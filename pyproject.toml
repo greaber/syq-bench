@@ -3,6 +3,8 @@ name = "syq-bench"
 version = "0.1.0"
 description = "Benchmark syq against rsync and cp on your own hardware, in the cloud, or across syq versions"
 readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
 authors = [{ name = "Grant Reaber", email = "grant@claw.party" }]
 requires-python = ">=3.13"
 dependencies = []

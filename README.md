@@ -62,3 +62,5 @@ See [`site/README.md`](site/README.md) for the selected public data and build
 process.
 
 See [PUBLICATION.md](PUBLICATION.md) for release provenance and publishing results.
+
+Licensed under [MIT](LICENSE). Bundled fonts retain their own licenses.
