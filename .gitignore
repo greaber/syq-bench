@@ -1,0 +1,21 @@
+.venv/
+__pycache__/
+*.pyc
+dist/
+.ruff_cache/
+.pytest_cache/
+/.env.keys
+/.env.infra
+# OpenTofu local state and secrets (per-user, never committed)
+providers/**/.terraform/
+providers/**/*.tfstate*
+providers/**/*.tfvars
+current-plans
+current-plans/
+# Run results embed host identity (hostnames, endpoints); they stay local.
+/results/
+/reframe-output/
+/reframe-stage/
+/perflogs/
+.syq-checkouts/
+.worktrees/
