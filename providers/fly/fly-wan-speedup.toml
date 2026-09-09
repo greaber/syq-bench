@@ -1,0 +1,19 @@
+# Exact unreleased syq revision used by the reproducible WAN-speedup campaign.
+primary_region = "ams"
+kill_signal = "SIGTERM"
+kill_timeout = "30s"
+
+[build]
+dockerfile = "Dockerfile"
+
+[build.args]
+SYQ_REV = "e0ee86b9962f2b030d8fb87cec30f84fdfe4077f"
+
+[processes]
+source = "source"
+destination = "destination"
+
+[[vm]]
+processes = ["source", "destination"]
+size = "performance-2x"
+memory = "4gb"

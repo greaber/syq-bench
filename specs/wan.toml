@@ -1,0 +1,61 @@
+# Push across a long link (the README's DE -> JP row, 262 ms RTT). syq's TCP
+# data path needs its port range reachable on the remote (SERVER-TUNING.md);
+# the --no-tcp entry shows what you get when it is not. Set [endpoints] and,
+# for a source-built syq, the --syq-path on the remote. 512 MiB over one ssh
+# stream at 262 ms takes ~75 s (2 MB window / RTT ~ 7 MB/s), so this spec is
+# 20-40 min; raise sizes once the numbers are steady.
+#
+# qcp needs UDP 47700-47710 open on the SSH target. Its bandwidth and RTT
+# arguments are link-specific: 125M means 1 Gbit/s (bytes, not bits), and 300
+# ms is only a template value. qcp is intentionally limited to large-file:
+# with -p, qcp 0.9 sends directory SETMETA requests serially after a recursive
+# copy, so tree timings grow by roughly one RTT per directory. Removing -p
+# would make its semantics weaker than the other archive-mode tools.
+name = "wan"
+description = "push over a high-RTT link: syq TCP vs ssh data paths, rsync, tuned qcp (large file), tar"
+
+[endpoints]
+source = "/tmp/syq-bench/src"
+destination = "user@far-host:/tmp/syq-bench/dst"
+
+[[tools]]
+name = "syq"
+args = ["-a", "--syq-path", "/tmp/syq-bench/bin/syq"]
+
+[[tools]]
+name = "syq-no-tcp"
+kind = "syq"
+args = ["-a", "--no-tcp", "--syq-path", "/tmp/syq-bench/bin/syq"]
+
+[[tools]]
+name = "syq-j8"
+kind = "syq"
+jobs = 8
+args = ["-a", "--syq-path", "/tmp/syq-bench/bin/syq"]
+
+[[tools]]
+name = "rsync"
+
+[[tools]]
+name = "qcp-tuned"
+kind = "qcp"
+workloads = ["large-file"]
+args = ["-rpq", "--remote-qcp-binary", "/tmp/syq-bench/bin/qcp", "--remote-port", "47700-47710",
+        "--tx", "125M", "--rx", "125M", "--rtt", "300"]
+
+[[tools]]
+name = "tar"
+
+[[workloads]]
+name = "large-file"
+kind = "large-file"
+bytes = "512MiB"
+
+[[workloads]]
+name = "small-files"
+kind = "small-files"
+files = 5000
+bytes = "20MiB"
+
+[protocol]
+repeats = 2

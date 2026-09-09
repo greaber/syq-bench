@@ -1,0 +1,78 @@
+# Two separate hosts with local storage. Run the harness on the source host.
+# See providers/hetzner/README.md for host preparation and independent controls.
+# Replace the endpoint and SSH placeholders in an ignored copy of this file.
+# Install the same pinned current-master syq binary on PATH at both ends.
+# This uses the current rsync-compatible interface, including worker controls.
+name = "fast-lan"
+description = "Separate public hosts with local storage: fresh large, mixed, and small-file copies"
+
+[endpoints]
+source = "/SOURCE_LOCAL_DISK/OWNED_RUN/source"
+destination = "BENCH_USER@DESTINATION_HOST:/DESTINATION_LOCAL_DISK/OWNED_RUN/destination"
+ssh = "ssh -F /OWNED_RUN/ssh_config"
+
+[[tools]]
+name = "syq"
+kind = "syq"
+args = ["rsync", "-a", "-vv", "--stats", "--syq-no-bootstrap"]
+debug = true
+
+[[tools]]
+name = "syq-1"
+kind = "syq"
+args = ["rsync", "-a", "-vv", "--stats", "--syq-no-bootstrap", "--syq-connections", "1"]
+debug = true
+
+[[tools]]
+name = "syq-4"
+kind = "syq"
+args = ["rsync", "-a", "-vv", "--stats", "--syq-no-bootstrap", "--syq-connections", "4"]
+debug = true
+
+[[tools]]
+name = "syq-8"
+kind = "syq"
+args = ["rsync", "-a", "-vv", "--stats", "--syq-no-bootstrap", "--syq-connections", "8"]
+debug = true
+
+[[tools]]
+name = "syq-16"
+kind = "syq"
+args = ["rsync", "-a", "-vv", "--stats", "--syq-no-bootstrap", "--syq-connections", "16"]
+debug = true
+
+[[tools]]
+name = "syq-ssh"
+kind = "syq"
+args = ["rsync", "-a", "-vv", "--stats", "--syq-no-bootstrap", "--syq-no-tcp"]
+debug = true
+
+[[tools]]
+name = "rsync"
+
+[[workloads]]
+name = "large-file"
+kind = "large-file"
+bytes = "8GiB"
+
+[[workloads]]
+name = "mixed-tree"
+kind = "mixed-tree"
+files = 8000
+bytes = "8GiB"
+
+[[workloads]]
+name = "small-files"
+kind = "small-files"
+files = 200000
+bytes = 838800000 # 4194 bytes/file, 256 subdirectories
+
+[protocol]
+repeats = 3
+cache = "evict"
+durable = false
+verify = true
+probes = false # Separate disk and network controls at both hosts; see the recipe.
+tool_timeout = 120
+slow_cutoff = 0
+seed = 204330278

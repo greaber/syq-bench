@@ -1,0 +1,26 @@
+schema = 1
+name = "fly-transport-validation-cross-region"
+description = "short cross-region validation of syq direct TCP against its SSH path and rsync"
+app_prefix = "syq-bench"
+max_duration_seconds = 360
+lifecycle = "experiment"
+max_parallel = 1
+exclusive_resources = ["fly-private-route-ams-nrt"]
+run_spec = "../specs/transport-validation-cross-region.toml"
+fly_config = "../fly-ipv6-validation.toml"
+
+[[experiments]]
+name = "cross-region-memory"
+network = "cross-region-private-6pn"
+storage = "tmpfs-memory-nondurable"
+source = "/memory/syq-bench/source"
+destination = "/memory/syq-bench/destination"
+source_region = "ams"
+destination_region = "nrt"
+
+[cost]
+checked_at = "2026-09-04"
+machine_usd_per_hour = 0.1391
+volume_usd_per_gb_month = 0.15
+other_usd = 0
+exclusions = "remote image-build fees, outbound transfer, taxes, and account-specific discounts or minimums"

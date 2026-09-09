@@ -1,0 +1,47 @@
+# Eight independent files ensure that eight workers have useful payload work.
+# This is intentionally different from a 32 MiB single-file smoke test: syq
+# only splits a remaining file range of at least 64 MiB, so scaling that smoke
+# test down disabled the multi-flow mechanism this experiment measures.
+name = "fly-wan-speedup"
+description = "eight-way fresh-file transfer over a high-RTT Fly private path"
+
+[endpoints]
+source = "/memory/syq-bench/source"
+destination = "root@destination.process.PLACEHOLDER.internal:/memory/syq-bench/destination"
+ssh = "ssh -i /root/.ssh/benchmark -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -o ConnectTimeout=10"
+
+[[tools]]
+name = "syq-auto"
+kind = "syq"
+debug = true
+args = ["rsync", "-a", "-vv", "--syq-no-bootstrap", "--stats"]
+
+[[tools]]
+name = "syq-j1"
+kind = "syq"
+debug = true
+args = ["rsync", "-a", "-vv", "--syq-no-bootstrap", "--syq-connections", "1", "--stats"]
+
+[[tools]]
+name = "syq-j8"
+kind = "syq"
+debug = true
+args = ["rsync", "-a", "-vv", "--syq-no-bootstrap", "--syq-connections", "8", "--stats"]
+
+[[tools]]
+name = "rsync"
+
+[[workloads]]
+name = "eight-large-files"
+kind = "small-files"
+files = 8
+bytes = "512MiB"
+
+[protocol]
+repeats = 1
+cache = "warm"
+durable = false
+verify = true
+probes = false
+tool_timeout = 100
+slow_cutoff = 5

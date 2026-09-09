@@ -1,0 +1,80 @@
+# A short, scaled version of the ordinary LAN/WAN and delta specs. The Fly
+# campaign supplies the real endpoints and infrastructure labels. The shapes
+# preserve the distinctions under test rather than trying to preserve the
+# absolute durations of another machine:
+#
+# - fresh-large and fresh-small exercise bulk transfer and per-file overhead;
+# - delta-edited gives rsync's block-delta algorithm useful unchanged data;
+# - delta-rewritten is the same shape with no reusable data.
+#
+# `bytes` is logical fixture size, and `changed_bytes` in a result is how much
+# the harness modified. Neither is an observation of bytes sent on the wire.
+name = "fly-remote-comparison"
+description = "scaled fresh-file and incremental remote-copy comparisons on Fly Machines"
+
+[endpoints]
+source = "/memory/syq-bench/source"
+destination = "root@destination.process.PLACEHOLDER.internal:/memory/syq-bench/destination"
+ssh = "ssh -i /root/.ssh/benchmark -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -o ConnectTimeout=10"
+
+[[tools]]
+name = "syq"
+args = ["rsync", "-a", "--no-bootstrap"]
+
+[[tools]]
+name = "syq-no-tcp"
+kind = "syq"
+args = ["rsync", "-a", "--no-bootstrap", "--no-tcp"]
+workloads = ["fresh-large", "fresh-small"]
+
+[[tools]]
+name = "syq-j8"
+kind = "syq"
+args = ["rsync", "-a", "--no-bootstrap"]
+jobs = 8
+workloads = ["fresh-large", "fresh-small"]
+
+[[tools]]
+name = "rsync"
+
+[[tools]]
+name = "tar"
+workloads = ["fresh-large", "fresh-small"]
+
+[[workloads]]
+name = "fresh-large"
+kind = "large-file"
+bytes = "256MiB"
+
+[[workloads]]
+name = "fresh-small"
+kind = "small-files"
+files = 50000
+bytes = "200MiB"
+
+[[workloads]]
+# Four 64 MiB files, with about 1% of their 4 KiB blocks edited in place.
+name = "delta-edited"
+kind = "small-files"
+files = 4
+bytes = "256MiB"
+changed = 1.0
+mutate = "blocks"
+
+[[workloads]]
+# Delta-hostile control: same files and sizes, but every byte is rewritten.
+name = "delta-rewritten"
+kind = "small-files"
+files = 4
+bytes = "256MiB"
+changed = 1.0
+mutate = "rewrite"
+
+[protocol]
+repeats = 1
+cache = "warm"
+durable = false
+verify = true
+probes = false
+tool_timeout = 15
+slow_cutoff = 5

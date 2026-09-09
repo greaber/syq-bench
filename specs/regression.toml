@@ -1,0 +1,44 @@
+# syq regression check: a baseline build against a candidate build on the same
+# machine, interleaved repeat by repeat so drift does not favour one. Run before
+# merging a change that touches performance. Set the two binaries, then:
+#
+#   syq-bench run specs/regression.toml -y
+#   syq-bench compare results/<previous>.json results/<this>.json
+#
+# Within one run the table's "vs syq-base" column is the ratio; across runs,
+# `compare` keys cases by (spec, host, workload, tool) and names the build by
+# its sha256, so the candidate's line in a report trend is its own history.
+name = "regression"
+description = "syq baseline vs candidate, interleaved, local"
+
+[endpoints]
+source = "/tmp/syq-bench/src"
+destination = "/tmp/syq-bench/dst"
+
+[[tools]]
+name = "syq-base"
+kind = "syq"
+binary = "/path/to/baseline/syq"
+
+[[tools]]
+name = "syq-new"
+kind = "syq"
+binary = "/path/to/candidate/syq"
+
+[[tools]]
+name = "rsync"
+
+[[workloads]]
+name = "large-file"
+kind = "large-file"
+bytes = "8GiB"
+
+[[workloads]]
+name = "small-files"
+kind = "small-files"
+files = 200000
+bytes = "800MiB"
+
+
+[protocol]
+repeats = 5

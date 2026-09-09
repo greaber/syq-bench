@@ -1,0 +1,55 @@
+name = "public-wan-reverse"
+description = "Release 0.5.2 comparison; generated incompressible fixture; logical throughput"
+[endpoints]
+source = "/path/to/empty-source-scratch"
+destination = "benchmark-peer:/path/to/empty-destination-scratch"
+ssh = "/usr/bin/ssh"
+
+[[tools]]
+name = "syq"
+kind = "syq"
+binary = "/path/to/syq"
+args = ["rsync", "-a", "--stats", "--no-progress", "--syq-no-bootstrap", "--rsync-path", "/path/to/syq"]
+debug = false
+
+[[tools]]
+name = "syq-ssh"
+kind = "syq"
+binary = "/path/to/syq"
+args = ["rsync", "-a", "--stats", "--no-progress", "--syq-no-bootstrap", "--rsync-path", "/path/to/syq", "--syq-no-tcp"]
+debug = false
+
+[[tools]]
+name = "rsync"
+kind = "rsync"
+binary = "/usr/bin/rsync"
+args = ["-a"]
+debug = false
+
+[[workloads]]
+name = "large-file"
+kind = "large-file"
+bytes = 1073741824
+files = 1
+
+[[workloads]]
+name = "large-files"
+kind = "small-files"
+bytes = 1073741824
+files = 16
+
+[[workloads]]
+name = "small-files"
+kind = "small-files"
+bytes = 20971520
+files = 5000
+
+[protocol]
+repeats = 3
+seed = 204330278
+cache = "warm"
+durable = false
+verify = true
+probes = false
+tool_timeout = 300
+slow_cutoff = 0

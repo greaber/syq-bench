@@ -1,0 +1,56 @@
+# Push from this machine to one host over the LAN. Copy this file and set
+# [endpoints]; everything else is the standard LAN row. ~20-40 min on 1 Gbit.
+#
+# syq appears three times: auto-tuned with TCP data connections (the default),
+# with --no-tcp (data over ssh, what you get behind a firewall), and fixed -j 8.
+# qcp needs qcp on both ends and UDP 47700-47710 open on the SSH target; tar
+# is the folk answer. Its 125M bandwidth and 1 ms RTT hints describe a 1 Gbit
+# LAN and must be changed with the endpoints. qcp 0.9 is large-file-only here
+# because archive-mode tree copies serialize one metadata request per directory.
+name = "lan"
+description = "push to a LAN host: big file (including tuned qcp), many small files"
+
+[endpoints]
+source = "/tmp/syq-bench/src"               # local scratch for fixtures
+destination = "user@host:/tmp/syq-bench/dst"  # must be empty or absent
+# ssh = "/path/to/wrapper"                  # optional: ssh command with port/key/options
+
+[[tools]]
+name = "syq"
+
+[[tools]]
+name = "syq-no-tcp"
+kind = "syq"
+args = ["-a", "--no-tcp"]
+
+[[tools]]
+name = "syq-j8"
+kind = "syq"
+jobs = 8
+
+[[tools]]
+name = "rsync"
+
+[[tools]]
+name = "qcp-tuned"
+kind = "qcp"
+workloads = ["large-file"]
+args = ["-rpq", "--remote-port", "47700-47710", "--tx", "125M", "--rx", "125M", "--rtt", "1"]
+
+[[tools]]
+name = "tar"
+
+[[workloads]]
+name = "large-file"
+kind = "large-file"
+bytes = "4GiB"
+
+[[workloads]]
+name = "small-files"
+kind = "small-files"
+files = 100000
+bytes = "400MiB"
+
+
+[protocol]
+repeats = 3

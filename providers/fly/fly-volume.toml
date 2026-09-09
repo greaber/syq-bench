@@ -1,0 +1,33 @@
+# performance-8x is the smallest performance size with the 128 MiB/s Volume cap.
+primary_region = "ams"
+kill_signal = "SIGTERM"
+kill_timeout = "30s"
+
+[build]
+dockerfile = "Dockerfile"
+
+[build.args]
+SYQ_REV = "f7f1589e23b8aae01fe458519b95f1d11f5fd15f"
+
+[processes]
+source = "source"
+destination = "destination"
+
+[[vm]]
+processes = ["source", "destination"]
+size = "performance-8x"
+memory = "16gb"
+
+[[mounts]]
+source = "source_data"
+destination = "/volume"
+initial_size = "20gb"
+processes = ["source"]
+scheduled_snapshots = false
+
+[[mounts]]
+source = "destination_data"
+destination = "/volume"
+initial_size = "20gb"
+processes = ["destination"]
+scheduled_snapshots = false

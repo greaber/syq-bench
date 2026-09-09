@@ -1,0 +1,776 @@
+{
+  "schema": 3,
+  "harness_version": "0.1.0",
+  "started": "2026-09-09T00:16:24+00:00",
+  "finished": "2026-09-09T00:28:02.323542+00:00",
+  "seed": 204330278,
+  "filesystems": {
+    "source": "tmpfs",
+    "destination": "tmpfs"
+  },
+  "source": "/path/to/empty-source-scratch",
+  "destination": "benchmark-peer:/path/to/empty-destination-scratch",
+  "aborted": null,
+  "host": {
+    "kernel": "6.12.107+deb13-cloud-amd64",
+    "machine": "x86_64",
+    "cpus": 4,
+    "python": "3.13.13",
+    "hostname": "source-host"
+  },
+  "spec": {
+    "name": "public-wan-reverse",
+    "description": "Release 0.5.2 comparison; generated incompressible fixture; logical throughput",
+    "endpoints": {
+      "source": "/path/to/empty-source-scratch",
+      "destination": "benchmark-peer:/path/to/empty-destination-scratch",
+      "ssh": "/usr/bin/ssh"
+    },
+    "tools": [
+      {
+        "name": "syq",
+        "kind": "syq",
+        "binary": "/path/to/syq",
+        "args": [
+          "rsync",
+          "-a",
+          "--stats",
+          "--no-progress",
+          "--syq-no-bootstrap",
+          "--rsync-path",
+          "/path/to/syq"
+        ],
+        "debug": false
+      },
+      {
+        "name": "syq-ssh",
+        "kind": "syq",
+        "binary": "/path/to/syq",
+        "args": [
+          "rsync",
+          "-a",
+          "--stats",
+          "--no-progress",
+          "--syq-no-bootstrap",
+          "--rsync-path",
+          "/path/to/syq",
+          "--syq-no-tcp"
+        ],
+        "debug": false
+      },
+      {
+        "name": "rsync",
+        "kind": "rsync",
+        "binary": "/usr/bin/rsync",
+        "args": [
+          "-a"
+        ],
+        "debug": false
+      }
+    ],
+    "workloads": [
+      {
+        "name": "large-file",
+        "kind": "large-file",
+        "bytes": 1073741824,
+        "files": 1
+      },
+      {
+        "name": "large-files",
+        "kind": "small-files",
+        "bytes": 1073741824,
+        "files": 16
+      },
+      {
+        "name": "small-files",
+        "kind": "small-files",
+        "bytes": 20971520,
+        "files": 5000
+      }
+    ],
+    "protocol": {
+      "repeats": 3,
+      "seed": 204330278,
+      "cache": "warm",
+      "durable": false,
+      "verify": true,
+      "probes": false,
+      "tool_timeout": 300,
+      "slow_cutoff": 0
+    }
+  },
+  "tools": {
+    "syq": {
+      "version": "syq 0.5.2",
+      "sha256": "da584b363640f2757f485058103c4be5f906fd8f7fd7e5d582bbcfd98a9ca1ef",
+      "binary": "syq",
+      "remote": {
+        "version": "syq 0.5.2",
+        "sha256": "da584b363640f2757f485058103c4be5f906fd8f7fd7e5d582bbcfd98a9ca1ef"
+      }
+    },
+    "syq-ssh": {
+      "version": "syq 0.5.2",
+      "sha256": "da584b363640f2757f485058103c4be5f906fd8f7fd7e5d582bbcfd98a9ca1ef",
+      "binary": "syq",
+      "remote": {
+        "version": "syq 0.5.2",
+        "sha256": "da584b363640f2757f485058103c4be5f906fd8f7fd7e5d582bbcfd98a9ca1ef"
+      }
+    },
+    "rsync": {
+      "version": "rsync  version 3.4.1  protocol version 32",
+      "sha256": "a56c05b960beb734169619d5760b43ff495e84f85a93eb1f54fe58118262fb20",
+      "binary": "rsync",
+      "remote": {
+        "version": "rsync  version 3.4.1  protocol version 32",
+        "sha256": "a56c05b960beb734169619d5760b43ff495e84f85a93eb1f54fe58118262fb20"
+      }
+    }
+  },
+  "cases": [
+    {
+      "workload": "large-file",
+      "tool": "syq",
+      "bytes": 1073741824,
+      "files": 1,
+      "source_fs": "tmpfs",
+      "mode": "fresh",
+      "prepopulated_with": null,
+      "too_short": false,
+      "source": "/path/to/empty-source-scratch",
+      "error": null,
+      "skipped": null,
+      "curtailed": null,
+      "repeats": [
+        {
+          "index": 0,
+          "wall_s": 6.835592246999909,
+          "user_s": 2.165917,
+          "sys_s": 0.8684749999999999,
+          "exit_code": 0,
+          "verified": true,
+          "fsync_s": null,
+          "cache": "warm",
+          "metadata_cache": "warm",
+          "changed_files": 0,
+          "changed_bytes": 0,
+          "delta_seed": null,
+          "fsync_note": "not requested",
+          "observed_transports": [
+            "tcp"
+          ]
+        },
+        {
+          "index": 1,
+          "wall_s": 7.310352146000014,
+          "user_s": 2.704235999999998,
+          "sys_s": 1.0501280000000008,
+          "exit_code": 0,
+          "verified": true,
+          "fsync_s": null,
+          "cache": "warm",
+          "metadata_cache": "warm",
+          "changed_files": 0,
+          "changed_bytes": 0,
+          "delta_seed": null,
+          "fsync_note": "not requested",
+          "observed_transports": [
+            "tcp"
+          ]
+        },
+        {
+          "index": 2,
+          "wall_s": 7.1882475130000785,
+          "user_s": 2.7464890000000004,
+          "sys_s": 1.0490390000000005,
+          "exit_code": 0,
+          "verified": true,
+          "fsync_s": null,
+          "cache": "warm",
+          "metadata_cache": "warm",
+          "changed_files": 0,
+          "changed_bytes": 0,
+          "delta_seed": null,
+          "fsync_note": "not requested",
+          "observed_transports": [
+            "tcp"
+          ]
+        }
+      ]
+    },
+    {
+      "workload": "large-file",
+      "tool": "syq-ssh",
+      "bytes": 1073741824,
+      "files": 1,
+      "source_fs": "tmpfs",
+      "mode": "fresh",
+      "prepopulated_with": null,
+      "too_short": false,
+      "source": "/path/to/empty-source-scratch",
+      "error": null,
+      "skipped": null,
+      "curtailed": null,
+      "repeats": [
+        {
+          "index": 0,
+          "wall_s": 12.247452565000003,
+          "user_s": 4.300395999999999,
+          "sys_s": 2.9785690000000002,
+          "exit_code": 0,
+          "verified": true,
+          "fsync_s": null,
+          "cache": "warm",
+          "metadata_cache": "warm",
+          "changed_files": 0,
+          "changed_bytes": 0,
+          "delta_seed": null,
+          "fsync_note": "not requested",
+          "observed_transports": [
+            "ssh"
+          ]
+        },
+        {
+          "index": 1,
+          "wall_s": 12.254593122000074,
+          "user_s": 5.847189,
+          "sys_s": 4.3405439999999995,
+          "exit_code": 0,
+          "verified": true,
+          "fsync_s": null,
+          "cache": "warm",
+          "metadata_cache": "warm",
+          "changed_files": 0,
+          "changed_bytes": 0,
+          "delta_seed": null,
+          "fsync_note": "not requested",
+          "observed_transports": [
+            "ssh"
+          ]
+        },
+        {
+          "index": 2,
+          "wall_s": 12.20793589799996,
+          "user_s": 5.191624000000001,
+          "sys_s": 4.099998000000003,
+          "exit_code": 0,
+          "verified": true,
+          "fsync_s": null,
+          "cache": "warm",
+          "metadata_cache": "warm",
+          "changed_files": 0,
+          "changed_bytes": 0,
+          "delta_seed": null,
+          "fsync_note": "not requested",
+          "observed_transports": [
+            "ssh"
+          ]
+        }
+      ]
+    },
+    {
+      "workload": "large-file",
+      "tool": "rsync",
+      "bytes": 1073741824,
+      "files": 1,
+      "source_fs": "tmpfs",
+      "mode": "fresh",
+      "prepopulated_with": null,
+      "too_short": false,
+      "source": "/path/to/empty-source-scratch",
+      "error": null,
+      "skipped": null,
+      "curtailed": null,
+      "repeats": [
+        {
+          "index": 0,
+          "wall_s": 59.502246426000056,
+          "user_s": 3.0894270000000006,
+          "sys_s": 3.4818300000000004,
+          "exit_code": 0,
+          "verified": true,
+          "fsync_s": null,
+          "cache": "warm",
+          "metadata_cache": "warm",
+          "changed_files": 0,
+          "changed_bytes": 0,
+          "delta_seed": null,
+          "fsync_note": "not requested"
+        },
+        {
+          "index": 1,
+          "wall_s": 59.99270371,
+          "user_s": 3.2687530000000002,
+          "sys_s": 4.0256989999999995,
+          "exit_code": 0,
+          "verified": true,
+          "fsync_s": null,
+          "cache": "warm",
+          "metadata_cache": "warm",
+          "changed_files": 0,
+          "changed_bytes": 0,
+          "delta_seed": null,
+          "fsync_note": "not requested"
+        },
+        {
+          "index": 2,
+          "wall_s": 59.90870524699994,
+          "user_s": 3.309595999999999,
+          "sys_s": 3.8731089999999995,
+          "exit_code": 0,
+          "verified": true,
+          "fsync_s": null,
+          "cache": "warm",
+          "metadata_cache": "warm",
+          "changed_files": 0,
+          "changed_bytes": 0,
+          "delta_seed": null,
+          "fsync_note": "not requested"
+        }
+      ]
+    },
+    {
+      "workload": "large-files",
+      "tool": "syq",
+      "bytes": 1073741824,
+      "files": 16,
+      "source_fs": "tmpfs",
+      "mode": "fresh",
+      "prepopulated_with": null,
+      "too_short": false,
+      "source": "/path/to/empty-source-scratch",
+      "error": null,
+      "skipped": null,
+      "curtailed": null,
+      "repeats": [
+        {
+          "index": 0,
+          "wall_s": 7.434975424999948,
+          "user_s": 2.3520250000000047,
+          "sys_s": 0.8862990000000011,
+          "exit_code": 0,
+          "verified": true,
+          "fsync_s": null,
+          "cache": "warm",
+          "metadata_cache": "warm",
+          "changed_files": 0,
+          "changed_bytes": 0,
+          "delta_seed": null,
+          "fsync_note": "not requested",
+          "observed_transports": [
+            "tcp"
+          ]
+        },
+        {
+          "index": 1,
+          "wall_s": 7.390025813000193,
+          "user_s": 2.709133999999999,
+          "sys_s": 1.0738270000000014,
+          "exit_code": 0,
+          "verified": true,
+          "fsync_s": null,
+          "cache": "warm",
+          "metadata_cache": "warm",
+          "changed_files": 0,
+          "changed_bytes": 0,
+          "delta_seed": null,
+          "fsync_note": "not requested",
+          "observed_transports": [
+            "tcp"
+          ]
+        },
+        {
+          "index": 2,
+          "wall_s": 7.294891723000092,
+          "user_s": 2.5560529999999986,
+          "sys_s": 0.9460249999999988,
+          "exit_code": 0,
+          "verified": true,
+          "fsync_s": null,
+          "cache": "warm",
+          "metadata_cache": "warm",
+          "changed_files": 0,
+          "changed_bytes": 0,
+          "delta_seed": null,
+          "fsync_note": "not requested",
+          "observed_transports": [
+            "tcp"
+          ]
+        }
+      ]
+    },
+    {
+      "workload": "large-files",
+      "tool": "syq-ssh",
+      "bytes": 1073741824,
+      "files": 16,
+      "source_fs": "tmpfs",
+      "mode": "fresh",
+      "prepopulated_with": null,
+      "too_short": false,
+      "source": "/path/to/empty-source-scratch",
+      "error": null,
+      "skipped": null,
+      "curtailed": null,
+      "repeats": [
+        {
+          "index": 0,
+          "wall_s": 12.502402116999974,
+          "user_s": 5.357230000000001,
+          "sys_s": 4.256325,
+          "exit_code": 0,
+          "verified": true,
+          "fsync_s": null,
+          "cache": "warm",
+          "metadata_cache": "warm",
+          "changed_files": 0,
+          "changed_bytes": 0,
+          "delta_seed": null,
+          "fsync_note": "not requested",
+          "observed_transports": [
+            "ssh"
+          ]
+        },
+        {
+          "index": 1,
+          "wall_s": 12.458226121000052,
+          "user_s": 5.123826000000001,
+          "sys_s": 4.010210000000001,
+          "exit_code": 0,
+          "verified": true,
+          "fsync_s": null,
+          "cache": "warm",
+          "metadata_cache": "warm",
+          "changed_files": 0,
+          "changed_bytes": 0,
+          "delta_seed": null,
+          "fsync_note": "not requested",
+          "observed_transports": [
+            "ssh"
+          ]
+        },
+        {
+          "index": 2,
+          "wall_s": 12.448742807999906,
+          "user_s": 5.390338,
+          "sys_s": 3.871425000000002,
+          "exit_code": 0,
+          "verified": true,
+          "fsync_s": null,
+          "cache": "warm",
+          "metadata_cache": "warm",
+          "changed_files": 0,
+          "changed_bytes": 0,
+          "delta_seed": null,
+          "fsync_note": "not requested",
+          "observed_transports": [
+            "ssh"
+          ]
+        }
+      ]
+    },
+    {
+      "workload": "large-files",
+      "tool": "rsync",
+      "bytes": 1073741824,
+      "files": 16,
+      "source_fs": "tmpfs",
+      "mode": "fresh",
+      "prepopulated_with": null,
+      "too_short": false,
+      "source": "/path/to/empty-source-scratch",
+      "error": null,
+      "skipped": null,
+      "curtailed": null,
+      "repeats": [
+        {
+          "index": 0,
+          "wall_s": 59.902233156999955,
+          "user_s": 3.4346320000000006,
+          "sys_s": 3.314149999999998,
+          "exit_code": 0,
+          "verified": true,
+          "fsync_s": null,
+          "cache": "warm",
+          "metadata_cache": "warm",
+          "changed_files": 0,
+          "changed_bytes": 0,
+          "delta_seed": null,
+          "fsync_note": "not requested"
+        },
+        {
+          "index": 1,
+          "wall_s": 60.315941787000156,
+          "user_s": 3.1949439999999996,
+          "sys_s": 2.8590400000000002,
+          "exit_code": 0,
+          "verified": true,
+          "fsync_s": null,
+          "cache": "warm",
+          "metadata_cache": "warm",
+          "changed_files": 0,
+          "changed_bytes": 0,
+          "delta_seed": null,
+          "fsync_note": "not requested"
+        },
+        {
+          "index": 2,
+          "wall_s": 59.80144899699985,
+          "user_s": 3.479151999999999,
+          "sys_s": 3.3783209999999997,
+          "exit_code": 0,
+          "verified": true,
+          "fsync_s": null,
+          "cache": "warm",
+          "metadata_cache": "warm",
+          "changed_files": 0,
+          "changed_bytes": 0,
+          "delta_seed": null,
+          "fsync_note": "not requested"
+        }
+      ]
+    },
+    {
+      "workload": "small-files",
+      "tool": "syq",
+      "bytes": 20970000,
+      "files": 5000,
+      "source_fs": "tmpfs",
+      "mode": "fresh",
+      "prepopulated_with": null,
+      "too_short": false,
+      "source": "/path/to/empty-source-scratch",
+      "error": null,
+      "skipped": null,
+      "curtailed": null,
+      "repeats": [
+        {
+          "index": 0,
+          "wall_s": 4.12760956499983,
+          "user_s": 0.2560629999999975,
+          "sys_s": 0.45311899999999383,
+          "exit_code": 0,
+          "verified": true,
+          "fsync_s": null,
+          "cache": "warm",
+          "metadata_cache": "warm",
+          "changed_files": 0,
+          "changed_bytes": 0,
+          "delta_seed": null,
+          "fsync_note": "not requested"
+        },
+        {
+          "index": 1,
+          "wall_s": 4.130181186000073,
+          "user_s": 0.2829770000000025,
+          "sys_s": 0.45170399999999944,
+          "exit_code": 0,
+          "verified": true,
+          "fsync_s": null,
+          "cache": "warm",
+          "metadata_cache": "warm",
+          "changed_files": 0,
+          "changed_bytes": 0,
+          "delta_seed": null,
+          "fsync_note": "not requested"
+        },
+        {
+          "index": 2,
+          "wall_s": 4.134731658999954,
+          "user_s": 0.26316900000000487,
+          "sys_s": 0.4189409999999967,
+          "exit_code": 0,
+          "verified": true,
+          "fsync_s": null,
+          "cache": "warm",
+          "metadata_cache": "warm",
+          "changed_files": 0,
+          "changed_bytes": 0,
+          "delta_seed": null,
+          "fsync_note": "not requested"
+        }
+      ]
+    },
+    {
+      "workload": "small-files",
+      "tool": "syq-ssh",
+      "bytes": 20970000,
+      "files": 5000,
+      "source_fs": "tmpfs",
+      "mode": "fresh",
+      "prepopulated_with": null,
+      "too_short": false,
+      "source": "/path/to/empty-source-scratch",
+      "error": null,
+      "skipped": null,
+      "curtailed": null,
+      "repeats": [
+        {
+          "index": 0,
+          "wall_s": 5.6800044999999955,
+          "user_s": 0.47958099999999604,
+          "sys_s": 0.5128360000000001,
+          "exit_code": 0,
+          "verified": true,
+          "fsync_s": null,
+          "cache": "warm",
+          "metadata_cache": "warm",
+          "changed_files": 0,
+          "changed_bytes": 0,
+          "delta_seed": null,
+          "fsync_note": "not requested"
+        },
+        {
+          "index": 1,
+          "wall_s": 5.682379537000088,
+          "user_s": 0.5134209999999939,
+          "sys_s": 0.5211970000000008,
+          "exit_code": 0,
+          "verified": true,
+          "fsync_s": null,
+          "cache": "warm",
+          "metadata_cache": "warm",
+          "changed_files": 0,
+          "changed_bytes": 0,
+          "delta_seed": null,
+          "fsync_note": "not requested"
+        },
+        {
+          "index": 2,
+          "wall_s": 5.585123487999908,
+          "user_s": 0.45507300000001294,
+          "sys_s": 0.47022799999999876,
+          "exit_code": 0,
+          "verified": true,
+          "fsync_s": null,
+          "cache": "warm",
+          "metadata_cache": "warm",
+          "changed_files": 0,
+          "changed_bytes": 0,
+          "delta_seed": null,
+          "fsync_note": "not requested"
+        }
+      ]
+    },
+    {
+      "workload": "small-files",
+      "tool": "rsync",
+      "bytes": 20970000,
+      "files": 5000,
+      "source_fs": "tmpfs",
+      "mode": "fresh",
+      "prepopulated_with": null,
+      "too_short": false,
+      "source": "/path/to/empty-source-scratch",
+      "error": null,
+      "skipped": null,
+      "curtailed": null,
+      "repeats": [
+        {
+          "index": 0,
+          "wall_s": 3.9282390969999597,
+          "user_s": 0.12384500000000287,
+          "sys_s": 0.16382899999999978,
+          "exit_code": 0,
+          "verified": true,
+          "fsync_s": null,
+          "cache": "warm",
+          "metadata_cache": "warm",
+          "changed_files": 0,
+          "changed_bytes": 0,
+          "delta_seed": null,
+          "fsync_note": "not requested"
+        },
+        {
+          "index": 1,
+          "wall_s": 3.9262640909998936,
+          "user_s": 0.1371079999999978,
+          "sys_s": 0.21611399999999747,
+          "exit_code": 0,
+          "verified": true,
+          "fsync_s": null,
+          "cache": "warm",
+          "metadata_cache": "warm",
+          "changed_files": 0,
+          "changed_bytes": 0,
+          "delta_seed": null,
+          "fsync_note": "not requested"
+        },
+        {
+          "index": 2,
+          "wall_s": 3.9267587449999155,
+          "user_s": 0.11961600000000772,
+          "sys_s": 0.21192700000000286,
+          "exit_code": 0,
+          "verified": true,
+          "fsync_s": null,
+          "cache": "warm",
+          "metadata_cache": "warm",
+          "changed_files": 0,
+          "changed_bytes": 0,
+          "delta_seed": null,
+          "fsync_note": "not requested"
+        }
+      ]
+    }
+  ],
+  "probes": [],
+  "uncontrolled": [
+    "metadata cache (dentries/inodes) is not evicted: generation, checksum, and repeats all warm it",
+    "remote end: fixture pages evicted on the client only",
+    "Shared host activity not reserved by OS; untimed before/after resource snapshots retained.",
+    "Metadata caches warm; data cache preparation recorded per repeat; no global eviction.",
+    "No final flush requested; command completion does not establish durability or physical device throughput.",
+    "Logical throughput is not physical disk, network or DRAM traffic.",
+    "Per-copy OUTPUT packet/byte counters distinguish benchmark TCP ports from SSH; headers/control packets included; same rules for all tools.",
+    "GNU time wrapper is timed; maximum process RSS is not aggregate simultaneous memory.",
+    "Clean runs have no debug tracing or concurrent diagnostic sampler; setup snapshots are untimed."
+  ],
+  "network": {
+    "before": {
+      "ping": {
+        "loss_pct": 0,
+        "rtt_avg_ms": 106.668,
+        "count": 20
+      },
+      "missing": [
+        "Private network details omitted"
+      ]
+    },
+    "after": {
+      "ping": null,
+      "missing": [
+        "Private network details omitted"
+      ]
+    }
+  },
+  "publication": {
+    "syq_revision": "fd2b17c642e62d7ee63f7f3835560a6ceacd0afb",
+    "build_type": "release source build",
+    "release": "0.5.2",
+    "harness_revision": "a81f64898a1080f7dceba0d05a6b4a919f8211c5",
+    "manual_recipe": "specs/release-052/public-wan-reverse.toml",
+    "environment": {
+      "kernel": "6.12.107+deb13-cloud-amd64",
+      "versions": {
+        "syq": "syq 0.5.2",
+        "syq-ssh": "syq 0.5.2",
+        "rsync": "rsync  version 3.4.1  protocol version 32"
+      },
+      "allowed_cpus": 4,
+      "governors": [
+        "unavailable"
+      ],
+      "cpu_model": "AMD EPYC-Milan Processor"
+    },
+    "path_filesystems": {
+      "source": "tmpfs",
+      "destination": "tmpfs"
+    },
+    "source_build_sha256": "da584b363640f2757f485058103c4be5f906fd8f7fd7e5d582bbcfd98a9ca1ef",
+    "selection_note": "Charts omit entire workloads if any tool is incomplete, unverified, cache preparation failed, or any repeat is under three seconds. Omitted cases remain in this capture.",
+    "remote_identity_basis": "Independent deployment and final hashes of the explicit --rsync-path helper, checked on both endpoints; the stock PATH probe did not identify that helper.",
+    "transport_evidence": "Per-copy destination-port byte counters checked for every large-file and large-files repetition; small-file and update paths are not inferred from those controls."
+  }
+}

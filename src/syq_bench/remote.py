@@ -140,7 +140,7 @@ class Location:
     def checksum(self) -> str:
         """Order-independent digest of (relative path, size, sha256) over all regular files."""
         script = (
-            f"cd {shlex.quote(str(self.path))} && find . -type f -print0 | sort -z | "
+            f"cd {shlex.quote(str(self.path))} && find . -type f -print0 | LC_ALL=C sort -z | "
             "xargs -0 sha256sum | sha256sum | cut -d' ' -f1"
         )
         return self.sh(script).stdout.strip()

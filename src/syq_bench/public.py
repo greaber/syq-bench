@@ -186,30 +186,48 @@ def advantage(rows: list[Result]) -> tuple[float, Result] | None:
     return best.mean / primary.mean, best
 
 
-def bar_chart(rows: list[Result], *, controls: bool = False, labels: dict | None = None) -> str:
-    drawn = rows if controls else competitors(rows)
+def bar_chart(
+    rows: list[Result],
+    *,
+    controls: bool = False,
+    labels: dict | None = None,
+    include_controls: tuple[str, ...] | list[str] = (),
+    metric: str = "speed",
+) -> str:
+    if metric not in {"speed", "time"}:
+        raise ValueError("chart metric must be speed or time")
+    elapsed_chart = metric == "time"
+    available = {row.name for row in rows if row.is_syq and row.name != row.primary}
+    if len(set(include_controls)) != len(include_controls) or not set(include_controls) <= available:
+        raise ValueError("chart_controls must name distinct syq controls in this comparison")
+    drawn = (
+        rows
+        if controls
+        else [row for row in rows if row.name == row.primary or not row.is_syq or row.name in include_controls]
+    )
     if not drawn:
         return "<p>No measurements.</p>"
     valid = [r for r in drawn if r.mean is not None]
-    extreme = [r.case["bytes"] / min(r.walls) / 1e6 for r in valid]
+    extreme = [max(r.walls) if elapsed_chart else r.case["bytes"] / min(r.walls) / 1e6 for r in valid]
     xmax = max(extreme, default=1) * 1.02
-    out = [
-        '<p class="chart-key">Effective speed · higher is better'
-        " <span>Dataset size ÷ mean runtime; whiskers show the repeat range.</span></p>"
-    ]
-    if drawn[0].incremental:
+    out = []
+    if drawn[0].incremental and not elapsed_chart and not controls:
         out.append(
-            '<p class="metric-note">Updates can reuse existing data. This rate uses the full reference dataset, '
+            '<p class="metric-note">Updates can reuse existing data. This speed uses the size of the whole folder, '
             "not the bytes sent over the network.</p>"
         )
     out.append('<div class="ladder">')
     for row in drawn:
         text, css = standing(row, drawn)
-        value = row.metric
+        value = row.mean if elapsed_chart else row.metric
         width = (value or 0) / xmax * 100
         whisk = ""
         if len(row.walls) > 1:
-            low, high = row.case["bytes"] / max(row.walls) / 1e6, row.case["bytes"] / min(row.walls) / 1e6
+            low, high = (
+                (min(row.walls), max(row.walls))
+                if elapsed_chart
+                else (row.case["bytes"] / max(row.walls) / 1e6, row.case["bytes"] / min(row.walls) / 1e6)
+            )
             whisk = (
                 f'<span class="whisk" style="left:{low / xmax * 100:.2f}%;'
                 f'width:{(high - low) / xmax * 100:.2f}%"></span>'
@@ -218,25 +236,52 @@ def bar_chart(rows: list[Result], *, controls: bool = False, labels: dict | None
         classes = "syq" if row.is_syq else ""
         version = row.run.get("tools", {}).get(row.name, {}).get("version", "Version unrecorded")
         count = len(row.repeats)
-        sub = f"{count} repeat{'s' if count != 1 else ''}"
+        sub = f"{count} run{'s' if count != 1 else ''}"
         if row.short:
             sub += " · under 2 s"
         if row.case.get("curtailed"):
             sub += " · further repeats curtailed"
-        shown = rate(value)
-        elapsed = f"{seconds(row.mean)} mean" if row.mean is not None else "Elapsed unavailable"
-        title = f"{version}; effective speed {shown}; {text}"
+        shown = seconds(value) if elapsed_chart else rate(value)
+        elapsed = f"{seconds(row.mean)} average" if row.mean is not None else "Elapsed unavailable"
+        elapsed = "average time" if elapsed_chart else elapsed
+        measurements = [f"{label}: {shown} · {elapsed}"]
+        if row.walls:
+            for i, wall in enumerate(row.walls, 1):
+                speed = "" if elapsed_chart else f" · {rate(row.case['bytes'] / wall / 1e6)}"
+                measurements.append(f"Run {i}: {wall:.6g} s{speed}")
+        else:
+            measurements.append(row.reason or "No measurements available")
+        # The average is explained in the hover summary and methodology, not on every row.
+        elapsed_label = (
+            ""
+            if elapsed_chart
+            else f'<small class="elapsed">{seconds(row.mean)}</small>'
+            if row.mean is not None
+            else '<small class="elapsed">Elapsed unavailable</small>'
+        )
+        tooltip = "".join(f"<span>{esc(line)}</span>" for line in measurements)
+        accessible = " ".join(measurements)
         transport = ""
         if row.is_syq:
-            path, basis = data_path(row.run, row.case, row.repeats)
-            transport = f'<small class="transport" title="{esc(basis)}">Data path: {esc(path)}</small>'
+            unchanged = (
+                row.case.get("mode") == "incremental"
+                and row.case.get("prepopulated_with")
+                and row.reason is None
+                and all(r.get("changed_files") == 0 and r.get("changed_bytes") == 0 for r in row.repeats)
+            )
+            if unchanged:
+                transport = '<small class="transport">No file data transferred</small>'
+            else:
+                path, basis = data_path(row.run, row.case, row.repeats)
+                transport = f'<small class="transport" title="{esc(basis)}">Data path: {esc(path)}</small>'
         out.extend(
             [
                 f'<div class="name {classes}" title="{esc(version)}"><b>{esc(label)}</b>{transport}</div>',
-                f'<div class="track" title="{esc(title)}"><span class="bar {classes}" '
+                f'<button type="button" class="track" aria-label="{esc(accessible)}"><span class="bar {classes}" '
                 f'style="width:{width:.2f}%"></span>'
-                f"{whisk}<small>{esc(sub)}</small></div>",
-                f'<div class="t"><span class="s">{shown}</span><small class="elapsed">{elapsed}</small></div>',
+                f"{whisk}<small>{esc(sub)}</small>"
+                f'<span class="measurements" aria-hidden="true">{tooltip}</span></button>',
+                f'<div class="t"><span class="s">{shown}</span>{elapsed_label}</div>',
                 f'<div class="r"><span class="chip {css}" title="{esc(text)}">{esc(text)}</span></div>',
             ]
         )
@@ -248,12 +293,16 @@ def workload_text(row: Result) -> str:
     noun = "file" if c["files"] == 1 else "files"
     what = f"{c['files']:,} {noun} · {size(c['bytes'])} total"
     if not row.incremental:
-        return what + " · fresh copy into an empty destination"
+        return what + " · copying to an empty folder"
     w = next((w for w in row.run["spec"].get("workloads", []) if w["name"] == c["workload"]), {})
-    mutation = {"blocks": "in-place block edits", "append": "appended data", "rewrite": "whole-file rewrites"}.get(
-        w.get("mutate", "rewrite"), "edits"
-    )
-    return what + f" · existing destination · re-sync after {mutation}"
+    if w.get("changed") == 0:
+        return f"{c['files']:,} files · identical copies at both ends · no file contents transferred"
+    mutation = {
+        "blocks": "small edits throughout the files",
+        "append": "adding data at the ends",
+        "rewrite": "replacing all the contents",
+    }.get(w.get("mutate", "rewrite"), "edits")
+    return what + f" · updating an existing copy after {mutation}"
 
 
 def capture_digest(run: dict) -> str:
@@ -268,9 +317,7 @@ def explanation(rows: list[Result], meta: dict) -> str:
         return ""
     if capture_digest(rows[0].run) not in meta.get("explained_captures", []):
         return ""  # A new allocation, build or result needs a new interpretation.
-    labels = {"control": "The controls show", "likely": "Likely reason", "unknown": "Not yet explained"}
-    label = labels[note["basis"]]
-    return f'<p class="explanation"><span>{esc(label)}</span> {esc(note["text"])}</p>'
+    return f'<p class="explanation">{esc(note["text"])}</p>'
 
 
 def details_table(rows: list[Result]) -> str:
@@ -295,8 +342,6 @@ def details_table(rows: list[Result]) -> str:
 def provenance(run: dict) -> str:
     out = [
         '<details class="evidence"><summary>Versions, commands &amp; measurement conditions</summary>',
-        '<p class="fine">A version string alone does not identify a development build. Local and remote '
-        "hashes are reported separately; missing remote identities stay unrecorded.</p>",
         '<div class="tablewrap"><table class="detail"><thead><tr><th>Tool</th><th>Local version / SHA-256</th>'
         "<th>Remote identity</th><th>Arguments</th></tr></thead><tbody>",
     ]
@@ -325,11 +370,24 @@ def provenance(run: dict) -> str:
     return "".join(out)
 
 
+def result_line(rows: list[Result]) -> str:
+    if edge := advantage(rows):
+        factor, best = edge
+        if factor >= 1.05:
+            text = f"syq is {factor:.2f}× faster than {best.label} in this run."
+        elif factor <= 1 / 1.05:
+            text = f"{best.label} is {1 / factor:.2f}× faster than syq in this run."
+        else:
+            text = f"syq and {best.label} have speeds within 5% of each other."
+        return f'<p class="result-line">{esc(text)}</p>'
+    return ""
+
+
 def run_html(run: dict, meta: dict, ordinal: int) -> str:
     primary = meta.get("primary", "syq")
     out = [f'<div class="run-heading"><span class="eyebrow">Run {ordinal} · {esc(run["started"][:10])}</span>']
     if run.get("_download"):
-        out.append(f'<a href="{esc(run["_download"])}" download>Download measurements ↓</a>')
+        out.append(f'<a href="{esc(run["_download"])}" download>Download results ↓</a>')
     out.append("</div>")
     for rows in selected_cases(run, meta):
         name = rows[0].case["workload"]
@@ -339,28 +397,22 @@ def run_html(run: dict, meta: dict, ordinal: int) -> str:
             f'class="case-head"><h4>{esc(titles.get(name, name.replace("-", " ").capitalize()))}</h4></div>'
             f'<p class="what">{esc(workload_text(rows[0]))}</p>'
         )
-        if edge := advantage(rows):
-            factor, best = edge
-            if factor >= 1.05:
-                text = f"syq is {factor:.2f}× faster than {best.label} in this run."
-            elif factor <= 1 / 1.05:
-                text = f"{best.label} is {1 / factor:.2f}× faster than syq in this run."
-            else:
-                text = f"syq and {best.label} have speeds within 5% of each other."
-            out.append(f'<p class="result-line">{esc(text)}</p>')
+        out.append(result_line(rows))
         out.append(explanation(rows, meta))
-        out.append(bar_chart(rows))
+        out.append(bar_chart(rows, metric=meta.get("chart_metric", "speed")))
         options = [r for r in rows if r.is_syq and r.name != primary]
         if options:
+            out.append('<details class="controls"><summary>Other syq settings</summary>')
             out.append(
-                '<details class="controls"><summary>Why these results? Explore the syq controls</summary>'
-                '<p class="fine">These change the connection or worker settings. The main comparison uses the '
-                "scenario’s default syq entry.</p>"
+                bar_chart(
+                    [r for r in rows if r.is_syq],
+                    controls=True,
+                    labels=meta.get("controls"),
+                    metric=meta.get("chart_metric", "speed"),
+                )
+                + "</details>"
             )
-            out.append(
-                bar_chart([r for r in rows if r.is_syq], controls=True, labels=meta.get("controls")) + "</details>"
-            )
-        out.append(f"<details><summary>Inspect all repeats</summary>{details_table(rows)}</details></section>")
+        out.append(f"<details><summary>See each test run</summary>{details_table(rows)}</details></section>")
     out.append(provenance(run))
     return "".join(out)
 
@@ -396,12 +448,10 @@ def setup_details(meta: dict, runs: list[dict]) -> str:
         unknown = sum(
             not (r.get("tools", {}).get(meta.get("primary", "syq"), {}).get("remote") or {}).get("sha256") for r in runs
         )
-        identity_note = (
-            f" {unknown} of these runs lack a recorded destination syq hash; see each run’s identity table."
-            if unknown
-            else " Destination syq hashes are recorded for every published run."
-        )
-        out.append(f"<p>{len(runs)} published run(s), shown separately.{esc(identity_note)}</p>")
+        if unknown:
+            out.append(
+                f"<p>{unknown} of these runs lack a recorded destination syq hash; see each run’s identity table.</p>"
+            )
     if not out:
         return ""
     return '<details class="setup"><summary>Test setup &amp; limitations</summary>' + "".join(out) + "</details>"
@@ -410,12 +460,8 @@ def setup_details(meta: dict, runs: list[dict]) -> str:
 def reproduction(meta: dict) -> str:
     if manual := meta.get("manual_recipe"):
         return (
-            '<details class="reproduce"><summary>Run this benchmark yourself <span>↓</span></summary>'
-            '<p>Get the source from <a href="https://github.com/greaber/syq-bench">GitHub</a> '
-            "(the repository will be available soon), then follow "
-            f"<code>{esc(manual)}</code>. It includes the machine and filesystem setup, "
-            "pinned build, commands and fixture specs. Supply your own server and empty scratch directories.</p>"
-            '<p><a href="reproduce.html#local-storage">Local storage setup →</a></p></details>'
+            '<p class="repro-note"><a href="https://github.com/greaber/syq-bench/blob/master/'
+            f'{esc(manual)}">Test recipe →</a></p>'
         )
     recipe = meta.get("_recipe")
     if not recipe:
@@ -430,7 +476,7 @@ def reproduction(meta: dict) -> str:
         f'<details class="reproduce" id="reproduce-{esc(meta["id"])}"><summary>Run this '
         f"benchmark yourself <span>↓</span></summary>"
         '<p>Get the source from <a href="https://github.com/greaber/syq-bench">GitHub</a> '
-        "(the repository will be available soon). You need Python 3.13+, uv, flyctl, an OpenSSH client, "
+        "You need Python 3.13+, uv, flyctl, an OpenSSH client, "
         "and your own Fly account. No access to our machines or credentials is needed.</p>"
         '<p><a href="reproduce.html">Setup, credentials &amp; cleanup →</a></p>'
         f'<pre class="spec">cd syq-bench\n./providers/fly/run plan '
@@ -478,20 +524,24 @@ def search_index(pages: list[tuple[str, str, str]]) -> str:
     return f'<script id="site-search-index" type="application/json">{data}</script>'
 
 
-def shell(title: str, body: str, nav: str = "", page: str = "index.html") -> str:
+def shell(title: str, body: str, nav: str = "", page: str = "index.html", *, all_results: bool = False) -> str:
     script = "<script>" + resources.files("syq_bench").joinpath("public.js").read_text() + "</script>"
     script = "<script>" + resources.files("syq_bench").joinpath("sidebar.js").read_text() + "</script>" + script
     script += "<script>" + resources.files("syq_bench").joinpath("controls.js").read_text() + "</script>"
+    links = [("index.html", "Benchmarks")]
+    if all_results:
+        links.append(("all-results.html", "All results"))
+    links.extend([("reproduce.html", "Reproduce a result"), ("method.html", "How we measure")])
     page_links = "".join(
         f'<a class="page-link" href="{href}"'
         + (' aria-current="page"' if page == href else "")
         + f">{label}</a>"
-        + (f'<div class="scenario-links">{nav}</div>' if href == "index.html" and nav else "")
-        for href, label in (
-            ("index.html", "Benchmarks"),
-            ("reproduce.html", "Reproduce a result"),
-            ("method.html", "How we measure"),
+        + (
+            f'<div class="scenario-links">{nav}</div>'
+            if href == ("all-results.html" if page == "all-results.html" else "index.html") and nav
+            else ""
         )
+        for href, label in links
     )
     site_nav = resources.files("syq_bench").joinpath("site-nav.html").read_text()
     site_nav = site_nav.replace('data-site="benchmarks"', 'data-site="benchmarks" aria-current="page"')
@@ -506,8 +556,7 @@ def shell(title: str, body: str, nav: str = "", page: str = "index.html") -> str
         f'{page_links}</nav><div class="aside-links">'
         '<a href="https://greaber.github.io/syq/install.html">Get syq ↗</a></div></div></aside>'
         f'<main id="main">{body}<footer><a href="https://github.com/greaber/syq-bench">Benchmarks on GitHub ↗</a>'
-        '<span>Measurements and methodology are available for inspection.</span><a href="method.html">Method '
-        f"&amp; limitations</a></footer></main></div>{search_index([(page, title, body)])}{script}</body></html>"
+        f"</footer></main></div>{search_index([(page, title, body)])}{script}</body></html>"
     )
 
 
@@ -525,67 +574,129 @@ def scenario_navigation(scenarios: list[dict], prefix: str = "") -> str:
     )
 
 
-def render_public(runs: list[dict], catalog: dict | None = None) -> str:
+def render_public(runs: list[dict], catalog: dict | None = None, *, page: str = "index.html") -> str:
     scenarios = public_scenarios(runs, catalog)
     groups = [
         (m, sorted([r for r in runs if r["spec"]["name"] == m["id"]], key=lambda r: r["started"], reverse=True))
         for m in scenarios
     ]
     nav = scenario_navigation(scenarios)
+    subtitle = (
+        (catalog or {}).get("overview", {}).get("subtitle", "Measured copy performance, with reproducible tests.")
+    )
     body = [
         '<header class="hero"><div><h1 class="landing-title" aria-label="syq benchmarks">'
         '<span class="landing-wordmark">syq</span> '
         '<span class="landing-subtitle">benchmarks</span></h1>'
-        "<p>Measured copy performance, with reproducible tests.</p>"
+        f"<p>{esc(subtitle)}</p>"
         '<nav class="landing-actions" aria-label="Explore benchmarks">'
         '<a class="landing-primary" href="reproduce.html">Reproduce a result</a>'
         '<a href="method.html">How we measure</a></nav></div></header>'
     ]
+    compact = bool(catalog and catalog.get("_overview"))
+    if page == "all-results.html":
+        body = [
+            '<header class="hero"><h1>All benchmark results</h1>'
+            "<p>The full set of comparisons for syq 0.5.2, including other settings and every test run.</p>"
+            '<p><a href="index.html">← Back to the short version</a></p></header>'
+        ]
+    if catalog and not compact:
+        if page != "all-results.html":
+            body.extend(f'<p class="scope-note">{esc(text)}</p>' for text in catalog.get("introduction", []))
+        if catalog.get("limitations"):
+            body.append('<details class="setup"><summary>Where syq can be slower</summary>')
+            body.extend(f"<p>{esc(text)}</p>" for text in catalog["limitations"])
+            body.append("</details>")
     for i, (meta, rs) in enumerate(groups, 1):
-        cloud = meta.get("kind") == "cloud"
-        label = (
-            "Public cloud · recipe included"
-            if cloud and meta.get("_recipe")
-            else "Public cloud · recorded setup"
-            if cloud
-            else "Public rental · manual recipe included"
-            if meta.get("kind") == "rental" and meta.get("manual_recipe")
-            else "Public rental · recorded setup"
-            if meta.get("kind") == "rental"
-            else "Existing hardware · bring your own setup"
-            if meta.get("kind") == "hardware"
-            else "Recorded setup · see run details"
+        label = {"cloud": "Cloud servers", "rental": "Rented server", "hardware": "Existing server"}.get(
+            meta.get("kind"), "See test setup"
+        )
+        label_html = (
+            "" if compact else (f'<div class="scenario-label"><span>{i:02}</span><span>{esc(label)}</span></div>')
         )
         body.append(
-            f'<section class="scenario" id="{esc(meta["id"])}"><div class="scenario-label"><span>{i:02}</span>'
-            f"<span>{esc(label)}</span></div><h2>{esc(meta['title'])}</h2><p "
-            f'class="desc">{esc(meta.get("description", ""))}</p>'
+            f'<section class="scenario" id="{esc(meta["id"])}">{label_html}'
+            f"<h2>{esc(meta['title'])}</h2>"
+            f'<p class="desc">{esc(meta.get("description", ""))}</p>'
         )
         if meta.get("note"):
             body.append(f'<p class="scope-note">{esc(meta["note"])}</p>')
-        body.append(setup_details(meta, rs))
-        body.append(run_html(rs[0], meta, len(rs)))
-        body.append(reproduction(meta))
-        body.append(capacity(rs[0]))
-        for ordinal, run in reversed(list(enumerate(reversed(rs[1:]), 1))):
+        if compact:
+            rows = selected_cases(rs[0], meta)[0]
+            body.append(f'<p class="what">{esc(workload_text(rows[0]))}</p>')
+            body.append(result_line(rows))
+            body.append(
+                bar_chart(
+                    rows, include_controls=meta.get("chart_controls", []), metric=meta.get("chart_metric", "speed")
+                )
+            )
+            body.append(explanation(rows, meta))
+            body.append(
+                f'<p class="fine"><a href="all-results.html#{esc(meta["id"])}">Test details and other results →</a></p>'
+            )
+        else:
+            body.append(setup_details(meta, rs))
+            body.append(run_html(rs[0], meta, len(rs)))
+            # All results shares the manual recipes linked from its persistent reproduction page.
+            if page != "all-results.html" or not meta.get("manual_recipe"):
+                body.append(reproduction(meta))
+            body.append(capacity(rs[0]))
+        history = [] if compact else list(enumerate(reversed(rs[1:]), 1))
+        for ordinal, run in reversed(history):
             body.append(
                 f'<details class="previous"><summary>Earlier run {ordinal} · '
                 f"{esc(run['started'][:10])} — inspect measurements</summary>"
                 f"{run_html(run, meta, ordinal)}{capacity(run)}</details>"
             )
         body.append("</section>")
-    return shell("Benchmarks", "".join(body), nav)
+    return shell(
+        "All results" if page == "all-results.html" else "Benchmarks",
+        "".join(body),
+        nav,
+        page=page,
+        all_results=bool(catalog and catalog.get("overview")),
+    )
 
 
-def method_body() -> str:
-    return resources.files("syq_bench").joinpath("method-body.html").read_text()
+def method_body(*, all_results: bool = False) -> str:
+    body = resources.files("syq_bench").joinpath("method-body.html").read_text()
+    return body if all_results else body.replace('href="all-results.html">All results', 'href="index.html">Results')
+
+
+def overview_catalog(runs: list[dict], catalog: dict) -> dict:
+    choices = catalog["overview"]["comparisons"]
+    if not choices or len({c["id"] for c in choices}) != len(choices):
+        raise ValueError("overview requires distinct scenarios")
+    scenarios = {m["id"]: m for m in public_scenarios(runs, catalog)}
+    selected = []
+    for choice in choices:
+        meta = scenarios.get(choice["id"])
+        if meta is None or choice["workload"] not in meta.get("workload_selection", []):
+            raise ValueError("overview must select an accepted workload")
+        selected.append(
+            {
+                **meta,
+                "workload_selection": [choice["workload"]],
+                "title": choice["title"],
+                "description": choice["description"],
+                "note": choice.get("note", meta.get("note", "")),
+                "chart_controls": choice.get("chart_controls", []),
+                "chart_metric": choice.get("chart_metric", meta.get("chart_metric", "speed")),
+                "tool_labels": {**meta.get("tool_labels", {}), **choice.get("tool_labels", {})},
+            }
+        )
+    return {**catalog, "scenarios": selected, "_overview": True}
 
 
 def render_pages(runs: list[dict], catalog: dict | None = None, reproduce_body: str = "") -> dict[str, str]:
-    nav = scenario_navigation(public_scenarios(runs, catalog), prefix="index.html")
+    has_overview = bool(catalog and catalog.get("overview"))
+    main_catalog = overview_catalog(runs, catalog) if has_overview else catalog
+    nav = scenario_navigation(public_scenarios(runs, main_catalog), prefix="index.html")
     pages = {
-        "index.html": render_public(runs, catalog),
-        "method.html": shell("How we measure", method_body(), nav, page="method.html"),
+        "index.html": render_public(runs, main_catalog),
+        "method.html": shell(
+            "How we measure", method_body(all_results=has_overview), nav, page="method.html", all_results=has_overview
+        ),
         "reproduce.html": shell(
             "Reproduce a benchmark",
             reproduce_body
@@ -593,16 +704,22 @@ def render_pages(runs: list[dict], catalog: dict | None = None, reproduce_body: 
             '<a href="index.html">← Results</a>',
             nav,
             page="reproduce.html",
+            all_results=has_overview,
         ),
     }
 
+    if has_overview:
+        pages["all-results.html"] = render_public(runs, catalog, page="all-results.html")
     index = search_index(
         [
             (
                 name,
-                {"index.html": "Benchmarks", "method.html": "How we measure", "reproduce.html": "Reproduce a result"}[
-                    name
-                ],
+                {
+                    "index.html": "Benchmarks",
+                    "all-results.html": "All results",
+                    "method.html": "How we measure",
+                    "reproduce.html": "Reproduce a result",
+                }[name],
                 page.split('<main id="main">', 1)[1].split("</main>", 1)[0],
             )
             for name, page in pages.items()

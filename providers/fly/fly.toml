@@ -1,0 +1,22 @@
+# Native Fly Launch configuration. The generated app name is supplied with
+# `fly deploy --app`; no user's infrastructure identifier belongs here.
+primary_region = "ams"
+kill_signal = "SIGTERM"
+kill_timeout = "30s"
+
+[build]
+dockerfile = "Dockerfile"
+
+[build.args]
+# Immutable revision behind syq v0.1.8. Change this deliberately when the
+# campaign is meant to measure another build.
+SYQ_REV = "35fd73e7220b3aae4079184b48786c18fd1a07ba"
+
+[processes]
+source = "source"
+destination = "destination"
+
+[[vm]]
+processes = ["source", "destination"]
+size = "performance-2x"
+memory = "4gb"

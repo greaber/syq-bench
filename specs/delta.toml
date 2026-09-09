@@ -1,0 +1,44 @@
+# rsync's home turf: a re-sync where big files changed a little, in place.
+# rsync's rolling-checksum delta sends only the changed blocks. syq reuses
+# matching *fixed-position* blocks from an existing destination, but its
+# blocks are large (default ~4 MiB), so scattered 4 KiB edits dirty nearly
+# every block and most of the file is resent; it has no rolling-checksum
+# delta. Run this over a network path - for local destinations rsync
+# defaults to --whole-file and the delta never engages. Expect rsync to win
+# by roughly the file-size / changed-bytes ratio, bounded by the basis-file
+# read + checksum cost on each end.
+name = "delta"
+description = "in-place block edits in large files over a network: delta transfer vs whole-file resend"
+
+[endpoints]
+source = "/tmp/syq-bench/src"
+destination = "user@host:/tmp/syq-bench/dst"
+
+[[tools]]
+name = "syq"
+kind = "syq"
+args = ["rsync", "-a"]
+
+[[tools]]
+name = "rsync"
+
+[[workloads]]
+# 8 files of 256 MiB; 1 % of files... all files change, ~1 % of blocks each.
+name = "big-edited"
+kind = "small-files"
+files = 8
+bytes = "2GiB"
+changed = 1.0
+mutate = "blocks"
+
+[[workloads]]
+# The delta-hostile control: same shape, whole files rewritten.
+name = "big-rewritten"
+kind = "small-files"
+files = 8
+bytes = "2GiB"
+changed = 1.0
+mutate = "rewrite"
+
+[protocol]
+repeats = 2

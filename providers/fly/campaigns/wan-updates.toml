@@ -1,0 +1,28 @@
+schema = 1
+name = "fly-wan-updates"
+description = "high-RTT block edits and full rewrites; exploratory public counterpart to private updates"
+app_prefix = "syq-bench"
+max_duration_seconds = 1200
+lifecycle = "experiment"
+max_parallel = 1
+exclusive_resources = ["fly-private-route-ams-nrt"]
+run_spec = "../specs/wan-updates.toml"
+fly_config = "../fly-wan-updates.toml"
+
+[[experiments]]
+name = "cross-region-memory"
+network = "cross-region-private-6pn"
+storage = "tmpfs-memory-nondurable"
+source = "/memory/syq-bench/source"
+destination = "/memory/syq-bench/destination"
+source_region = "ams"
+destination_region = "nrt"
+
+[cost]
+# https://fly.io/docs/about/pricing/; conservative regional performance-2x rate.
+# Includes the transient replacement Machine for the entire lifetime cap.
+checked_at = "2026-09-07"
+machine_usd_per_hour = 0.1391
+volume_usd_per_gb_month = 0.15
+other_usd = 0
+exclusions = "remote image-build fees, outbound transfer, taxes, and account-specific discounts or minimums"

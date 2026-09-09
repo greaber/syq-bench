@@ -1,0 +1,26 @@
+schema = 1
+name = "fly-wan-speedup"
+description = "bounded high-RTT test of syq multi-flow speedup over rsync"
+app_prefix = "syq-bench"
+max_duration_seconds = 660
+lifecycle = "experiment"
+max_parallel = 1
+exclusive_resources = ["fly-private-route-ams-nrt"]
+run_spec = "../specs/wan-speedup.toml"
+fly_config = "../fly-wan-speedup.toml"
+
+[[experiments]]
+name = "cross-region-memory"
+network = "cross-region-private-6pn"
+storage = "tmpfs-memory-nondurable"
+source = "/memory/syq-bench/source"
+destination = "/memory/syq-bench/destination"
+source_region = "ams"
+destination_region = "nrt"
+
+[cost]
+checked_at = "2026-09-04"
+machine_usd_per_hour = 0.1391
+volume_usd_per_gb_month = 0.15
+other_usd = 0
+exclusions = "remote image-build fees, outbound transfer, taxes, and account-specific discounts or minimums"

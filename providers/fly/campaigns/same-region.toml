@@ -1,0 +1,30 @@
+schema = 1
+name = "fly-same-region"
+description = "short same-region private-network qualification on an isolated Fly Machine pair"
+app_prefix = "syq-bench"
+max_duration_seconds = 480
+lifecycle = "experiment"
+max_parallel = 1
+run_spec = "../spec.toml"
+fly_config = "../fly.toml"
+
+# This first qualification point keeps storage out of the path. Later campaign
+# points can add independently labelled storage resources and run in parallel.
+[[experiments]]
+name = "memory"
+network = "same-region-private-6pn"
+storage = "tmpfs-memory-nondurable"
+source = "/memory/syq-bench/source"
+destination = "/memory/syq-bench/destination"
+source_region = "ams"
+destination_region = "ams"
+
+[cost]
+# Conservative upper bound among the regional rates shown by Fly for the
+# declared performance-2x/4 GB config. This is reviewable input, not a live
+# quote; `plan` identifies it as an estimate and prints what it excludes.
+checked_at = "2026-09-04"
+machine_usd_per_hour = 0.1391
+volume_usd_per_gb_month = 0.15
+other_usd = 0
+exclusions = "remote image-build fees, outbound transfer, taxes, and account-specific discounts or minimums"

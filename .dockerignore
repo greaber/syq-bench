@@ -1,0 +1,18 @@
+# The Fly remote builder receives only the benchmark package and its pinned
+# image inputs. In particular, never upload local credentials, results,
+# current-plans, worktrees, or Git history as build context.
+*
+!pyproject.toml
+!uv.lock
+!README.md
+!src
+!src/**
+!specs
+!specs/**
+!providers
+!providers/fly
+!providers/fly/Dockerfile
+!providers/fly/node-entrypoint.sh
+!providers/fly/spec.toml
+!providers/fly/specs
+!providers/fly/specs/**

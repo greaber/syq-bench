@@ -1,0 +1,57 @@
+# Push across a long link with emulated packet loss: does QUIC (qcp) recover
+# better than syq's parallel TCP connections or its ssh data path? Run once per
+# loss level (0, 0.1 %, 1 %) with the same seed and compare. Loss is emulated
+# with tc netem on each host's egress, filtered to the peer's address only
+# (scripts/loss-emulation.sh). The harness records both ends' qdiscs and a
+# ping sample in the result (`network`), so the level is auditable; the run
+# name is only a label:
+#
+#   syq-bench run specs/wan-loss.toml -y --set name=wan-loss-1pct
+#
+# qcp is given explicit bandwidth/RTT hints (its defaults describe a 100
+# Mbit/s, 300 ms link); syq receives no hints. Set --tx/--rx and --rtt to the
+# real link. UDP 47700-47710 must be open on the SSH target. qcp runs only the
+# large-file case: with -p, qcp 0.9 serializes directory metadata requests,
+# while dropping -p would weaken its copy semantics. Sizes are small on
+# purpose: at 1 % loss a single TCP stream on a long link crawls.
+name = "wan-loss"
+description = "push over a lossy long link: syq TCP vs ssh data paths, rsync, tuned qcp (large file)"
+
+[endpoints]
+source = "/tmp/syq-bench/src"
+destination = "user@far-host:/tmp/syq-bench/dst"
+ssh = "/tmp/syq-bench/ssh"
+
+[[tools]]
+name = "syq"
+args = ["-a", "--syq-path", "/path/to/remote/syq"]
+
+[[tools]]
+name = "syq-no-tcp"
+kind = "syq"
+args = ["-a", "--no-tcp", "--syq-path", "/path/to/remote/syq"]
+
+[[tools]]
+name = "rsync"
+
+[[tools]]
+name = "qcp-tuned"
+kind = "qcp"
+workloads = ["large-file"]
+args = ["-rpq", "--remote-qcp-binary", "/path/to/remote/qcp", "--remote-port", "47700-47710",
+        "--tx", "125M", "--rx", "125M", "--rtt", "300"]
+
+[[workloads]]
+name = "large-file"
+kind = "large-file"
+bytes = "256MiB"
+
+[[workloads]]
+name = "small-files"
+kind = "small-files"
+files = 1000
+bytes = "4MiB"
+
+[protocol]
+repeats = 2
+seed = 7

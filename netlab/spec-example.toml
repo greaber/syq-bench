@@ -1,0 +1,26 @@
+# Template for a lab run (copy and adjust; pass to: sh netlab/netlab.sh run SPEC OUT).
+# Endpoints and the ssh wrapper are fixed by the lab layout.
+name = "lab-example"
+description = "containerized WAN lab run; impairment set separately via netlab.sh impair"
+
+[endpoints]
+source = "/tmp/syq-bench/src"
+destination = "root@syq-lab-b:/tmp/syq-bench/dst"
+ssh = "/lab/ssh"
+
+[[tools]]
+name = "syq"
+kind = "syq"
+binary = "syq"
+args = ["rsync", "-a", "--syq-path", "/usr/local/bin/syq"]
+
+[[tools]]
+name = "rsync"
+
+[[workloads]]
+name = "large-file"
+kind = "large-file"
+bytes = "512MiB"
+
+[protocol]
+repeats = 2

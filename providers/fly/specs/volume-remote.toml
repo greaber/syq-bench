@@ -1,0 +1,52 @@
+# Same shapes as volume-local.toml, but between two Volume-backed Machines.
+# Remote destination storage is not independently probed by the harness yet;
+# a result records that limitation. iperf measures the network separately.
+name = "fly-volume-remote"
+description = "disk-backed same-region large-file, mixed-tree, and small-file qualification"
+
+[endpoints]
+source = "/volume/syq-bench/source"
+destination = "root@destination.process.PLACEHOLDER.internal:/volume/syq-bench/destination"
+
+[[tools]]
+name = "syq"
+args = ["rsync", "-a", "-vv", "--stats", "--syq-no-bootstrap"]
+debug = true
+
+[[tools]]
+name = "syq-j8"
+kind = "syq"
+args = ["rsync", "-a", "-vv", "--stats", "--syq-no-bootstrap", "--syq-connections", "8"]
+debug = true
+
+[[tools]]
+name = "rsync"
+
+[[tools]]
+name = "tar"
+
+[[workloads]]
+name = "large-file"
+kind = "large-file"
+bytes = "1GiB"
+
+[[workloads]]
+name = "mixed-tree"
+kind = "mixed-tree"
+files = 8000
+bytes = "512MiB"
+
+[[workloads]]
+name = "small-files"
+kind = "small-files"
+files = 16000
+bytes = "64MiB"
+
+[protocol]
+repeats = 1
+cache = "evict"
+durable = true
+verify = true
+probes = true
+tool_timeout = 30
+slow_cutoff = 5

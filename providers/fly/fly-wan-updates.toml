@@ -1,0 +1,19 @@
+# Exact syq revision for the exploratory WAN update comparison.
+primary_region = "ams"
+kill_signal = "SIGTERM"
+kill_timeout = "30s"
+
+[build]
+dockerfile = "Dockerfile"
+
+[build.args]
+SYQ_REV = "aab3dc7e13c7f7abdc580cc3261401aa42771b7c"
+
+[processes]
+source = "source"
+destination = "destination"
+
+[[vm]]
+processes = ["source", "destination"]
+size = "performance-2x"
+memory = "4gb"

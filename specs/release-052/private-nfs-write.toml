@@ -1,0 +1,61 @@
+name = "private-nfs-write"
+description = "Release 0.5.2 comparison; generated incompressible fixture; logical throughput"
+[endpoints]
+source = "/path/to/empty-source-scratch"
+destination = "/path/to/empty-destination-scratch"
+
+[[tools]]
+name = "syq"
+kind = "syq"
+binary = "/path/to/syq"
+args = ["rsync", "-a", "--stats", "--no-progress", "--syq-no-bootstrap"]
+debug = false
+
+[[tools]]
+name = "syq-j32"
+kind = "syq"
+binary = "/path/to/syq"
+args = ["rsync", "-a", "--stats", "--no-progress", "--syq-no-bootstrap", "--syq-connections", "32"]
+debug = false
+
+[[tools]]
+name = "rsync"
+kind = "rsync"
+binary = "/usr/bin/rsync"
+args = ["-a"]
+debug = false
+
+[[tools]]
+name = "cp"
+kind = "cp"
+binary = "/usr/bin/cp"
+args = ["-a"]
+debug = false
+
+[[workloads]]
+name = "large-file"
+kind = "large-file"
+bytes = 8589934592
+files = 1
+
+[[workloads]]
+name = "mixed-tree"
+kind = "mixed-tree"
+bytes = 8589934592
+files = 8000
+
+[[workloads]]
+name = "small-files"
+kind = "small-files"
+bytes = 419430400
+files = 100000
+
+[protocol]
+repeats = 3
+seed = 204330278
+cache = "evict"
+durable = false
+verify = true
+probes = false
+tool_timeout = 120
+slow_cutoff = 0

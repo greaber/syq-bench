@@ -1,0 +1,53 @@
+# Local -> local on one machine: does syq's parallel scan/copy help on this
+# storage? Takes ~15-40 min on NVMe. Sizes are chosen so even a fast tool
+# stays above the harness's 2 s floor on ~3 GB/s storage; scale up further on
+# faster arrays. Copy this file and change [endpoints] to
+# point at the filesystems you care about (e.g. an NFS mount for source).
+name = "local"
+description = "local copy: one big file, a mixed tree, many small files"
+
+[endpoints]
+source = "/tmp/syq-bench/src"
+destination = "/tmp/syq-bench/dst"
+
+[[tools]]
+name = "syq"
+
+[[tools]]
+name = "syq-j8"
+kind = "syq"
+jobs = 8
+
+[[tools]]
+name = "rsync"
+
+[[tools]]
+name = "cp"
+
+[[workloads]]
+name = "large-file"
+kind = "large-file"
+bytes = "8GiB"
+
+[[workloads]]
+name = "mixed-tree"
+kind = "mixed-tree"
+files = 8000
+bytes = "8GiB"
+
+[[workloads]]
+name = "small-files"
+kind = "small-files"
+files = 200000
+bytes = "800MiB"
+
+# To benchmark an existing directory instead (read-only; e.g. files that have
+# sat untouched on NFS for weeks), add a path workload:
+# [[workloads]]
+# name = "cold-nfs"
+# path = "/mnt/nfs/some/old/tree"
+
+[protocol]
+repeats = 3
+cache = "evict"     # evict | warm | drop (drop needs root and hurts shared servers)
+durable = true      # also time until the harness has fsynced everything it wrote

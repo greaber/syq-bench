@@ -1,0 +1,24 @@
+schema = 1
+name = "fly-volume-directory"
+description = "scaled local small-file qualification with repeated copy and post-copy fsync measurements"
+app_prefix = "syq-bench"
+max_duration_seconds = 600
+lifecycle = "experiment"
+max_parallel = 1
+run_spec = "../specs/volume-directory.toml"
+fly_config = "../fly-volume.toml"
+
+[[experiments]]
+name = "local-volume-directory"
+execution = "local"
+network = "none-local-copy"
+storage = "fly-volume-local-nvme-same-volume-128MiBps-tier"
+source = "/volume/syq-bench/source"
+destination = "/volume/syq-bench/destination"
+
+[cost]
+checked_at = "2026-09-05"
+machine_usd_per_hour = 0.5564
+volume_usd_per_gb_month = 0.15
+other_usd = 0
+exclusions = "remote image-build fees, outbound transfer, taxes, and account-specific discounts or minimums"

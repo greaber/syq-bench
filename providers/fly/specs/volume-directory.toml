@@ -1,0 +1,41 @@
+# Larger version of volume-local's small-file shape, keeping bytes/file and
+# directory layout. Rank only copy time; post-copy fsync is a separate
+# troubleshooting diagnostic. This is still qualification, not acceptance.
+name = "fly-volume-directory"
+description = "80000 small files on one Fly Volume, with two interleaved repeats"
+
+[endpoints]
+source = "/volume/syq-bench/source"
+destination = "/volume/syq-bench/destination"
+
+[[tools]]
+name = "syq"
+args = ["rsync", "-a", "-vv", "--stats"]
+debug = true
+
+[[tools]]
+name = "syq-j8"
+kind = "syq"
+args = ["rsync", "-a", "-vv", "--stats", "--syq-connections", "8"]
+debug = true
+
+[[tools]]
+name = "rsync"
+
+[[tools]]
+name = "cp"
+
+[[workloads]]
+name = "small-files"
+kind = "small-files"
+files = 80000
+bytes = "320MiB"
+
+[protocol]
+repeats = 2
+cache = "evict"
+durable = true
+verify = true
+probes = true
+tool_timeout = 30
+slow_cutoff = 5

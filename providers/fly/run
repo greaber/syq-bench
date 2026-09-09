@@ -1,0 +1,32 @@
+#!/bin/sh
+set -eu
+
+root=$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)
+cd "$root"
+
+action=${1:-}
+if [ "$action" = "run" ]; then
+    set -- uv run --group cloud syq-bench-fly "$@"
+else
+    set -- uv run syq-bench-fly "$@"
+fi
+
+if [ "$action" = "plan" ]; then
+    exec "$@"
+fi
+
+if [ -n "${FLY_API_TOKEN:-}" ] && [ -n "${FLY_ORG:-}" ]; then
+    exec "$@"
+fi
+
+if [ -f "$root/.env.infra" ]; then
+    dotenvx_bin=${DOTENVX_BIN:-dotenvx}
+    if ! command -v "$dotenvx_bin" >/dev/null 2>&1; then
+        echo "error: .env.infra exists but dotenvx is not installed (or set DOTENVX_BIN)" >&2
+        exit 2
+    fi
+    exec "$dotenvx_bin" run --redact --quiet -f "$root/.env.infra" -- \
+        "$@"
+fi
+
+exec "$@"

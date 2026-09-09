@@ -1,0 +1,52 @@
+# Scaled specs/local.toml shapes on real storage. Both paths share one Volume,
+# so reads and writes contend for that device; the second Machine is unused.
+# The harness records tool-return time and the following fsync separately.
+name = "fly-volume-local"
+description = "disk-backed local large-file, mixed-tree, and small-file qualification"
+
+[endpoints]
+source = "/volume/syq-bench/source"
+destination = "/volume/syq-bench/destination"
+
+[[tools]]
+name = "syq"
+args = ["rsync", "-a", "-vv", "--stats"]
+debug = true
+
+[[tools]]
+name = "syq-j8"
+kind = "syq"
+args = ["rsync", "-a", "-vv", "--stats", "--syq-connections", "8"]
+debug = true
+
+[[tools]]
+name = "rsync"
+
+[[tools]]
+name = "cp"
+
+[[workloads]]
+name = "large-file"
+kind = "large-file"
+bytes = "1GiB"
+
+[[workloads]]
+name = "mixed-tree"
+kind = "mixed-tree"
+files = 8000
+bytes = "512MiB"
+
+[[workloads]]
+name = "small-files"
+kind = "small-files"
+files = 16000
+bytes = "64MiB"
+
+[protocol]
+repeats = 1
+cache = "evict"
+durable = true
+verify = true
+probes = true
+tool_timeout = 30
+slow_cutoff = 5

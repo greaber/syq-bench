@@ -1,0 +1,44 @@
+# Six independent 64 MiB files preserve useful multi-worker payload work.
+# 384 MiB plus its snapshot / destination temporary copies fits each 1 GiB tmpfs.
+# Existing 512 MiB fresh-copy specs cannot simply gain changed=1: incremental
+# state needs twice the fixture space, plus metadata and free-space headroom.
+name = "fly-wan-updates"
+description = "high-RTT updates with reusable blocks and a full-rewrite control"
+
+[endpoints]
+source = "/memory/syq-bench/source"
+destination = "root@destination.process.PLACEHOLDER.internal:/memory/syq-bench/destination"
+ssh = "ssh -i /root/.ssh/benchmark -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -o ConnectTimeout=10"
+
+[[tools]]
+name = "syq"
+debug = true
+args = ["rsync", "-a", "-vv", "--stats", "--syq-no-bootstrap"]
+
+[[tools]]
+name = "rsync"
+
+[[workloads]]
+name = "big-edited"
+kind = "small-files"
+files = 6
+bytes = "384MiB"
+changed = 1.0
+mutate = "blocks"
+
+[[workloads]]
+name = "big-rewritten"
+kind = "small-files"
+files = 6
+bytes = "384MiB"
+changed = 1.0
+mutate = "rewrite"
+
+[protocol]
+repeats = 2
+cache = "warm"
+durable = false
+verify = true
+probes = false
+tool_timeout = 100
+slow_cutoff = 0

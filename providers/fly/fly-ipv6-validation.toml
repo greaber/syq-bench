@@ -1,0 +1,20 @@
+# Fly configuration for reproducing the first IPv6 data-path validation at an
+# exact unreleased syq revision without changing the released-version campaign.
+primary_region = "ams"
+kill_signal = "SIGTERM"
+kill_timeout = "30s"
+
+[build]
+dockerfile = "Dockerfile"
+
+[build.args]
+SYQ_REV = "445cd5c7be2255fbc97479d2a29f714cf3974ec1"
+
+[processes]
+source = "source"
+destination = "destination"
+
+[[vm]]
+processes = ["source", "destination"]
+size = "performance-2x"
+memory = "4gb"

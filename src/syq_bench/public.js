@@ -32,3 +32,28 @@
   document.fonts.ready.then(schedule);
   schedule();
 })();
+
+// A wide hover/focus target also makes the measurements available by keyboard or tap.
+(() => {
+  const tracks = [...document.querySelectorAll('button.track')];
+  function position(track) {
+    const box = track.getBoundingClientRect();
+    const tip = track.querySelector('.measurements');
+    tip.style.display = 'block';
+    const left = Math.max(16, Math.min(box.left, innerWidth - tip.offsetWidth - 16));
+    track.style.setProperty('--tip-left', `${left - box.left}px`);
+    tip.style.display = '';
+  }
+  for (const track of tracks) {
+    for (const event of ['pointerenter', 'focus', 'click']) {
+      track.addEventListener(event, () => {
+        track.classList.remove('dismissed');
+        position(track);
+      });
+    }
+  }
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape') tracks.forEach(track => track.classList.add('dismissed'));
+  });
+  window.addEventListener('resize', () => tracks.forEach(position));
+})();

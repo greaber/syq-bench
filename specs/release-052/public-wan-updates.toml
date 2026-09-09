@@ -1,0 +1,69 @@
+name = "public-wan-updates"
+description = "Release 0.5.2 comparison; generated incompressible fixture; logical throughput"
+[endpoints]
+source = "/path/to/empty-source-scratch"
+destination = "benchmark-peer:/path/to/empty-destination-scratch"
+ssh = "/usr/bin/ssh"
+
+[[tools]]
+name = "syq"
+kind = "syq"
+binary = "/path/to/syq"
+args = ["rsync", "-a", "--stats", "--no-progress", "--syq-no-bootstrap", "--rsync-path", "/path/to/syq"]
+debug = false
+
+[[tools]]
+name = "syq-ssh"
+kind = "syq"
+binary = "/path/to/syq"
+args = ["rsync", "-a", "--stats", "--no-progress", "--syq-no-bootstrap", "--rsync-path", "/path/to/syq", "--syq-no-tcp"]
+debug = false
+
+[[tools]]
+name = "rsync"
+kind = "rsync"
+binary = "/usr/bin/rsync"
+args = ["-a"]
+debug = false
+
+[[workloads]]
+name = "unchanged"
+kind = "small-files"
+bytes = 2147483648
+files = 8
+changed = 0.0
+mutate = "rewrite"
+
+[[workloads]]
+name = "block-edits"
+kind = "small-files"
+bytes = 2147483648
+files = 8
+changed = 1.0
+mutate = "blocks"
+
+[[workloads]]
+name = "full-rewrite"
+kind = "small-files"
+bytes = 2147483648
+files = 8
+changed = 1.0
+mutate = "rewrite"
+
+[[workloads]]
+name = "append"
+kind = "small-files"
+bytes = 2147483648
+files = 8
+changed = 1.0
+mutate = "append"
+
+[protocol]
+repeats = 3
+seed = 204330278
+cache = "warm"
+durable = false
+verify = true
+probes = false
+tool_timeout = 300
+slow_cutoff = 0

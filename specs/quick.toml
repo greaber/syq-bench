@@ -1,0 +1,31 @@
+# Smoke test: tiny local run, under a minute. Use it to check the harness works
+# on this machine before running a real spec. Numbers from it mean nothing.
+name = "quick"
+description = "local smoke test at tiny scale"
+
+[endpoints]
+source = "/tmp/syq-bench/src"        # scratch: fixtures are generated here
+destination = "/tmp/syq-bench/dst"   # must be empty or absent
+
+[[tools]]
+name = "syq"
+
+[[tools]]
+name = "rsync"
+
+[[tools]]
+name = "cp"
+
+[[workloads]]
+name = "large-file"
+kind = "large-file"
+bytes = "64MiB"
+
+[[workloads]]
+name = "small-files"
+kind = "small-files"
+files = 500
+bytes = "2MiB"
+
+[protocol]
+repeats = 2

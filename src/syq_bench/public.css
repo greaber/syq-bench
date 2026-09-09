@@ -318,3 +318,15 @@ aside{background: var(--bg);}
 .ladder .t .elapsed{display:block;margin-top:4px;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
 
 .notes p code{overflow-wrap:anywhere}
+
+/* The whole chart track opens its measurements, including the thin range line. */
+.ladder button.track{border:0;background:transparent;color:inherit;text-align:left;font:inherit;cursor:help}
+.ladder button.track:focus-visible{outline:2px solid var(--syq);outline-offset:3px}
+.measurements{display:none;visibility:hidden;position:absolute;bottom:100%;left:var(--tip-left,0px);
+  width:min(340px,calc(100vw - 32px));padding:12px 16px;border:1px solid var(--line);border-radius:4px;
+  background:var(--bg);color:var(--ink);box-shadow:0 4px 16px #0002;z-index:30;
+  font:14px/1.5 var(--sans);white-space:normal}
+.measurements>span{display:block;margin:4px 0}
+.measurements>span:first-child{font-weight:600}
+.track:not(.dismissed):hover .measurements,.track:not(.dismissed):focus .measurements{display:block;visibility:visible}
+@media print{.measurements{display:none}}

@@ -1,0 +1,35 @@
+schema = 1
+name = "fly-volume-qualification"
+description = "short local and same-region disk-backed copies; exploratory, not publication acceptance"
+app_prefix = "syq-bench"
+max_duration_seconds = 900
+lifecycle = "experiment"
+max_parallel = 2
+run_spec = "../specs/volume-local.toml"
+fly_config = "../fly-volume.toml"
+
+[[experiments]]
+name = "local-volume"
+execution = "local"
+network = "none-local-copy"
+storage = "fly-volume-local-nvme-same-volume-128MiBps-tier"
+source = "/volume/syq-bench/source"
+destination = "/volume/syq-bench/destination"
+
+[[experiments]]
+name = "same-region-volume"
+execution = "remote"
+network = "same-region-private-6pn"
+storage = "fly-volume-local-nvme-separate-machines-128MiBps-tier"
+source = "/volume/syq-bench/source"
+destination = "/volume/syq-bench/destination"
+run_spec = "../specs/volume-remote.toml"
+
+[cost]
+checked_at = "2026-09-05"
+# Conservative upper regional rate, not a quote for a particular account.
+# https://fly.io/docs/about/pricing/
+machine_usd_per_hour = 0.5564
+volume_usd_per_gb_month = 0.15
+other_usd = 0
+exclusions = "remote image-build fees, outbound transfer, taxes, and account-specific discounts or minimums"

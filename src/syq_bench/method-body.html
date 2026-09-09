@@ -1,61 +1,14 @@
 <header class="hero"><div><h1>How we measure</h1>
-<p>Every chart starts with a described job, an actual run, and measurements you can inspect.</p></div></header>
+<p>We copy generated test files with each tool, measure how long it takes, and check that the copies are correct.</p></div></header>
 <article class="notes">
-<h2>Recorded runs, generated files</h2><p>The published performance results come from actual transfers of generated
-test files, not simulated timings or display placeholders. Speeds and ratios are calculated from the captured times.
-Download each run to inspect its measurements, verification results and setup. Cloud cost estimates are estimates,
-not measured bills.</p>
-<h2 id="time">Time the whole command</h2><p>The clock starts when the copy tool starts and stops when it exits.
-Startup, connection setup and finishing work count. Fixture creation and checksum verification are outside that clock.
-Where enabled, the harness measures a separate post-copy flush; that time appears beside each repeat. A missing flush
-is not a zero-cost durable write. The Fly WAN scenarios use tmpfs and deliberately do not measure persistent storage.</p>
-<h2>Compare one run at a time</h2><p>Tools run in interleaved order against the same fixture. The main charts use the
-latest selected run of each scenario. Older runs remain visible separately. We do not combine unknown remote identities,
-independent allocations, or different builds into a single measurement. A development version string can describe several
-commits; consult the source revision and binary hashes, not just the version label.</p>
-<h2>Read the bars</h2><p>Every chart shows <strong>effective speed</strong>: the reference dataset size divided by mean
-command time. Longer bars are always better. We use the same calculation for a new copy and an update to an existing copy.</p>
-<p>For an update, a tool can reuse unchanged data instead of sending it again. A higher effective speed means it completes
-the same job faster—not that it sends more bytes per second. The reference size is the recorded fixture size before edits,
-including for tests that append data. Neither that size nor the logical changed-byte count measures network traffic.
-Compare tools within the same test; a small edit and a complete copy are different jobs.</p>
-<p>Whiskers show the speeds calculated from the slowest and fastest observed repeats, not a confidence interval.
-One repeat has no whisker. Raw elapsed times remain available under “Inspect all repeats”. Sizes and rates use decimal units: 1 MB = 1,000,000 bytes and
-1 GB = 1,000 MB. Displayed values are rounded; downloads preserve the recorded precision.</p>
-<h2>Read the comparison</h2><p>The quickest valid result is “fastest measured”. A tool within 5%, or within 15% with
-overlapping repeat ranges, is marked comparable. Other labels give a percentage of the fastest effective speed in that
-chart. This is a display heuristic, not a significance test. Under-two-second
-measurements are marked; when all results are that short, we do not rank them. Failed, unverified, aborted, or improperly
-prepared cases receive no performance bar. Their recorded repeats remain available. Default syq is selected explicitly
-by the scenario; tuned variants appear in the controls, not as competitors.</p>
-<h2>Know what was controlled</h2><p>A fresh copy uses an empty harness-owned destination. An incremental run first seeds
-the destination, modifies the source, then times the re-sync. The recipe states the cache policy: warm does not evict
-pages; evict requests eviction of fixture pages only. Metadata and server caches can remain warm. The data records which
-cache preparation actually succeeded. The performance tools themselves and the cloud network remain subject to ambient load.</p>
-<h2>Why the update experiment has a full-rewrite control</h2><p>The small-edit and full-rewrite cases use the same file
-sizes, connection and protocol. The difference is what changes: small pieces or all the contents. This tests whether
-reusing old data helps. A full rewrite resembles a fresh transfer, but the destination already has files to inspect
-and replace; it is not the same procedure as copying into an empty destination. The other remote-copy sections also
-use different file sizes and counts, so their rates are not duplicate measurements of this control.</p>
-<h2>How to read the explanations</h2><p>“The controls show” points to a measured comparison with a syq variant.
-“Likely reason” is an interpretation of the recorded behavior, not an isolated proof of the cause.
-“Not yet explained” means these measurements do not establish the reason. Explanations are tied to the specific
-captures reviewed; a changed result or build needs a new interpretation.</p>
-<h2>Which data path did syq use?</h2><p>Each syq bar names its data path. “Observed” means the saved data-connection
-diagnostics record TCP, SSH, or both; a successful reachability probe alone does not qualify. “Requested” describes
-a command setting, not an observed connection. “Unrecorded” means the saved run cannot establish the actual path;
-the default TCP setting is not proof that SSH fallback did not occur. A partial record means some repeats have
-evidence and others do not. Inspect the repeat table for the individual records.</p>
-<p>“Local copy” means both endpoints are on the computer running syq. Internal receiver communication can still use TCP; this does not imply traffic crosses the physical network.
-An NFS mount still sends storage traffic over the network. syq can use kernel-side copying such as
-<code>copy_file_range</code> where supported, but these runs do not record which local copy optimization was used.</p>
-<p>The update explanation uses <a href="https://download.samba.org/pub/rsync/rsync.1">rsync’s documented delta-transfer
-behavior</a> and the tested syq implementation. It does not claim that actual network bytes were recorded.</p>
-<h2>Reproduce the experiment</h2><p>Reproduction means following the same described procedure with your own resources.
-Different allocations and different days will produce different numbers. The useful question is whether the relative behavior
-and its mechanism persist. Start with the published recipe, then inspect the transport, capacity probes and workload shape
-if your result differs. Do not resize the workload so far that it stops exercising the feature being measured.</p>
-<h2>Know what is missing</h2><p>An older collector sometimes failed to record the binary actually selected at the remote
-end. Affected identities are marked unrecorded; a matching local version does not establish a matching remote build.
-Consult each run’s identity table. The published WAN recipe compares rsync; it has no qcp or tar entry. The public local-storage cases include a manual rental recipe. Private hardware sections remain where the public comparisons do not reproduce their larger benefits or have no matching case. Hardware, build, file size and cache differences prevent treating them as interchangeable measurements.</p>
-<p><a href="index.html">← Back to the benchmarks</a></p></article>
+<h2>What we time</h2>
+<p>Timing covers the whole command, including startup and connection setup. Creating the test files and checking their contents happen outside that time. These tests finish when the tool exits; they do not include a final flush to persistent storage.</p>
+<h2>What the charts show</h2>
+<p>Copy speed is the file size divided by the average time across runs. Longer bars mean faster copies. The unchanged-folder test shows elapsed time instead: shorter bars are better, and no file contents need transferring.</p>
+<p>The thin line spans the fastest and slowest runs. Hover, tap or focus the bar to see each measurement. Speeds use decimal units: 1 MB is 1,000,000 bytes.</p>
+<p>For updates to existing files, speeds use the size of the whole folder. Tools may reuse old contents, so this is a way to compare how quickly they finish the job, rather than a measure of network traffic.</p>
+<h2>Making a fair comparison</h2>
+<p>Each tool gets the same files and starting destination. We repeat the job three times per tool, vary which tool goes first, and verify every copy with checksums. Release charts require every tool to complete all three runs successfully, with each run lasting at least three seconds.</p>
+<p>The setup depends on the test. Local-copy tests use disks; server-to-server tests keep files in memory to focus on the network. Filesystems, caching and hardware can affect the outcome.</p>
+<p>Each comparison on <a href="all-results.html">All results</a> includes its setup, individual runs and downloadable measurements. For instructions, see <a href="reproduce.html">Reproduce a result</a>.</p>
+</article>

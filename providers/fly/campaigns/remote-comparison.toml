@@ -1,0 +1,43 @@
+schema = 1
+name = "fly-remote-comparison"
+description = "short fresh-file and delta comparisons over same- and cross-region Fly private networking"
+app_prefix = "syq-bench"
+max_duration_seconds = 480
+lifecycle = "experiment"
+max_parallel = 2
+exclusive_resources = ["fly-private-route-ams-nrt"]
+run_spec = "../specs/remote-comparison.toml"
+fly_config = "../fly.toml"
+
+# Infrastructure and workload are independent axes. Both experiments use the
+# same operation/file-shape matrix, with path-specific scales, and each gets a
+# private app and Machine pair so ReFrame can measure them concurrently without
+# sharing benchmark Machines.
+[[experiments]]
+name = "same-region-memory"
+network = "same-region-private-6pn"
+storage = "tmpfs-memory-nondurable"
+source = "/memory/syq-bench/source"
+destination = "/memory/syq-bench/destination"
+source_region = "ams"
+destination_region = "ams"
+
+[[experiments]]
+name = "cross-region-memory"
+network = "cross-region-private-6pn"
+storage = "tmpfs-memory-nondurable"
+source = "/memory/syq-bench/source"
+destination = "/memory/syq-bench/destination"
+source_region = "ams"
+destination_region = "nrt"
+run_spec = "../specs/remote-cross-region.toml"
+
+[cost]
+# Conservative upper bound among the regional rates shown by Fly for the
+# declared performance-2x/4 GB config. The estimate charges the transient NRT
+# replacement Machine for the full cap even though it overlaps only briefly.
+checked_at = "2026-09-04"
+machine_usd_per_hour = 0.1391
+volume_usd_per_gb_month = 0.15
+other_usd = 0
+exclusions = "remote image-build fees, outbound transfer, taxes, and account-specific discounts or minimums"
