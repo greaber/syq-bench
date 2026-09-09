@@ -3,7 +3,7 @@
 A spec names endpoints, tools, workloads, and the protocol; the harness derives
 the steps. The parsed spec is stored verbatim (as loaded, plus overrides) in
 every result so a result is reproducible and two results are comparable by
-diffing their specs. See DESIGN.md, "Declarative runs".
+diffing their specs. See BENCHMARKING.md, "Describe the job, then repeat it fairly".
 """
 
 from __future__ import annotations

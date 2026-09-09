@@ -1,7 +1,6 @@
 """Everything that touches a remote host lives here.
 
-v1 decision (see DESIGN.md): the remote
-runs no Python. Every remote operation is a shell command over ssh. If that
+The remote runs no Python. Every remote operation is a shell command over ssh. If that
 gets unwieldy, this module is the seam to replace with a shipped helper.
 """
 

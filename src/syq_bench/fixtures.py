@@ -4,7 +4,7 @@ The *shape* of a fixture (file count, sizes, layout) is a deterministic function
 of the seed, so two runs with the same seed copy identically shaped trees.
 Contents are pseudo-random so compression cannot cheat. Files are written with
 O_DIRECT where the filesystem allows, so generating a fixture does not leave it
-in the page cache (DESIGN.md, "Cache state without drop_caches"); where it does
+in the page cache (BENCHMARKING.md, "Timing and cache state"); where it does
 not (tmpfs), the pages are evicted with posix_fadvise afterwards.
 """
 

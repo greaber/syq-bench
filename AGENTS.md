@@ -58,8 +58,8 @@ a plausible branch name. Before every file edit or write, confirm that
 
 ## Documentation over agent memory
 
-Prefer durable, committed documentation over private memory. Design decisions
-and their rationale go in `DESIGN.md`; guidance every session needs goes here;
+Prefer durable, committed documentation over private memory. Measurement decisions
+and their rationale go in `BENCHMARKING.md`; guidance every session needs goes here;
 plans and handoff notes that change too fast for git go in `current-plans/`
 (gitignored by design; check it before starting work on a topic it covers).
 Measured numbers go in `results/` as data, not in prose. Use memory only for
@@ -68,7 +68,7 @@ what fits none of those.
 When writing any of these, record decisions as current state plus the
 rationale at the time, not as timeless policy. An assumption encoded as a
 requirement can outlive its premise and steer later work in the wrong
-direction. `DESIGN.md` is deliberately opinionated about *what* to measure and
+direction. `BENCHMARKING.md` is deliberately opinionated about *what* to measure and
 neutral about vendors, frameworks, and other choices that have not been made.
 
 ## Branch synchronization and handoff
@@ -111,7 +111,7 @@ brought back into the private workspace to avoid divergent implementations.
 
 ## Working on syq-bench
 
-- `DESIGN.md` records what the tool is for and why; the code is authoritative
+- `BENCHMARKING.md` records what the tool is for and why; the code is authoritative
   for what it does today. Keep the user-facing README focused on built behavior;
   do not document behavior that has not been decided or built.
 - Distinguish explicit requirements from assumptions and design choices. If a
@@ -124,7 +124,7 @@ brought back into the private workspace to avoid divergent implementations.
   `--delete` (or run `rm -rf`) only on a tree it generated itself in this
   run under the scratch destination, must refuse a non-empty destination, must remove only what it created, and must check free space
   before writing. Do not use global `drop_caches` by default: the user's
-  servers are shared; evict only fixture pages (see `DESIGN.md`). Treat user
+  servers are shared; evict only fixture pages (see `BENCHMARKING.md`). Treat user
   `--source` directories and remote hosts as read-only except for the
   designated scratch destination. Exercise the harness against temporary
   directories and, for remote paths, against hosts the user has named for
@@ -145,9 +145,9 @@ brought back into the private workspace to avoid divergent implementations.
   the provider/host, and must print an estimate and a destroy/rollback path
   before doing it.
 
-- **`DESIGN.md` is a living document, not a spec.** It records what was
-  decided and why, as of a date. A pull request that changes a product or
-  design decision recorded there (what is measured, how, the protocol,
+- **`BENCHMARKING.md` is a living document, not a spec.** It records what was
+  decided and why, as of a date. A pull request that changes a measurement or
+  product decision recorded there (what is measured, how, the protocol,
   safety rules, what results contain) edits the statement in that same
   pull request; git keeps the history, so stale text is not preserved, and
   a stale statement is not a requirement to code or review against. A

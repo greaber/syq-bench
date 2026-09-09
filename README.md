@@ -4,7 +4,7 @@ Measures [syq](https://github.com/greaber/syq) against rsync, cp, and friends
 on your own hardware, across syq versions, and on reference machines.
 
 The harness runs local and remote copy comparisons and builds static reports.
-The interface is still evolving. See `DESIGN.md` for the measurement decisions
+The interface is still evolving. See [BENCHMARKING.md](BENCHMARKING.md) for the measurement decisions
 and limitations.
 
 [Published benchmark results](https://greaber.github.io/syq-bench/)
@@ -37,7 +37,7 @@ uv run syq-bench report results/ -o results/index.html
 
 The output is a self-contained file suitable for local viewing or static
 hosting. Results include host and endpoint identities, so do not publish it
-until its inputs are explicitly safe to make public; see `DESIGN.md`.
+until its inputs are explicitly safe to make public; see [BENCHMARKING.md](BENCHMARKING.md).
 
 The public comparison layout is also available for your own results:
 

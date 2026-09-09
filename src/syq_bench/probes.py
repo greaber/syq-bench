@@ -1,6 +1,6 @@
 """Cheap environment probes: what could bound a transfer on this setup.
 
-v1 measures local storage only (DESIGN.md, "What limits transfer speed"):
+v1 measures local storage only (BENCHMARKING.md, "Interpreting results"):
 sequential write and read through the page cache bypassed with O_DIRECT, and a
 create/stat/unlink loop for metadata latency. Each probe is a few seconds and
 touches only the harness's scratch directory. Network and remote probes come
