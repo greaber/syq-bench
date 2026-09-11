@@ -3,16 +3,18 @@
 .comparison-note{border-left:3px solid #be8835;padding:.4rem 1rem}
 main pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px;line-height:1.7}main pre code{font-size:inherit}main details{margin:1rem 0}main summary{cursor:pointer}
 .comparison-links{display:flex;flex-wrap:wrap;gap:1rem}
-.copy-result{padding:1.2rem 0;border-top:1px solid #8885}.copy-result h4{margin:0}
-.copy-settings{font-size:.85rem;margin:.3rem 0}.copy-speed{display:flex;gap:1rem;align-items:baseline;flex-wrap:wrap}
-.copy-speed strong{font-size:1.35rem;font-variant-numeric:tabular-nums}.copy-speed span{font-size:.85rem}
-.copy-track{position:relative;height:24px;background:#8881;margin:.5rem 0}
+.copy-chart{margin:1rem 0}.copy-chart-row{display:grid;grid-template-columns:minmax(180px,1.2fr) minmax(100px,2fr) 145px;gap:1rem;align-items:center;padding:.35rem 0}
+.copy-label{font-size:15px}.copy-label small{display:block;font-size:12px;line-height:1.4;overflow-wrap:anywhere}
+.copy-speed strong{font-size:18px;font-variant-numeric:tabular-nums}.copy-speed small{display:block;font-size:12px}
+.copy-track{position:relative;height:24px;background:#8881}
 .copy-bar{position:absolute;height:12px;top:6px;background:#808892;border-radius:2px}
 .copy-bar.syq{background:var(--syq,#0875cd)}
 .copy-range{position:absolute;height:4px;top:10px;background:var(--fg,#333);border-left:2px solid;border-right:2px solid}
-.copy-pending{font-size:.8rem;margin:.3rem 0}.copy-command{margin:.75rem 0;padding:12px;background:#8881}
-.copy-preparation{border-left:3px solid #8885;padding-left:1rem;margin:1.5rem 0}
-.copy-preparation p{font-size:.9rem}.copy-result details{font-size:.85rem}
+.copy-command-row{display:grid;grid-template-columns:1.5rem minmax(0,1fr);gap:.5rem;align-items:baseline}
+.copy-command-row>b{font-size:13px}.copy-command{margin:.15rem 0;font-size:13px;line-height:1.6}
+.copy-commands{padding:.6rem;background:#8881}.copy-data,.comparison-note{font-size:15px}
+.comparison-case{margin:1.5rem 0}.comparison-case>p{margin:.5rem 0}
+@media(max-width:700px){.copy-chart-row{grid-template-columns:minmax(0,1fr) 110px;gap:.2rem .6rem;padding:.5rem 0}.copy-label{grid-column:1/-1}.copy-speed strong{font-size:16px}.copy-chart-row .copy-track{min-width:0}.copy-label small{display:inline;margin-left:.5rem}}
 </style>
 <header class="hero"><h1>syq vs rclone</h1>
 <p>Presentation preview · screening data pending longer, three-run tests</p>
@@ -21,26 +23,14 @@ Each result puts speed, elapsed time, the exact copy command and data preparatio
 <p class="comparison-links"><a href="#results">See the comparisons</a>
 <a href="#manual">Run without the harness</a>
 <a href="data/rclone-exploratory.json" download>Download screening data (JSON)</a></p></header>
-<section id="reading"><h2>How to read the results</h2>
-<p><strong>Speeds are dataset bytes divided by mean command time</strong>, using decimal MB/s and GB/s,
-just like the main benchmark page. Seconds remain visible. The thin line shows the observed speed range
-when multiple runs exist; individual times and speeds are directly below each command.
-This is effective copy throughput, including startup and native checksum work—not a measurement of wire speed
-or durable storage bandwidth.</p>
-<p><strong>These are old screening measurements used to preview the layout.</strong>
-They have not been replaced by the longer campaign yet. The publication campaign will use three successful,
-verified runs per tool and setting, with rotated order. We will calibrate workload size so the fastest tool
-runs for at least 10 seconds as a starting target; WAN payload work must also clearly outweigh measured startup.
-A duration threshold alone cannot prove that overhead is negligible.</p>
-<p>Short or incomplete cases are marked beside the bars. Existing timings remain inspectable; they are not
-relabelled as results of larger datasets. The final comparisons need new measurements and a review of cache,
-metadata, authentication and rail controls before publication.</p>
-<p><strong>“Local filesystem” includes mounted NFS.</strong> Both programs access normal paths; the operating system’s
-NFS client talks to the NFS server. No SFTP or WebDAV service is involved in those tests.
-For server-to-server copies we tested rclone’s SFTP and HTTPS/WebDAV backends separately.
-See <a href="https://rclone.org/local/">rclone’s local backend documentation</a>.</p></section>
+<section id="reading">
+<p>Bars share a scale within each test. Speed = dataset bytes ÷ mean elapsed time; the thin line shows the run range.
+Commands A, B, C… below each chart match its rows. SOURCE and DESTINATION are fresh scratch paths; server and key names are placeholders.</p>
+<p><strong>Screening data only:</strong> longer workloads and three verified runs per setting are still pending.
+“Local filesystem” includes mounted NFS: the operating system handles NFS access, without SFTP or WebDAV.</p>
+</section>
 <section id="results"><h2>Copy speeds, commands and datasets</h2><!-- RESULTS --></section>
-<section id="manual"><h2>Try a copy without the benchmark harness</h2>
+<section id="manual"><details><summary>Optional: reproduce a workload without the harness</summary>
 <p>The following is an inspectable Linux recipe for a filesystem copy, including mounted NFS.
 Use Python 3.9+, Bash, GNU time and coreutils, plus the listed syq/rclone versions.
 Download <a href="make-files.py">make-files.py</a> next to your shell session.
@@ -129,7 +119,7 @@ The client URL is HTTPS, with <code>--webdav-vendor rclone --ca-cert CA_CERT</co
 Start a listener only on your authorized server and scratch root, and stop it when finished.
 Check free space and perform content/metadata verification on the receiving host outside the timed client command.
 These endpoint steps depend on your server; the local recipe alone is not a complete network reproduction.</p>
-</section>
+</details></section>
 <section id="settings"><h2>Settings and server setup</h2>
 <p>Every rclone command used <code>copy --config /dev/null --create-empty-src-dirs</code>.
 Filesystem copies added <code>--metadata</code>. Network copies did not request archive-equivalent metadata:

@@ -101,17 +101,19 @@ def results_table(rows: list[dict]) -> str:
         groups[row["tool"]].append(row)
     measured = {name: measurements(group) for name, group in groups.items()}
     maximum = max((m[3] for m in measured.values() if m), default=1) * 1.02
-    body = ['<div class="copy-results">']
-    for name, group in groups.items():
-        row = group[0]
-        values = measured[name]
-        body.append(f'<article class="copy-result"><h4>{escape(backend(row))}</h4>')
-        body.append(f'<p class="copy-settings">{escape(settings(row))}</p>')
+    body = ['<div class="copy-chart" aria-label="Copy speeds on a shared scale">']
+    commands, details = [], []
+    for index, (name, group) in enumerate(groups.items()):
+        row, values = group[0], measured[name]
+        letter = chr(ord("A") + index)
+        label = f"{letter}. {backend(row)}"
+        body.append(
+            f'<div class="copy-chart-row"><div class="copy-label"><b>{escape(label)}</b>'
+            f"<small>{escape(settings(row))}</small></div>"
+        )
         if values:
             speed, seconds, low, high = values
             body.append(
-                f'<div class="copy-speed"><strong>{rate(speed)}</strong>'
-                f"<span>{seconds:.3f} s mean · {len(group)} run(s)</span></div>"
                 f'<div class="copy-track" role="img" aria-label="{escape(rate(speed))}; '
                 f'observed range {escape(rate(low))} to {escape(rate(high))}">'
                 f'<span class="copy-bar {"syq" if row["tool"] == "syq" else ""}" '
@@ -122,50 +124,31 @@ def results_table(rows: list[dict]) -> str:
                     f'<span class="copy-range" style="left:{low / maximum * 100:.3f}%;'
                     f'width:{(high - low) / maximum * 100:.3f}%"></span>'
                 )
-            body.append("</div>")
+            body.append(
+                f'</div><div class="copy-speed"><strong>{rate(speed)}</strong>'
+                f"<small>{seconds:.3f} s mean · {len(group)} run(s)</small></div>"
+            )
         else:
-            body.append("<p><strong>No verified copy speed</strong></p>")
-        body.append(f'<p class="copy-pending">Screening only: {escape(replacement_note(group))}.</p>')
-        # Commands are visible beside each result, not behind the methodology link.
-        body.append(f'<pre class="copy-command"><code>{escape(shlex.join(row["argv"]))}</code></pre>')
-        body.append("<details><summary>Individual speeds, times and checks</summary><ul>")
+            body.append('<div class="copy-track"></div><div class="copy-speed">No verified speed</div>')
+        body.append("</div>")
+        commands.append(
+            f'<div class="copy-command-row"><b>{letter}</b>'
+            f'<pre class="copy-command"><code>{escape(shlex.join(row["argv"]))}</code></pre></div>'
+        )
+        details.append(f"<h4>{escape(label)}</h4><p>{escape(replacement_note(group))}.</p><ul>")
         for r in group:
             item = measurements([r])
             speed_text = rate(item[0]) + " · " if item else ""
-            body.append(f"<li>Run {r['repeat'] + 1}: {speed_text}{escape(timing(r))}. {escape(status(r))}.</li>")
-        metadata = row["metadata"]
-        scope = metadata["scope"] if metadata else "unrecorded"
-        body.append(
+            details.append(f"<li>Run {r['repeat'] + 1}: {speed_text}{escape(timing(r))}. {escape(status(r))}.</li>")
+        scope = row["metadata"]["scope"] if row["metadata"] else "unrecorded"
+        details.append(
             f"</ul><p>Metadata checked: {escape(scope)}. "
             f"Requested cache preparation: {escape(row['protocol']['cache'])}. "
-            f"Final durability flush: {'yes' if row['protocol']['durable'] else 'no'}.</p></details></article>"
+            f"Final durability flush: {'yes' if row['protocol']['durable'] else 'no'}.</p>"
         )
-    body.append("</div>")
+    body.append('</div><div class="copy-commands">' + "".join(commands) + "</div>")
+    body.append("<details><summary>Individual runs and verification</summary>" + "".join(details) + "</details>")
     return "".join(body)
-
-
-def preparation(case: dict, rows: list[dict]) -> str:
-    row = rows[0]
-    recipe = case["preparation"]
-    command = (
-        f'python3 make-files.py "$SRC" --files {recipe["files"]} '
-        f"--size {recipe['size']} --directories {recipe['directories']} --seed {row['seed']}"
-    )
-    return (
-        '<div class="copy-preparation"><h4>Prepare the data</h4>'
-        f"<p>{escape(recipe['original'])}</p>"
-        "<p>Simple equivalent workload for the rerun (not the generator used for these old timings):</p>"
-        f"<pre><code>{escape(command)}</code></pre>"
-        '<p><a href="make-files.py" download>Download make-files.py</a> · '
-        '<a href="#manual">Run and check a copy without the harness</a>. '
-        "SRC is a new directory under the source filesystem described above. "
-        "These counts describe the old screening workload; increase them during calibration "
-        "before the three-run campaign.</p>"
-        f"<p>Recorded payload: {row['bytes']:,} bytes; {row['files']:,} files. "
-        f"Client: {row['host']['cpus']} logical CPUs, "
-        f"{escape(row['host']['machine'])}, kernel {escape(row['host']['kernel'])}. "
-        "Executable hashes and full protocol fields are in the JSON download.</p></div>"
-    )
 
 
 def build(root: Path) -> Path:
@@ -180,7 +163,9 @@ def build(root: Path) -> Path:
             f'<section class="comparison-case" id="{escape(case["id"])}">'
             f"<h3>{escape(case['title'])}</h3><p>{escape(case['workload'])}</p>"
             f'<p class="comparison-note">{escape(case["caveat"])}</p>'
-            f"{preparation(case, rows)}{results_table(rows)}</section>"
+            '<p class="copy-data">Generated pseudorandom contents, copied into a fresh destination. '
+            "Content checks ran after timing; no final durability flush.</p>"
+            f"{results_table(rows)}</section>"
         )
     selected = {c["id"] for c in data["featured"]}
     appendix = []

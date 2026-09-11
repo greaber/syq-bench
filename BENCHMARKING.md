@@ -134,7 +134,9 @@ logs and speculative roadmap items do not belong in this document.
 The separate rclone page is a presentation preview pending replacement runs.
 Speeds use the same dataset-bytes / mean-command-time calculation and decimal
 units as the main page, with seconds and observed repeat ranges also visible.
-Each result shows the exact command; dataset preparation sits beside the case.
+Keep bars adjacent on a shared scale within each case, followed by a compact
+block of exact commands. Describe file sizes, counts, placement and preparation
+in plain language; optional reproduction instructions stay outside the main flow.
 A small standalone generator and shell recipe expose the proposed replacement
 procedure without requiring the full harness. They did not produce the old data.
 
