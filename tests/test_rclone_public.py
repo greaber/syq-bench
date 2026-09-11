@@ -153,3 +153,18 @@ def test_page_only_renders_selected_comparisons_with_sidebar_links(tmp_path):
     assert page.count('class="comparison-case"') == len(data["featured"])
     for text in ('id="appendix"', 'href="#manual"', "needs three runs", "publication controls"):
         assert text not in page
+
+
+def test_multi_rail_notice_is_scoped_to_three_fast_fabric_cases(tmp_path):
+    import shutil
+
+    from syq_bench.rclone_public import build
+
+    shutil.copytree(ROOT / "site", tmp_path / "site")
+    page = build(tmp_path).read_text()
+    start, end = page.index('<section id="rails">'), page.index('<section id="nfs">')
+    scoped = page[start:end]
+    assert scoped.count('class="comparison-case"') == 3
+    assert "<strong>Only these three comparisons" in scoped
+    assert 'id="lan-keyed-small"' not in scoped
+    assert page.count("<strong>Only these three comparisons") == 1

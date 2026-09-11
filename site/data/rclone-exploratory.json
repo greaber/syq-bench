@@ -25,7 +25,7 @@
       "id": "wan-repeat-one8g",
       "title": "WAN: one 8 GiB file",
       "workload": "One 8 GiB regular file. Flat directory, warm tmpfs source \u2192 remote XFS RAID; approximately 250\u2013265 ms RTT. Sender NIC: 1 Gb/s (125 MB/s nominal ceiling).",
-      "caveat": "Three verified copies per setting. Whole-command time includes startup and native checksumming. HTTPS WebDAV was the faster rclone backend tested for a single file.",
+      "caveat": "Three verified runs per setting. HTTPS WebDAV was the faster single-file rclone backend tested.",
       "preparation": {
         "files": 1,
         "size": 8589934592,
@@ -37,7 +37,7 @@
       "id": "wan-repeat-many32g",
       "title": "WAN: 32 \u00d7 1 GiB files",
       "workload": "32 \u00d7 1 GiB regular files. Flat directory, warm tmpfs source \u2192 remote XFS RAID; approximately 250\u2013265 ms RTT. Sender NIC: 1 Gb/s (125 MB/s nominal ceiling).",
-      "caveat": "Three verified copies per setting in rotated order. Whole-command time includes startup and native checksumming. syq’s automatic tuning cache changed starting worker counts between repeats.",
+      "caveat": "Three verified runs per setting. syq\u2019s automatic tuning cache changed worker counts between runs.",
       "preparation": {
         "files": 32,
         "size": 1073741824,
@@ -49,7 +49,7 @@
       "id": "main-write",
       "title": "Small files \u2192 mounted NFS",
       "workload": "40,000 \u00d7 4 KiB files in 256 directories. Local /tmp source \u2192 mounted NFSv4.2 destination.",
-      "caveat": "Three runs per setting. NFS server cache and other clients were uncontrolled; timings varied substantially.",
+      "caveat": "Three runs per setting. NFS server caches and other clients were uncontrolled.",
       "preparation": {
         "files": 40000,
         "size": 4096,
@@ -61,7 +61,7 @@
       "id": "calibration-read",
       "title": "Small files \u2190 mounted NFS",
       "workload": "10,000 \u00d7 4 KiB files in 256 directories. Mounted NFSv4.2 source \u2192 local /tmp destination.",
-      "caveat": "Initial calibration. Subsecond results are too short to establish a dependable ranking.",
+      "caveat": "Subsecond runs: too short for a dependable ranking.",
       "preparation": {
         "files": 10000,
         "size": 4096,
@@ -73,7 +73,7 @@
       "id": "raid-explore-local-small",
       "title": "Small files on local RAID",
       "workload": "40,000 \u00d7 4 KiB files in 256 directories. Copy between directories on the same XFS RAID filesystem.",
-      "caveat": "Single runs; metadata caches were warm. This is a filesystem copy, with no SFTP or WebDAV.",
+      "caveat": "Single runs; warm metadata caches.",
       "preparation": {
         "files": 40000,
         "size": 4096,
@@ -85,7 +85,7 @@
       "id": "raid-explore-nfs-large-write",
       "title": "Large file \u2192 mounted NFS",
       "workload": "One 2 GiB file. XFS RAID source \u2192 mounted NFSv4.2 destination.",
-      "caveat": "Single runs. Completion does not include a final durability flush. NFS server cache is uncontrolled.",
+      "caveat": "Single runs; uncontrolled NFS server cache.",
       "preparation": {
         "files": 1,
         "size": 2147483648,
@@ -97,7 +97,7 @@
       "id": "raid-explore-nfs-large-read",
       "title": "Large file \u2190 mounted NFS",
       "workload": "One 2 GiB file. Mounted NFSv4.2 source \u2192 XFS RAID destination.",
-      "caveat": "Single runs. Advisory fixture eviction does not establish cold NFS server storage.",
+      "caveat": "Single runs; file eviction does not establish a cold NFS server cache.",
       "preparation": {
         "files": 1,
         "size": 2147483648,
@@ -109,7 +109,7 @@
       "id": "raid-explore-local-large",
       "title": "Large file on the same filesystem",
       "workload": "One 2 GiB file. Source and destination on the same XFS RAID filesystem.",
-      "caveat": "Kernel-assisted copying can avoid moving all payload bytes through user space and may share extents. Do not interpret this as physical disk bandwidth.",
+      "caveat": "Kernel-assisted copying may share extents; these rates are not physical disk bandwidth.",
       "preparation": {
         "files": 1,
         "size": 2147483648,
@@ -121,7 +121,7 @@
       "id": "lan-keyed-small",
       "title": "Small files between nearby servers",
       "workload": "1,000 \u00d7 4 KiB files. XFS RAID \u2192 XFS RAID, approximately 0.2 ms RTT; receiver has a 2 \u00d7 10 Gb/s bond.",
-      "caveat": "Local SSH key, with source-restricted authorization. WebDAV failed endpoint validation before the copy; it has no comparable time in this run.",
+      "caveat": "Both tools use the same two-port bond. A separate SFTP check confirmed rclone can use both ports, with uneven traffic distribution. WebDAV failed endpoint validation before copying.",
       "preparation": {
         "files": 1000,
         "size": 4096,
@@ -133,7 +133,7 @@
       "id": "fast-corrected-8g",
       "title": "Fast fabric: one large file",
       "workload": "One 8 GiB file, tmpfs \u2192 tmpfs between servers in the same data center.",
-      "caveat": "Busy receiver; short transfers. syq used eight rail addresses; rclone targeted one 400 Gb/s rail. Timing includes an empty fixture probe. These results do not establish peak throughput.",
+      "caveat": "Timing includes an empty fixture probe.",
       "preparation": {
         "files": 1,
         "size": 8589934592,
@@ -145,7 +145,7 @@
       "id": "fast-many-8g",
       "title": "Fast fabric: eight large files",
       "workload": "Eight \u00d7 1 GiB files, tmpfs \u2192 tmpfs on the same fast-fabric hosts.",
-      "caveat": "Busy receiver; short transfers. Eight syq rail addresses versus one rclone 400 Gb/s rail. Timing includes an empty fixture probe. These results do not isolate the effect of rail count.",
+      "caveat": "Timing includes an empty fixture probe.",
       "preparation": {
         "files": 8,
         "size": 1073741824,
@@ -157,7 +157,7 @@
       "id": "fast-32files-8g",
       "title": "Fast fabric: 32 large files",
       "workload": "32 \u00d7 256 MiB files, tmpfs \u2192 tmpfs on the same fast-fabric hosts.",
-      "caveat": "Busy receiver; short transfers. Eight syq rail addresses versus one rclone 400 Gb/s rail. Timing includes an empty fixture probe. These results do not isolate the effect of rail count.",
+      "caveat": "Timing includes an empty fixture probe.",
       "preparation": {
         "files": 32,
         "size": 268435456,
@@ -9594,6 +9594,74 @@
       "source_manifest_sha256": "efb1c5c66be4ce95bf6de0c7b5e02151f7ef4f472c0318411920c47f5b6cfb01",
       "stage": "three-repeat series",
       "payload_started_by_s": 11.256967306137085
+    }
+  ],
+  "network_checks": [
+    {
+      "id": "bond-sftp-port-distribution",
+      "purpose": "Port-use diagnostic, not a throughput benchmark or a reconstruction of the earlier run.",
+      "tool": "rclone 1.75.1",
+      "backend": "SFTP",
+      "files": 16,
+      "file_bytes": 67108864,
+      "bytes": 1073741824,
+      "transfers": 16,
+      "bwlimit": "128M",
+      "exit_code": 0,
+      "content_independently_verified": false,
+      "bond_mode": "802.3ad",
+      "transmit_hash_policy": "layer3+4",
+      "port_speed_mbps": 10000,
+      "ports_per_host": 2,
+      "counter_interval_s": 27.51711368560791,
+      "baseline_interval_s": 24.33775281906128,
+      "counter_scope": "Physical-port byte counters include preparation, authentication and unrelated traffic. Receiver had substantial background traffic; sender idle traffic was only kilobytes. No maximum-throughput claim.",
+      "counters": {
+        "sender": {
+          "port_1": {
+            "copy_interval_delta": {
+              "rx_bytes": 11050583,
+              "tx_bytes": 987754216
+            },
+            "baseline_delta": {
+              "rx_bytes": 9151,
+              "tx_bytes": 10019
+            }
+          },
+          "port_2": {
+            "copy_interval_delta": {
+              "rx_bytes": 1591250,
+              "tx_bytes": 141208452
+            },
+            "baseline_delta": {
+              "rx_bytes": 14425,
+              "tx_bytes": 16189
+            }
+          }
+        },
+        "receiver": {
+          "port_1": {
+            "copy_interval_delta": {
+              "rx_bytes": 987805940,
+              "tx_bytes": 423693306
+            },
+            "baseline_delta": {
+              "rx_bytes": 55770,
+              "tx_bytes": 244122031
+            }
+          },
+          "port_2": {
+            "copy_interval_delta": {
+              "rx_bytes": 552064230,
+              "tx_bytes": 1644778
+            },
+            "baseline_delta": {
+              "rx_bytes": 243186234,
+              "tx_bytes": 40666
+            }
+          }
+        }
+      }
     }
   ]
 }

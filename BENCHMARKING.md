@@ -141,7 +141,12 @@ block of exact commands. Describe file sizes, counts, placement and preparation
 in plain language; optional reproduction instructions stay outside the main flow.
 A linked standalone generator provides an optional procedure; it did not produce
 the captured data. The page groups selected comparisons by WAN, LAN, NFS and
-local filesystem, with each comparison linked in the sidebar. Unreported trials
+local filesystem, with each comparison linked in the sidebar. The three fast-fabric
+cases have their own multi-rail section, with one bold notice of unequal rail use.
+Other sections do not inherit that limitation. A separate rate-capped SFTP
+diagnostic confirmed that rclone can use both bonded ports, with uneven traffic
+distribution. Its counters and idle baseline are retained as diagnostic data,
+not pooled into the timing results or treated as maximum-throughput evidence. Unreported trials
 remain in the raw data but are not rendered as an appendix or a details page.
 Show nominal sender ceilings only from consistent recorded NIC ratings, without
 treating per-rail ratings as measured end-to-end throughput.

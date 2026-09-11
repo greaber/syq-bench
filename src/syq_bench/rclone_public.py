@@ -166,6 +166,9 @@ def results_table(rows: list[dict]) -> str:
 def build(root: Path) -> Path:
     data = json.loads((root / "site/data/rclone-exploratory.json").read_text())
     body = (root / "site/rclone-body.html").read_text()
+    before, remainder = body.split("<!-- MULTIRAIL -->")
+    rail_intro, after = remainder.split("<!-- /MULTIRAIL -->")
+    body = before + after
     featured = []
     for case in data["featured"]:
         rows = [r for r in data["rows"] if r["scenario"] == case["id"]]
@@ -179,7 +182,8 @@ def build(root: Path) -> Path:
         )
     sections = [
         ("wan", "WAN", ["wan-repeat-one8g", "wan-repeat-many32g"]),
-        ("lan", "LAN", ["lan-keyed-small", "fast-corrected-8g", "fast-many-8g", "fast-32files-8g"]),
+        ("lan", "LAN", ["lan-keyed-small"]),
+        ("rails", "Multi-rail LAN", ["fast-corrected-8g", "fast-many-8g", "fast-32files-8g"]),
         (
             "nfs",
             "Mounted NFS",
@@ -194,11 +198,8 @@ def build(root: Path) -> Path:
     content, links = [], []
     for anchor, label, cases in sections:
         content.append(f'<section id="{anchor}"><h2>{label}</h2>')
-        if anchor == "lan":
-            content.append(
-                "<p>The fast-fabric comparisons use eight rail addresses for syq and one for rclone. "
-                '<a href="#rails">Multi-rail capabilities and test limits</a>.</p>'
-            )
+        if anchor == "rails":
+            content.append(rail_intro)
         links.append(f'<a class="nav-item comparison-nav-group" href="#{anchor}">{label}</a>')
         for case in cases:
             content.append(rendered[case])
@@ -210,7 +211,6 @@ def build(root: Path) -> Path:
         for anchor, label in [
             ("method", "Method"),
             ("settings", "Transfer settings"),
-            ("rails", "Multi-rail networking"),
         ]
     )
     target = root / "site/rclone.html"

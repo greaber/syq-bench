@@ -28,41 +28,41 @@ main pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px;line-height:
 <a href="#wan-repeat-many32g">WAN: multiple files</a>
 <a href="data/rclone-exploratory.json" download>Measurement data (JSON)</a></p></header>
 <section id="reading">
-<p>Speed is dataset bytes divided by mean elapsed time. Bars share a scale within each test;
-the thin line shows the range across runs. Where the sender’s link speed is recorded, the chart
-also shows its nominal ceiling, before protocol overhead.</p>
-<p>The WAN comparisons have three verified copies per setting. The other comparisons are exploratory;
-each shows its run count and test conditions. Commands below each chart use placeholders for paths,
-servers and keys. “Local filesystem” includes mounted NFS, which requires no SFTP or WebDAV service.</p>
+<p>Bars show dataset bytes / mean elapsed time; thin lines show the run range.
+Dashed lines mark nominal link ceilings. WAN results use three copies per setting;
+other results are exploratory. Commands use placeholder paths and servers.</p>
 </section>
 <div id="results"><!-- RESULTS --></div>
-<section id="method"><h2>How the copies were measured</h2>
-<p>Each tool copied generated pseudorandom files into an empty destination. Elapsed time includes
-connection setup and the tool’s own checksumming, but excludes dataset preparation, independent
-verification and cleanup. Completion does not include a final durability flush.</p>
-<p>WAN sources stayed in memory (tmpfs); destinations were on XFS RAID. File contents, sizes and
-whole-second modification times were checked after every copy. Filesystem comparisons additionally
-checked types, permissions, ownership and directory times. These tests do not measure interrupted-copy
-recovery or full archive preservation.</p>
-<p>WAN tool order rotated between runs. One WebDAV run overlapped unrelated local work and was replaced.
-syq used automatic worker selection with its existing tuning cache, which changed worker counts between
-runs. NFS server caches and other clients were uncontrolled. The fast-fabric receiver was busy;
-its short transfers do not establish peak throughput.</p>
-<p>Datasets are described beside each chart. The optional <a href="make-files.py">dataset generator</a>
-can recreate their file counts, sizes and layout; it was not the harness used to collect these measurements.
-The JSON includes individual timings, verification scope, commands and tool hashes.
-The experimental measurement harness has not been released publicly.</p>
+<!-- MULTIRAIL -->
+<p><strong>Only these three comparisons use eight network paths for syq versus one for rclone.
+This is not a comparison with equal network resources.</strong></p>
+<p>A rail is an independent network path, usually a NIC port, not necessarily a separate card.
+Each is rated at 400 Gb/s (50 GB/s). The receiver was busy and transfers were short,
+so these results neither establish peak speed nor isolate the effect of rail count.</p>
+<p>The tested <a href="https://github.com/rclone/rclone/blob/v1.75.1/backend/sftp/sftp.go#L2617">SFTP</a>
+and <a href="https://github.com/rclone/rclone/blob/v1.75.1/backend/webdav/webdav.go#L1486">WebDAV</a>
+uploads do not split one file across rail addresses. More <code>--transfers</code> alone does not change that.
+Separate rclone processes could distribute multiple files across rails; this was not tested.</p>
+<!-- /MULTIRAIL -->
+<section id="method"><h2>Method</h2>
+<p>Generated pseudorandom files were copied into empty destinations. Timing includes connection
+setup and native checksumming; preparation, independent verification and cleanup are excluded.
+No final durability flush was requested. Mounted NFS uses rclone’s local-filesystem backend,
+with no SFTP or WebDAV server.</p>
+<p>Contents and stated metadata were checked after each copy; verification scope appears under each chart.
+WAN tool order rotated. One WebDAV run overlapping unrelated work was replaced.
+Cache and workload limitations are noted beside the results.</p>
+<p><a href="data/rclone-exploratory.json">Raw data</a> includes timings, commands and tool hashes.
+The optional <a href="make-files.py">dataset generator</a> reproduces the file layout;
+it is separate from the unreleased measurement harness.</p>
 </section>
 <section id="settings"><h2>Transfer settings</h2>
-<p>Rclone’s <code>--transfers</code> controls concurrent files, not streams within one file.
-Settings were selected from trials of transfer counts, SFTP packet sizes and request concurrency,
-SSH connection sharing and WebDAV pacing. They are the best configurations among those tested,
-not a claim of optimal settings for every system.</p>
-<p>SFTP used the existing SSH service with host-key verification. WebDAV used an authenticated
-<code>rclone serve webdav</code> server over HTTPS with a verified certificate.
-Services and remote binaries were prepared before timing; starting each copy’s connections remained timed.
-WAN SSH authentication used a local key. File mtimes were preserved; SFTP and WebDAV were not asked
-to preserve Unix ownership, permissions or ACLs.</p>
+<p><code>--transfers</code> controls concurrent files; <code>--multi-thread-streams</code>
+controls streams within a file for supported destinations. We tested transfer counts,
+SFTP packet sizes and concurrency, SSH connection sharing, and WebDAV pacing.</p>
+<p>SFTP used verified SSH host keys; WebDAV used authenticated HTTPS with a verified certificate.
+Services were started before timing. Remote copies preserved file mtimes, but did not request
+Unix ownership, permissions or ACLs.</p>
 <details><summary>Server command and SSH wrapper</summary>
 <pre><code>rclone serve webdav "$REMOTE_SCRATCH" --config /dev/null --addr SERVER:PORT --dir-cache-time 0s --cert CERT_FILE --key TLS_KEY_FILE
 
@@ -76,20 +76,5 @@ The copy commands above include the remaining client settings.</p></details>
 <a href="https://rclone.org/docs/#multi-thread-streams">multithread streams</a>,
 <a href="https://rclone.org/sftp/">SFTP</a> and <a href="https://rclone.org/webdav/">WebDAV</a>.</p>
 </section>
-<section id="rails"><h2>Multi-rail networking</h2>
-<p><strong>In these tests, syq used eight rail addresses; rclone used one.</strong>
-Increasing <code>--transfers</code> creates concurrent file transfers to the configured endpoint;
-it does not distribute them across the eight separate addresses.</p>
-<p>For rclone 1.75.1 uploads, <a href="https://github.com/rclone/rclone/blob/v1.75.1/backend/sftp/sftp.go#L2617">SFTP keeps one connection per file</a>,
-with concurrent requests on that connection. The <a href="https://github.com/rclone/rclone/blob/v1.75.1/backend/webdav/webdav.go#L1486">WebDAV server configuration tested here uploads each file in one request</a>.
-Neither stripes a single upload across these rails. Multiple files could be divided among separate
-rclone processes targeting different rail addresses; that configuration was not tested.</p>
-<p>This is not a universal one-file limit: rclone supports
-<a href="https://rclone.org/docs/#multi-thread-cutoff">multithread transfers for capable destinations</a>,
-including downloads to local storage. Using multiple physical links also depends on routing and
-network configuration; multiple streams alone do not select separate rail addresses.</p>
-<p>Each rail is rated at 400 Gb/s (50 GB/s), already above the measured speeds here.
-Unequal rail use, receiver load and short durations prevent attributing the speed difference to rail count.
-That per-rail rating is not a measured end-to-end copy limit.</p>
-<p>Suggestions for improving either tool’s settings are welcome in the
-<a href="https://news.ycombinator.com/item?id=49644955">discussion</a>.</p></section>
+<p>Suggestions for tuning either tool are welcome in the
+<a href="https://news.ycombinator.com/item?id=49644955">discussion</a>.</p>
