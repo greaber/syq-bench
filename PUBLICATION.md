@@ -55,3 +55,13 @@ Transfer selected harness changes onto a branch based on public history and
 review both content and commit messages before a public PR. Never merge private
 branches wholesale or push private refs. Bring public harness releases back into
 the private workspace to avoid diverging implementations.
+
+## Preliminary rclone page (2026-09-11)
+
+The separate rclone comparison publishes exploratory single runs to invite tuning
+feedback before a full benchmark release. It retains unsuccessful trials and
+shows workload, settings, timing boundaries, verification and limitations next
+to the results. It does not enter the release-page catalog or weaken its
+acceptance checks. The experimental adapters are not yet public: the page says
+so explicitly, and retains original source provenance privately. Publishing
+matching measurement code remains necessary for a full reproducible release.

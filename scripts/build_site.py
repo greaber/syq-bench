@@ -10,6 +10,7 @@ from pathlib import Path
 
 from syq_bench.fly import load_campaign
 from syq_bench.public import render_pages, selected_cases
+from syq_bench.rclone_public import build as build_rclone_page
 from syq_bench.spec import from_dict
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -110,6 +111,7 @@ def build(root: Path = ROOT) -> list[Path]:
         target = site / name
         target.write_text(page)
         outputs.append(target)
+    outputs.append(build_rclone_page(root))
     return outputs
 
 

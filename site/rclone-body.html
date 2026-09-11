@@ -1,0 +1,96 @@
+<style>
+.comparison-case{margin:2.5rem 0;padding-top:1rem;border-top:1px solid var(--border,#8886)}
+.comparison-note{border-left:3px solid #be8835;padding:.4rem 1rem}
+.comparison-scroll{overflow-x:auto;max-width:100%;margin:1rem 0}
+.comparison-table{border-collapse:collapse;width:100%;font-size:.85rem;min-width:620px}
+.comparison-table th,.comparison-table td{text-align:left;vertical-align:top;padding:.7rem;border-bottom:1px solid #8885}
+.comparison-table th:first-child{width:19%}.comparison-table td:nth-child(2){width:32%}
+.comparison-table code{white-space:normal;overflow-wrap:anywhere}.times{font-variant-numeric:tabular-nums}
+main pre{white-space:pre-wrap;overflow-wrap:anywhere}main details{margin:1rem 0}main summary{cursor:pointer}
+.comparison-links{display:flex;flex-wrap:wrap;gap:1rem}
+@media(max-width:700px){
+.comparison-table{min-width:0;font-size:.9rem}.comparison-table,.comparison-table tbody,.comparison-table tr{display:block}
+.comparison-table thead{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+.comparison-table tr{border-bottom:1px solid #8886;padding:.75rem 0}
+.comparison-table th,.comparison-table td,.comparison-table th:first-child,.comparison-table td:nth-child(2){display:block;width:auto;border:0;padding:.3rem 0}
+.comparison-table td:before{content:attr(data-label);display:block;font-weight:600;font-size:.8rem;margin-bottom:.2rem}
+}
+</style>
+<header class="hero"><h1>syq vs rclone</h1>
+<p>Preliminary file-copy results · 11 September 2026</p>
+<p>We tried syq 0.5.2 and rclone 1.75.1 on mounted NFS, local RAID, and connections between servers.
+These are exploratory measurements shared by syq’s author to invite scrutiny and rclone tuning suggestions.</p>
+<p class="comparison-links"><a href="#results">See what we copied</a>
+<a href="data/rclone-exploratory.json" download>Download the measurements (JSON)</a>
+<a href="https://news.ycombinator.com/item?id=49644955">Discuss on Hacker News ↗</a></p></header>
+<section id="reading"><h2>What the numbers mean</h2>
+<p>Each table describes one copy into a fresh, empty destination. It shows elapsed command time in seconds,
+including startup and the tool’s own checksum work. Lower means that particular job finished sooner.
+Every tested setting for that case is shown; there is no aggregate score or selected “winning” speed bar.</p>
+<p>Most settings have one run. The earlier small-file NFS write test has three; we show all three rather than hiding
+its variability in an average. Times below two seconds are marked because overhead and noise can dominate.</p>
+<p><strong>This is not a fully tuned ranking.</strong> The WAN tests are too small to judge sustained throughput.
+The fast-fabric tests used different numbers of network rails and a busy receiver.
+Those limitations appear next to the affected results.</p>
+<p><strong>“Local filesystem” includes mounted NFS.</strong> Both programs access normal paths; the operating system’s
+NFS client talks to the NFS server. No SFTP or WebDAV service is involved in those tests.
+For server-to-server copies we tested rclone’s SFTP and HTTPS/WebDAV backends separately.
+See <a href="https://rclone.org/local/">rclone’s local backend documentation</a>.</p></section>
+<section id="results"><h2>What we copied, and how long it took</h2><!-- RESULTS --></section>
+<section id="settings"><h2>Settings and server setup</h2>
+<p>Every rclone command used <code>copy --config /dev/null --create-empty-src-dirs</code>.
+Filesystem copies added <code>--metadata</code>. Network copies did not request archive-equivalent metadata:
+we checked regular-file contents and mtimes to whole seconds, not ownership, modes, ACLs or extended attributes.</p>
+<p>SFTP used rclone’s built-in SSH implementation against the existing SSH/SFTP service, with host-key verification.
+Corrected LAN and fast-fabric tests used a local private key. Earlier LAN tests used an agent forwarded over the WAN;
+the authentication delay affected both tools, and those trials are retained only in the appendix.
+WAN tests used agent authentication.</p>
+<p>WebDAV used <code>rclone serve webdav</code> with HTTPS, authentication and server-side
+<code>--dir-cache-time 0s</code>. The client used <code>--webdav-vendor rclone</code> and a verified TLS certificate.
+Thus these results describe this particular WebDAV server as well as the client.</p>
+<p>We varied <code>--transfers</code>, <code>--multi-thread-streams</code>,
+<code>--sftp-chunk-size</code>, <code>--sftp-concurrency</code> and
+<code>--webdav-pacer-min-sleep</code>. Exact values appear in each row and its command disclosure.
+We kept default hashing enabled and did not sweep checkers, buffer sizes, connection limits or hash options.</p>
+<p>Network screening generally used <code>--contimeout 5s --retries 1</code>.
+Some early tests also used <code>--timeout 15s</code>; this interrupted hashing on the large SFTP test,
+so the corrected fast-fabric test restored the normal IO timeout. Those failed attempts remain in the appendix.
+Zero WebDAV pacing failed concurrent directory creation on one small-file LAN test; a 2 ms follow-up timed out.</p>
+<p>syq filesystem copies used <code>rsync -a --no-progress</code>. Network copies used
+<code>rsync -rt --no-progress --syq-no-bootstrap</code> with an already installed remote binary;
+automatic transport and worker selection remained enabled. WAN logs recorded direct TCP, not SSH fallback.
+We did not sweep syq worker counts or congestion control. “Automatic” does not mean we established optimal tuning.</p>
+<p>Rclone settings reference: <a href="https://rclone.org/docs/#transfers-n">transfers</a>,
+<a href="https://rclone.org/docs/#multi-thread-streams">multithread streams</a>,
+<a href="https://rclone.org/sftp/">SFTP</a>, <a href="https://rclone.org/webdav/">WebDAV</a>.</p></section>
+<section id="rails"><h2>Would using all eight network rails help rclone?</h2>
+<p>The fast hosts have eight network interfaces rated at 400 Gb/s each, with separate rail addresses.
+syq selected eight destination addresses automatically; our rclone commands selected one.
+<strong>We have not measured rclone across all eight rails, or syq restricted to the same single rail.</strong></p>
+<p>Rclone documents one outgoing address for <a href="https://rclone.org/docs/#bind-string"><code>--bind</code></a>
+and one SFTP host per remote. We have not found a documented automatic equivalent to syq’s rail discovery in this setup.
+A practical candidate is to partition the file list into eight disjoint sets and run eight rclone processes,
+each targeting a different rail (with source binding where needed). Time the whole group, check every exit status,
+and verify the combined destination. That is an untested configuration, and it would not stripe a single file.</p>
+<p><strong>The rail difference does not establish the cause of the speed gap.</strong>
+One 400 Gb/s rail has a nominal capacity of 50 GB/s before protocol overhead—already well above the rclone throughput
+observed here. Hashing, CPU work, file parallelism, the server implementation and load could matter.
+We need matched single-rail controls and the multi-process experiment before attributing the difference to a rail limitation.</p>
+<p>If you know a better rclone setup for these hosts or workloads, please suggest it in the
+<a href="https://news.ycombinator.com/item?id=49644955">discussion</a>. We want the comparison to give both tools a fair chance.</p></section>
+<section id="method"><h2>What was controlled, and what was not</h2>
+<p>Fixtures and destination trees were generated for the benchmark. Each timed copy was followed by independent
+content verification outside timing. The filesystem cases also checked types, modes, numeric ownership and mtimes;
+network metadata checks covered regular-file mtimes to whole seconds. This is not a test of interrupted-copy recovery,
+atomic replacement, archive fidelity or crash durability.</p>
+<!-- LIMITS -->
+<p>The download contains individual timings, exit status, verification fields, workload size, seed, protocol and
+commands with endpoint placeholders. It preserves failed and unfavorable trials as well as successful copies.
+Private operational logs are not public. The experimental rclone harness adapters have not yet been released,
+so this is a transparent preliminary report, not yet a complete independently reproducible benchmark package.</p>
+<p>The separate <a href="index.html">syq/rsync benchmark page</a> has a different measurement protocol.
+Do not combine numbers across the two pages as if they came from the same campaign.</p></section>
+<section id="appendix"><h2>Other screening and diagnostic trials</h2>
+<p>These include calibration, tests distorted by forwarded authentication, server setup failures, timeout experiments
+and connection diagnostics. They document the exploration; they are not additional clean comparisons.
+Scenario identifiers match the downloadable data.</p><!-- APPENDIX --></section>

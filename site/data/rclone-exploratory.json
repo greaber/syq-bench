@@ -1,0 +1,6470 @@
+{
+  "schema": 1,
+  "date": "2026-09-11",
+  "tools": {
+    "syq": "0.5.2",
+    "rclone": "1.75.1"
+  },
+  "limits": [
+    "Exploratory single runs after initial repeated NFS campaign; not publication-quality estimates.",
+    "Completed copies independently content checked. Metadata scope and missing records are explicit per row: remote file mtimes to whole seconds; filesystem copies additionally mode, uid/gid and directory times.",
+    "Whole-command time includes tool-native checksumming but excludes harness verification and cleanup. No final durability flush.",
+    "Fixture fadvise is advisory; metadata caches warm; NFS server cache and other clients uncontrolled. Tmpfs data remains memory-resident.",
+    "Fast-fabric receiver was busy before screening (load average 77.19 / 84.13 / 90.60). No idle-host peak is established.",
+    "Fast tmpfs workloads include one extra empty O_DIRECT probe created by the harness; result file counts include it.",
+    "LAN fixed runs used WAN-forwarded authentication; LAN keyed runs used a restricted local key. Do not interpret the former as clean LAN timings.",
+    "Original fast-8g SFTP attempts used an overly short idle timeout and failed during destination hashing. fast-corrected-8g restores normal IO timeout.",
+    "WebDAV with zero request pacing failed concurrent directory creation in lan-pacer-small. Keep failures and timeouts distinct from completed transfers.",
+    "The fast-fabric syq path used eight rail addresses automatically; rclone targeted one 400Gb/s rail. The management-LAN receiver used a 2x10Gb/s management bond.",
+    "Sizes, directory layouts and settings vary by scenario; compare tools within a scenario. A selected setting is only best among those tested.",
+    "WAN payloads are too small and startup-heavy to establish sustained throughput or a fully tuned ranking.",
+    "Original operational logs and exact infrastructure identifiers are private. This sanitized extract preserves timings, commands with endpoint placeholders, verification, workload and protocol. The experimental harness revision is retained privately; its rclone adapters are not yet in the public release."
+  ],
+  "featured": [
+    {
+      "id": "main-write",
+      "title": "Small files \u2192 mounted NFS",
+      "workload": "40,000 \u00d7 4 KiB files in 256 directories. Local /tmp source \u2192 mounted NFSv4.2 destination.",
+      "caveat": "Three earlier runs per setting. NFS server cache and other clients were uncontrolled; retain the substantial variation."
+    },
+    {
+      "id": "calibration-read",
+      "title": "Small files \u2190 mounted NFS",
+      "workload": "10,000 \u00d7 4 KiB files in 256 directories. Mounted NFSv4.2 source \u2192 local /tmp destination.",
+      "caveat": "Initial calibration. Subsecond results are too short to establish a dependable ranking."
+    },
+    {
+      "id": "raid-explore-local-small",
+      "title": "Small files on local RAID",
+      "workload": "40,000 \u00d7 4 KiB files in 256 directories. Copy between directories on the same XFS RAID filesystem.",
+      "caveat": "Single runs; metadata caches were warm. This is a filesystem copy, with no SFTP or WebDAV."
+    },
+    {
+      "id": "raid-explore-nfs-large-write",
+      "title": "Large file \u2192 mounted NFS",
+      "workload": "One 2 GiB file. XFS RAID source \u2192 mounted NFSv4.2 destination.",
+      "caveat": "Single runs. Completion does not include a final durability flush. NFS server cache is uncontrolled."
+    },
+    {
+      "id": "raid-explore-nfs-large-read",
+      "title": "Large file \u2190 mounted NFS",
+      "workload": "One 2 GiB file. Mounted NFSv4.2 source \u2192 XFS RAID destination.",
+      "caveat": "Single runs. Advisory fixture eviction does not establish cold NFS server storage."
+    },
+    {
+      "id": "raid-explore-local-large",
+      "title": "Large file on the same filesystem",
+      "workload": "One 2 GiB file. Source and destination on the same XFS RAID filesystem.",
+      "caveat": "Kernel-assisted copying can avoid moving all payload bytes through user space and may share extents. Do not interpret this as physical disk bandwidth."
+    },
+    {
+      "id": "lan-keyed-small",
+      "title": "Small files between nearby servers",
+      "workload": "1,000 \u00d7 4 KiB files. XFS RAID \u2192 XFS RAID, approximately 0.2 ms RTT; receiver has a 2 \u00d7 10 Gb/s bond.",
+      "caveat": "Local SSH key, with source-restricted authorization. WebDAV failed endpoint validation before the copy; it has no comparable time in this run."
+    },
+    {
+      "id": "fast-corrected-8g",
+      "title": "Fast fabric: one large file",
+      "workload": "One 8 GiB file, tmpfs \u2192 tmpfs between servers in the same data center.",
+      "caveat": "Receiver was busy. syq used eight rail addresses; rclone targeted one 400 Gb/s rail. Includes an extra empty fixture probe. Normal rclone IO timeout restored after an earlier hashing failure."
+    },
+    {
+      "id": "fast-many-8g",
+      "title": "Fast fabric: eight large files",
+      "workload": "Eight \u00d7 1 GiB files, tmpfs \u2192 tmpfs on the same fast-fabric hosts.",
+      "caveat": "Receiver was busy. Eight syq rail addresses versus one rclone 400 Gb/s rail. Includes an extra empty fixture probe. This does not establish an idle-host peak or the cause of the speed difference."
+    },
+    {
+      "id": "fast-32files-8g",
+      "title": "Fast fabric: 32 large files",
+      "workload": "32 \u00d7 256 MiB files, tmpfs \u2192 tmpfs on the same fast-fabric hosts.",
+      "caveat": "Same unequal rail selection and busy receiver. Includes an extra empty fixture probe. WebDAV was much slower here; the cause was not established."
+    },
+    {
+      "id": "wan-compact-small",
+      "title": "WAN: small files \u2014 inconclusive",
+      "workload": "256 \u00d7 4 KiB files in eight directories. Workstation \u2192 remote XFS RAID, approximately 265 ms RTT.",
+      "caveat": "Startup-heavy single runs; neither tool was fully tuned. These are not reliable evidence of sustained WAN throughput. SFTP was stopped at the 60-second screening limit."
+    },
+    {
+      "id": "wan-large64-large",
+      "title": "WAN: one file \u2014 inconclusive",
+      "workload": "One 64 MiB file. Workstation \u2192 remote XFS RAID, approximately 265 ms RTT.",
+      "caveat": "Too little data to separate startup from sustained throughput. syq logs show 7.34 seconds elapsed before payload planning finished. No WAN capacity baseline or full tuning sweep."
+    }
+  ],
+  "rows": [
+    {
+      "scenario": "fast-many-8g",
+      "tool": "syq",
+      "repeat": 0,
+      "bytes": 8589934592,
+      "files": 9,
+      "wall_s": 1.5666122548282146,
+      "argv": [
+        "env",
+        "SYQ_DEBUG=1",
+        "syq",
+        "rsync",
+        "-rt",
+        "--no-progress",
+        "--syq-no-bootstrap",
+        "--rsync-path",
+        "REMOTE_SYQ",
+        "-e",
+        "SSH_WRAPPER",
+        "SOURCE/",
+        "USER@SERVER:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "file mtimes, whole seconds",
+        "mismatches": 0,
+        "entries": 9
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 90,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "data",
+          "kind": "small-files",
+          "files": 8,
+          "bytes": 8589934592
+        }
+      ],
+      "cache": "evict",
+      "case_error": false,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-5.15.0-126-generic-x86_64-with-glibc2.35",
+        "kernel": "5.15.0-126-generic",
+        "machine": "x86_64",
+        "cpus": 160,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "tmpfs",
+        "destination": "tmpfs"
+      },
+      "tool_identity": {
+        "version": "syq 0.5.2",
+        "sha256": "5e4586bdc9706834cc907ff087afed57180e918e7459f9cefb7fda4e7973dbff"
+      }
+    },
+    {
+      "scenario": "fast-many-8g",
+      "tool": "sftp-t8-chunk128",
+      "repeat": 0,
+      "bytes": 8589934592,
+      "files": 9,
+      "wall_s": 5.171234400942922,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--sftp-host",
+        "SERVER",
+        "--sftp-known-hosts-file",
+        "KNOWN_HOSTS",
+        "--sftp-user",
+        "USER",
+        "--sftp-host",
+        "SERVER",
+        "--sftp-port",
+        "PORT",
+        "--sftp-user",
+        "USER",
+        "--sftp-key-file",
+        "KEY_FILE",
+        "--sftp-known-hosts-file",
+        "KNOWN_HOSTS",
+        "--create-empty-src-dirs",
+        "--contimeout",
+        "5s",
+        "--retries",
+        "1",
+        "--transfers",
+        "8",
+        "--sftp-chunk-size",
+        "128Ki",
+        "--sftp-concurrency",
+        "128",
+        "--",
+        ":local:SOURCE",
+        ":sftp:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "file mtimes, whole seconds",
+        "mismatches": 0,
+        "entries": 9
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 90,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "data",
+          "kind": "small-files",
+          "files": 8,
+          "bytes": 8589934592
+        }
+      ],
+      "cache": "evict",
+      "case_error": false,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-5.15.0-126-generic-x86_64-with-glibc2.35",
+        "kernel": "5.15.0-126-generic",
+        "machine": "x86_64",
+        "cpus": 160,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "tmpfs",
+        "destination": "tmpfs"
+      },
+      "tool_identity": {
+        "version": "rclone v1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      }
+    },
+    {
+      "scenario": "fast-many-8g",
+      "tool": "webdav-t16",
+      "repeat": 0,
+      "bytes": 8589934592,
+      "files": 9,
+      "wall_s": 4.521488886326551,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--webdav-url",
+        "https://SERVER:PORT/",
+        "--webdav-vendor",
+        "rclone",
+        "--ca-cert",
+        "CA_CERT",
+        "--transfers",
+        "16",
+        "--webdav-pacer-min-sleep",
+        "0s",
+        "--create-empty-src-dirs",
+        "--contimeout",
+        "5s",
+        "--retries",
+        "1",
+        "--",
+        ":local:SOURCE",
+        ":webdav:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "file mtimes, whole seconds",
+        "mismatches": 0,
+        "entries": 9
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 90,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "data",
+          "kind": "small-files",
+          "files": 8,
+          "bytes": 8589934592
+        }
+      ],
+      "cache": "evict",
+      "case_error": false,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-5.15.0-126-generic-x86_64-with-glibc2.35",
+        "kernel": "5.15.0-126-generic",
+        "machine": "x86_64",
+        "cpus": 160,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "tmpfs",
+        "destination": "tmpfs"
+      },
+      "tool_identity": {
+        "version": "rclone v1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      }
+    },
+    {
+      "scenario": "fast-8g",
+      "tool": "syq",
+      "repeat": 0,
+      "bytes": 8589934592,
+      "files": 2,
+      "wall_s": 5.172425325959921,
+      "argv": [
+        "env",
+        "SYQ_DEBUG=1",
+        "syq",
+        "rsync",
+        "-rt",
+        "--no-progress",
+        "--syq-no-bootstrap",
+        "--rsync-path",
+        "REMOTE_SYQ",
+        "-e",
+        "SSH_WRAPPER",
+        "SOURCE/",
+        "USER@SERVER:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "file mtimes, whole seconds",
+        "mismatches": 0,
+        "entries": 2
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 90,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "data",
+          "kind": "large-file",
+          "files": 1,
+          "bytes": 8589934592
+        }
+      ],
+      "cache": "evict",
+      "case_error": false,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-5.15.0-126-generic-x86_64-with-glibc2.35",
+        "kernel": "5.15.0-126-generic",
+        "machine": "x86_64",
+        "cpus": 160,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "tmpfs",
+        "destination": "tmpfs"
+      },
+      "tool_identity": {
+        "version": "syq 0.5.2",
+        "sha256": "5e4586bdc9706834cc907ff087afed57180e918e7459f9cefb7fda4e7973dbff"
+      }
+    },
+    {
+      "scenario": "fast-8g",
+      "tool": "sftp-default",
+      "repeat": 0,
+      "bytes": 8589934592,
+      "files": 2,
+      "wall_s": 30.76539896056056,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--sftp-host",
+        "SERVER",
+        "--sftp-known-hosts-file",
+        "KNOWN_HOSTS",
+        "--sftp-user",
+        "USER",
+        "--sftp-host",
+        "SERVER",
+        "--sftp-port",
+        "PORT",
+        "--sftp-user",
+        "USER",
+        "--sftp-key-file",
+        "KEY_FILE",
+        "--sftp-known-hosts-file",
+        "KNOWN_HOSTS",
+        "-vv",
+        "--create-empty-src-dirs",
+        "--contimeout",
+        "5s",
+        "--timeout",
+        "15s",
+        "--retries",
+        "1",
+        "--",
+        ":local:SOURCE",
+        ":sftp:DESTINATION"
+      ],
+      "exit_code": 1,
+      "content_verified": null,
+      "metadata": null,
+      "recorded_status": "failed",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 90,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "data",
+          "kind": "large-file",
+          "files": 1,
+          "bytes": 8589934592
+        }
+      ],
+      "cache": "evict",
+      "case_error": true,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-5.15.0-126-generic-x86_64-with-glibc2.35",
+        "kernel": "5.15.0-126-generic",
+        "machine": "x86_64",
+        "cpus": 160,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "tmpfs",
+        "destination": "tmpfs"
+      },
+      "tool_identity": {
+        "version": "rclone v1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      }
+    },
+    {
+      "scenario": "fast-8g",
+      "tool": "sftp-chunk128",
+      "repeat": 0,
+      "bytes": 8589934592,
+      "files": 2,
+      "wall_s": 29.656254936009645,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--sftp-host",
+        "SERVER",
+        "--sftp-known-hosts-file",
+        "KNOWN_HOSTS",
+        "--sftp-user",
+        "USER",
+        "--sftp-host",
+        "SERVER",
+        "--sftp-port",
+        "PORT",
+        "--sftp-user",
+        "USER",
+        "--sftp-key-file",
+        "KEY_FILE",
+        "--sftp-known-hosts-file",
+        "KNOWN_HOSTS",
+        "-vv",
+        "--create-empty-src-dirs",
+        "--contimeout",
+        "5s",
+        "--timeout",
+        "15s",
+        "--retries",
+        "1",
+        "--sftp-chunk-size",
+        "128Ki",
+        "--sftp-concurrency",
+        "128",
+        "--",
+        ":local:SOURCE",
+        ":sftp:DESTINATION"
+      ],
+      "exit_code": 1,
+      "content_verified": null,
+      "metadata": null,
+      "recorded_status": "failed",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 90,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "data",
+          "kind": "large-file",
+          "files": 1,
+          "bytes": 8589934592
+        }
+      ],
+      "cache": "evict",
+      "case_error": true,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-5.15.0-126-generic-x86_64-with-glibc2.35",
+        "kernel": "5.15.0-126-generic",
+        "machine": "x86_64",
+        "cpus": 160,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "tmpfs",
+        "destination": "tmpfs"
+      },
+      "tool_identity": {
+        "version": "rclone v1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      }
+    },
+    {
+      "scenario": "fast-8g",
+      "tool": "webdav-t16",
+      "repeat": 0,
+      "bytes": 8589934592,
+      "files": 2,
+      "wall_s": 30.214481005445123,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--webdav-url",
+        "https://SERVER:PORT/",
+        "--webdav-vendor",
+        "rclone",
+        "--ca-cert",
+        "CA_CERT",
+        "--transfers",
+        "16",
+        "--webdav-pacer-min-sleep",
+        "0s",
+        "-vv",
+        "--create-empty-src-dirs",
+        "--contimeout",
+        "5s",
+        "--timeout",
+        "15s",
+        "--retries",
+        "1",
+        "--",
+        ":local:SOURCE",
+        ":webdav:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "file mtimes, whole seconds",
+        "mismatches": 0,
+        "entries": 2
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 90,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "data",
+          "kind": "large-file",
+          "files": 1,
+          "bytes": 8589934592
+        }
+      ],
+      "cache": "evict",
+      "case_error": false,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-5.15.0-126-generic-x86_64-with-glibc2.35",
+        "kernel": "5.15.0-126-generic",
+        "machine": "x86_64",
+        "cpus": 160,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "tmpfs",
+        "destination": "tmpfs"
+      },
+      "tool_identity": {
+        "version": "rclone v1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      }
+    },
+    {
+      "scenario": "lan-keyed-small",
+      "tool": "syq",
+      "repeat": 0,
+      "bytes": 4096000,
+      "files": 1000,
+      "wall_s": 0.31470431946218014,
+      "argv": [
+        "env",
+        "SYQ_DEBUG=1",
+        "syq",
+        "rsync",
+        "-rt",
+        "--no-progress",
+        "--syq-no-bootstrap",
+        "--rsync-path",
+        "REMOTE_SYQ",
+        "-e",
+        "SSH_WRAPPER",
+        "SOURCE/",
+        "USER@SERVER:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "file mtimes, whole seconds",
+        "mismatches": 0,
+        "entries": 1000
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 60,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "data",
+          "kind": "small-files",
+          "files": 1000,
+          "bytes": 4096000
+        }
+      ],
+      "cache": "evict",
+      "case_error": false,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-5.15.0-126-generic-x86_64-with-glibc2.35",
+        "kernel": "5.15.0-126-generic",
+        "machine": "x86_64",
+        "cpus": 160,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "xfs",
+        "destination": "xfs"
+      },
+      "tool_identity": {
+        "version": "syq 0.5.2",
+        "sha256": "5e4586bdc9706834cc907ff087afed57180e918e7459f9cefb7fda4e7973dbff"
+      }
+    },
+    {
+      "scenario": "lan-keyed-small",
+      "tool": "sftp-t16",
+      "repeat": 0,
+      "bytes": 4096000,
+      "files": 1000,
+      "wall_s": 1.4163735713809729,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--sftp-host",
+        "SERVER",
+        "--sftp-known-hosts-file",
+        "KNOWN_HOSTS",
+        "--sftp-user",
+        "USER",
+        "--sftp-host",
+        "SERVER",
+        "--sftp-port",
+        "PORT",
+        "--sftp-user",
+        "USER",
+        "--sftp-key-file",
+        "KEY_FILE",
+        "--sftp-known-hosts-file",
+        "KNOWN_HOSTS",
+        "-vv",
+        "--create-empty-src-dirs",
+        "--contimeout",
+        "5s",
+        "--timeout",
+        "15s",
+        "--retries",
+        "1",
+        "--transfers",
+        "16",
+        "--",
+        ":local:SOURCE",
+        ":sftp:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "file mtimes, whole seconds",
+        "mismatches": 0,
+        "entries": 1000
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 60,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "data",
+          "kind": "small-files",
+          "files": 1000,
+          "bytes": 4096000
+        }
+      ],
+      "cache": "evict",
+      "case_error": false,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-5.15.0-126-generic-x86_64-with-glibc2.35",
+        "kernel": "5.15.0-126-generic",
+        "machine": "x86_64",
+        "cpus": 160,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "xfs",
+        "destination": "xfs"
+      },
+      "tool_identity": {
+        "version": "rclone v1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      }
+    },
+    {
+      "scenario": "lan-keyed-small",
+      "tool": "sftp-t64",
+      "repeat": 0,
+      "bytes": 4096000,
+      "files": 1000,
+      "wall_s": 2.8682831283658743,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--sftp-host",
+        "SERVER",
+        "--sftp-known-hosts-file",
+        "KNOWN_HOSTS",
+        "--sftp-user",
+        "USER",
+        "--sftp-host",
+        "SERVER",
+        "--sftp-port",
+        "PORT",
+        "--sftp-user",
+        "USER",
+        "--sftp-key-file",
+        "KEY_FILE",
+        "--sftp-known-hosts-file",
+        "KNOWN_HOSTS",
+        "-vv",
+        "--create-empty-src-dirs",
+        "--contimeout",
+        "5s",
+        "--timeout",
+        "15s",
+        "--retries",
+        "1",
+        "--transfers",
+        "64",
+        "--",
+        ":local:SOURCE",
+        ":sftp:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "file mtimes, whole seconds",
+        "mismatches": 0,
+        "entries": 1000
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 60,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "data",
+          "kind": "small-files",
+          "files": 1000,
+          "bytes": 4096000
+        }
+      ],
+      "cache": "evict",
+      "case_error": false,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-5.15.0-126-generic-x86_64-with-glibc2.35",
+        "kernel": "5.15.0-126-generic",
+        "machine": "x86_64",
+        "cpus": 160,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "xfs",
+        "destination": "xfs"
+      },
+      "tool_identity": {
+        "version": "rclone v1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      }
+    },
+    {
+      "scenario": "lan-keyed-small",
+      "tool": "webdav-t16",
+      "repeat": 0,
+      "bytes": 4096000,
+      "files": 1000,
+      "wall_s": 0.0,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--webdav-url",
+        "https://SERVER:PORT/",
+        "--webdav-vendor",
+        "rclone",
+        "--ca-cert",
+        "CA_CERT",
+        "--transfers",
+        "16",
+        "-vv",
+        "--create-empty-src-dirs",
+        "--contimeout",
+        "5s",
+        "--timeout",
+        "15s",
+        "--retries",
+        "1",
+        "--",
+        ":local:SOURCE",
+        ":webdav:DESTINATION"
+      ],
+      "exit_code": -1,
+      "content_verified": null,
+      "metadata": null,
+      "recorded_status": "failed",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 60,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "data",
+          "kind": "small-files",
+          "files": 1000,
+          "bytes": 4096000
+        }
+      ],
+      "cache": "not-run",
+      "case_error": true,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-5.15.0-126-generic-x86_64-with-glibc2.35",
+        "kernel": "5.15.0-126-generic",
+        "machine": "x86_64",
+        "cpus": 160,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "xfs",
+        "destination": "xfs"
+      },
+      "tool_identity": {
+        "version": "rclone v1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      }
+    },
+    {
+      "scenario": "lan-pacer2-small",
+      "tool": "webdav-t16-pacer2ms",
+      "repeat": 0,
+      "bytes": 4096000,
+      "files": 1000,
+      "wall_s": 60.000097163021564,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--webdav-url",
+        "https://SERVER:PORT/",
+        "--webdav-vendor",
+        "rclone",
+        "--ca-cert",
+        "CA_CERT",
+        "--transfers",
+        "16",
+        "--create-empty-src-dirs",
+        "--contimeout",
+        "5s",
+        "--retries",
+        "1",
+        "--webdav-pacer-min-sleep",
+        "2ms",
+        "--",
+        ":local:SOURCE",
+        ":webdav:DESTINATION"
+      ],
+      "exit_code": -124,
+      "content_verified": null,
+      "metadata": null,
+      "recorded_status": "timeout",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 60,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "data",
+          "kind": "small-files",
+          "files": 1000,
+          "bytes": 4096000
+        }
+      ],
+      "cache": "evict",
+      "case_error": true,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-5.15.0-126-generic-x86_64-with-glibc2.35",
+        "kernel": "5.15.0-126-generic",
+        "machine": "x86_64",
+        "cpus": 160,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "xfs",
+        "destination": "xfs"
+      },
+      "tool_identity": {
+        "version": "rclone v1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      }
+    },
+    {
+      "scenario": "lan-connections-small",
+      "tool": "sftp-t16",
+      "repeat": 0,
+      "bytes": 4096000,
+      "files": 1000,
+      "wall_s": 0.0,
+      "argv": [
+        "rclone-diagnostic",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--sftp-host",
+        "SERVER",
+        "--sftp-known-hosts-file",
+        "KNOWN_HOSTS",
+        "--sftp-user",
+        "USER",
+        "--sftp-host",
+        "SERVER",
+        "--sftp-port",
+        "PORT",
+        "--sftp-user",
+        "USER",
+        "--sftp-key-file",
+        "KEY_FILE",
+        "--sftp-known-hosts-file",
+        "KNOWN_HOSTS",
+        "-vv",
+        "--create-empty-src-dirs",
+        "--contimeout",
+        "5s",
+        "--timeout",
+        "15s",
+        "--retries",
+        "1",
+        "--transfers",
+        "16",
+        "--",
+        ":local:SOURCE",
+        ":sftp:DESTINATION"
+      ],
+      "exit_code": -1,
+      "content_verified": null,
+      "metadata": null,
+      "recorded_status": "failed",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 60,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "data",
+          "kind": "small-files",
+          "files": 1000,
+          "bytes": 4096000
+        }
+      ],
+      "cache": "not-run",
+      "case_error": true,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-5.15.0-126-generic-x86_64-with-glibc2.35",
+        "kernel": "5.15.0-126-generic",
+        "machine": "x86_64",
+        "cpus": 160,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "xfs",
+        "destination": "xfs"
+      },
+      "tool_identity": {
+        "version": "rclone v1.75.1",
+        "sha256": "89cc36d93c654f3bac973e0274867a732e49ee40a770f089d749bd1934661c6f"
+      }
+    },
+    {
+      "scenario": "lan-connections-small",
+      "tool": "sftp-t64",
+      "repeat": 0,
+      "bytes": 4096000,
+      "files": 1000,
+      "wall_s": 0.0,
+      "argv": [
+        "rclone-diagnostic",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--sftp-host",
+        "SERVER",
+        "--sftp-known-hosts-file",
+        "KNOWN_HOSTS",
+        "--sftp-user",
+        "USER",
+        "--sftp-host",
+        "SERVER",
+        "--sftp-port",
+        "PORT",
+        "--sftp-user",
+        "USER",
+        "--sftp-key-file",
+        "KEY_FILE",
+        "--sftp-known-hosts-file",
+        "KNOWN_HOSTS",
+        "-vv",
+        "--create-empty-src-dirs",
+        "--contimeout",
+        "5s",
+        "--timeout",
+        "15s",
+        "--retries",
+        "1",
+        "--transfers",
+        "64",
+        "--",
+        ":local:SOURCE",
+        ":sftp:DESTINATION"
+      ],
+      "exit_code": -1,
+      "content_verified": null,
+      "metadata": null,
+      "recorded_status": "failed",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 60,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "data",
+          "kind": "small-files",
+          "files": 1000,
+          "bytes": 4096000
+        }
+      ],
+      "cache": "not-run",
+      "case_error": true,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-5.15.0-126-generic-x86_64-with-glibc2.35",
+        "kernel": "5.15.0-126-generic",
+        "machine": "x86_64",
+        "cpus": 160,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "xfs",
+        "destination": "xfs"
+      },
+      "tool_identity": {
+        "version": "rclone v1.75.1",
+        "sha256": "89cc36d93c654f3bac973e0274867a732e49ee40a770f089d749bd1934661c6f"
+      }
+    },
+    {
+      "scenario": "lan-small",
+      "tool": "syq",
+      "repeat": 0,
+      "bytes": 4096000,
+      "files": 1000,
+      "wall_s": 2.8686215076595545,
+      "argv": [
+        "syq",
+        "rsync",
+        "-rt",
+        "--no-progress",
+        "--syq-no-bootstrap",
+        "--rsync-path",
+        "REMOTE_SYQ",
+        "-e",
+        "SSH_WRAPPER",
+        "SOURCE/",
+        "USER@SERVER:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": null,
+      "recorded_status": "content verified; metadata unrecorded",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 60,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "data",
+          "kind": "small-files",
+          "files": 1000,
+          "bytes": 4096000
+        }
+      ],
+      "cache": "evict",
+      "case_error": false,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-5.15.0-126-generic-x86_64-with-glibc2.35",
+        "kernel": "5.15.0-126-generic",
+        "machine": "x86_64",
+        "cpus": 160,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "xfs",
+        "destination": "xfs"
+      },
+      "tool_identity": {
+        "version": "syq 0.5.2",
+        "sha256": "5e4586bdc9706834cc907ff087afed57180e918e7459f9cefb7fda4e7973dbff"
+      }
+    },
+    {
+      "scenario": "lan-small",
+      "tool": "sftp-t16",
+      "repeat": 0,
+      "bytes": 4096000,
+      "files": 1000,
+      "wall_s": 0.0,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--sftp-host",
+        "SERVER",
+        "--sftp-known-hosts-file",
+        "KNOWN_HOSTS",
+        "--sftp-user",
+        "USER",
+        "--sftp-host",
+        "SERVER",
+        "--sftp-port",
+        "PORT",
+        "--sftp-user",
+        "USER",
+        "--sftp-key-use-agent",
+        "--sftp-known-hosts-file",
+        "KNOWN_HOSTS",
+        "--create-empty-src-dirs",
+        "--transfers",
+        "16",
+        "--",
+        ":local:SOURCE",
+        ":sftp:DESTINATION"
+      ],
+      "exit_code": -1,
+      "content_verified": null,
+      "metadata": null,
+      "recorded_status": "failed",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 60,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "data",
+          "kind": "small-files",
+          "files": 1000,
+          "bytes": 4096000
+        }
+      ],
+      "cache": "not-run",
+      "case_error": true,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-5.15.0-126-generic-x86_64-with-glibc2.35",
+        "kernel": "5.15.0-126-generic",
+        "machine": "x86_64",
+        "cpus": 160,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "xfs",
+        "destination": "xfs"
+      },
+      "tool_identity": {
+        "version": "rclone v1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      }
+    },
+    {
+      "scenario": "lan-small",
+      "tool": "sftp-t64",
+      "repeat": 0,
+      "bytes": 4096000,
+      "files": 1000,
+      "wall_s": 0.0,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--sftp-host",
+        "SERVER",
+        "--sftp-known-hosts-file",
+        "KNOWN_HOSTS",
+        "--sftp-user",
+        "USER",
+        "--sftp-host",
+        "SERVER",
+        "--sftp-port",
+        "PORT",
+        "--sftp-user",
+        "USER",
+        "--sftp-key-use-agent",
+        "--sftp-known-hosts-file",
+        "KNOWN_HOSTS",
+        "--create-empty-src-dirs",
+        "--transfers",
+        "64",
+        "--",
+        ":local:SOURCE",
+        ":sftp:DESTINATION"
+      ],
+      "exit_code": -1,
+      "content_verified": null,
+      "metadata": null,
+      "recorded_status": "failed",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 60,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "data",
+          "kind": "small-files",
+          "files": 1000,
+          "bytes": 4096000
+        }
+      ],
+      "cache": "not-run",
+      "case_error": true,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-5.15.0-126-generic-x86_64-with-glibc2.35",
+        "kernel": "5.15.0-126-generic",
+        "machine": "x86_64",
+        "cpus": 160,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "xfs",
+        "destination": "xfs"
+      },
+      "tool_identity": {
+        "version": "rclone v1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      }
+    },
+    {
+      "scenario": "lan-small",
+      "tool": "webdav-t16",
+      "repeat": 0,
+      "bytes": 4096000,
+      "files": 1000,
+      "wall_s": 0.0,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--webdav-url",
+        "https://SERVER:PORT/",
+        "--webdav-vendor",
+        "rclone",
+        "--ca-cert",
+        "CA_CERT",
+        "--transfers",
+        "16",
+        "--create-empty-src-dirs",
+        "--",
+        ":local:SOURCE",
+        ":webdav:DESTINATION"
+      ],
+      "exit_code": -1,
+      "content_verified": null,
+      "metadata": null,
+      "recorded_status": "failed",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 60,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "data",
+          "kind": "small-files",
+          "files": 1000,
+          "bytes": 4096000
+        }
+      ],
+      "cache": "not-run",
+      "case_error": true,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-5.15.0-126-generic-x86_64-with-glibc2.35",
+        "kernel": "5.15.0-126-generic",
+        "machine": "x86_64",
+        "cpus": 160,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "xfs",
+        "destination": "xfs"
+      },
+      "tool_identity": {
+        "version": "rclone v1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      }
+    },
+    {
+      "scenario": "lan-fixed-large",
+      "tool": "syq",
+      "repeat": 0,
+      "bytes": 268435456,
+      "files": 1,
+      "wall_s": 2.9688058737665415,
+      "argv": [
+        "env",
+        "SYQ_DEBUG=1",
+        "syq",
+        "rsync",
+        "-rt",
+        "--no-progress",
+        "--syq-no-bootstrap",
+        "--rsync-path",
+        "REMOTE_SYQ",
+        "-e",
+        "SSH_WRAPPER",
+        "SOURCE/",
+        "USER@SERVER:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "file mtimes, whole seconds",
+        "mismatches": 0,
+        "entries": 1
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 60,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "data",
+          "kind": "large-file",
+          "files": 1,
+          "bytes": 268435456
+        }
+      ],
+      "cache": "evict",
+      "case_error": false,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-5.15.0-126-generic-x86_64-with-glibc2.35",
+        "kernel": "5.15.0-126-generic",
+        "machine": "x86_64",
+        "cpus": 160,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "xfs",
+        "destination": "xfs"
+      },
+      "tool_identity": {
+        "version": "syq 0.5.2",
+        "sha256": "5e4586bdc9706834cc907ff087afed57180e918e7459f9cefb7fda4e7973dbff"
+      }
+    },
+    {
+      "scenario": "lan-fixed-large",
+      "tool": "sftp-default",
+      "repeat": 0,
+      "bytes": 268435456,
+      "files": 1,
+      "wall_s": 3.269107297062874,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--sftp-host",
+        "SERVER",
+        "--sftp-known-hosts-file",
+        "KNOWN_HOSTS",
+        "--sftp-user",
+        "USER",
+        "--sftp-host",
+        "SERVER",
+        "--sftp-port",
+        "PORT",
+        "--sftp-user",
+        "USER",
+        "--sftp-key-use-agent",
+        "--sftp-known-hosts-file",
+        "KNOWN_HOSTS",
+        "--create-empty-src-dirs",
+        "--contimeout",
+        "5s",
+        "--timeout",
+        "15s",
+        "--retries",
+        "1",
+        "--",
+        ":local:SOURCE",
+        ":sftp:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "file mtimes, whole seconds",
+        "mismatches": 0,
+        "entries": 1
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 60,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "data",
+          "kind": "large-file",
+          "files": 1,
+          "bytes": 268435456
+        }
+      ],
+      "cache": "evict",
+      "case_error": false,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-5.15.0-126-generic-x86_64-with-glibc2.35",
+        "kernel": "5.15.0-126-generic",
+        "machine": "x86_64",
+        "cpus": 160,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "xfs",
+        "destination": "xfs"
+      },
+      "tool_identity": {
+        "version": "rclone v1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      }
+    },
+    {
+      "scenario": "lan-fixed-large",
+      "tool": "sftp-chunk128",
+      "repeat": 0,
+      "bytes": 268435456,
+      "files": 1,
+      "wall_s": 3.118890831246972,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--sftp-host",
+        "SERVER",
+        "--sftp-known-hosts-file",
+        "KNOWN_HOSTS",
+        "--sftp-user",
+        "USER",
+        "--sftp-host",
+        "SERVER",
+        "--sftp-port",
+        "PORT",
+        "--sftp-user",
+        "USER",
+        "--sftp-key-use-agent",
+        "--sftp-known-hosts-file",
+        "KNOWN_HOSTS",
+        "--create-empty-src-dirs",
+        "--contimeout",
+        "5s",
+        "--timeout",
+        "15s",
+        "--retries",
+        "1",
+        "--sftp-chunk-size",
+        "128Ki",
+        "--sftp-concurrency",
+        "128",
+        "--",
+        ":local:SOURCE",
+        ":sftp:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "file mtimes, whole seconds",
+        "mismatches": 0,
+        "entries": 1
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 60,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "data",
+          "kind": "large-file",
+          "files": 1,
+          "bytes": 268435456
+        }
+      ],
+      "cache": "evict",
+      "case_error": false,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-5.15.0-126-generic-x86_64-with-glibc2.35",
+        "kernel": "5.15.0-126-generic",
+        "machine": "x86_64",
+        "cpus": 160,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "xfs",
+        "destination": "xfs"
+      },
+      "tool_identity": {
+        "version": "rclone v1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      }
+    },
+    {
+      "scenario": "lan-fixed-large",
+      "tool": "webdav-t16",
+      "repeat": 0,
+      "bytes": 268435456,
+      "files": 1,
+      "wall_s": 0.9655549023300409,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--webdav-url",
+        "https://SERVER:PORT/",
+        "--webdav-vendor",
+        "rclone",
+        "--ca-cert",
+        "CA_CERT",
+        "--transfers",
+        "16",
+        "--create-empty-src-dirs",
+        "--contimeout",
+        "5s",
+        "--timeout",
+        "15s",
+        "--retries",
+        "1",
+        "--",
+        ":local:SOURCE",
+        ":webdav:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "file mtimes, whole seconds",
+        "mismatches": 0,
+        "entries": 1
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 60,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "data",
+          "kind": "large-file",
+          "files": 1,
+          "bytes": 268435456
+        }
+      ],
+      "cache": "evict",
+      "case_error": false,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-5.15.0-126-generic-x86_64-with-glibc2.35",
+        "kernel": "5.15.0-126-generic",
+        "machine": "x86_64",
+        "cpus": 160,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "xfs",
+        "destination": "xfs"
+      },
+      "tool_identity": {
+        "version": "rclone v1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      }
+    },
+    {
+      "scenario": "lan-connections-fixed-small",
+      "tool": "sftp-t16",
+      "repeat": 0,
+      "bytes": 4096000,
+      "files": 1000,
+      "wall_s": 1.5167040843516588,
+      "argv": [
+        "rclone-diagnostic",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--sftp-host",
+        "SERVER",
+        "--sftp-known-hosts-file",
+        "KNOWN_HOSTS",
+        "--sftp-user",
+        "USER",
+        "--sftp-host",
+        "SERVER",
+        "--sftp-port",
+        "PORT",
+        "--sftp-user",
+        "USER",
+        "--sftp-key-file",
+        "KEY_FILE",
+        "--sftp-known-hosts-file",
+        "KNOWN_HOSTS",
+        "-vv",
+        "--create-empty-src-dirs",
+        "--contimeout",
+        "5s",
+        "--timeout",
+        "15s",
+        "--retries",
+        "1",
+        "--transfers",
+        "16",
+        "--",
+        ":local:SOURCE",
+        ":sftp:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "file mtimes, whole seconds",
+        "mismatches": 0,
+        "entries": 1000
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 60,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "data",
+          "kind": "small-files",
+          "files": 1000,
+          "bytes": 4096000
+        }
+      ],
+      "cache": "evict",
+      "case_error": false,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-5.15.0-126-generic-x86_64-with-glibc2.35",
+        "kernel": "5.15.0-126-generic",
+        "machine": "x86_64",
+        "cpus": 160,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "xfs",
+        "destination": "xfs"
+      },
+      "tool_identity": {
+        "version": "rclone v1.75.1",
+        "sha256": "40d7db6208ebac0ec765bc210bd2900a3b390e3887b5468b614c19982f0cd8bb"
+      }
+    },
+    {
+      "scenario": "lan-connections-fixed-small",
+      "tool": "sftp-t64",
+      "repeat": 0,
+      "bytes": 4096000,
+      "files": 1000,
+      "wall_s": 2.768303679302335,
+      "argv": [
+        "rclone-diagnostic",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--sftp-host",
+        "SERVER",
+        "--sftp-known-hosts-file",
+        "KNOWN_HOSTS",
+        "--sftp-user",
+        "USER",
+        "--sftp-host",
+        "SERVER",
+        "--sftp-port",
+        "PORT",
+        "--sftp-user",
+        "USER",
+        "--sftp-key-file",
+        "KEY_FILE",
+        "--sftp-known-hosts-file",
+        "KNOWN_HOSTS",
+        "-vv",
+        "--create-empty-src-dirs",
+        "--contimeout",
+        "5s",
+        "--timeout",
+        "15s",
+        "--retries",
+        "1",
+        "--transfers",
+        "64",
+        "--",
+        ":local:SOURCE",
+        ":sftp:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "file mtimes, whole seconds",
+        "mismatches": 0,
+        "entries": 1000
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 60,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "data",
+          "kind": "small-files",
+          "files": 1000,
+          "bytes": 4096000
+        }
+      ],
+      "cache": "evict",
+      "case_error": false,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-5.15.0-126-generic-x86_64-with-glibc2.35",
+        "kernel": "5.15.0-126-generic",
+        "machine": "x86_64",
+        "cpus": 160,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "xfs",
+        "destination": "xfs"
+      },
+      "tool_identity": {
+        "version": "rclone v1.75.1",
+        "sha256": "40d7db6208ebac0ec765bc210bd2900a3b390e3887b5468b614c19982f0cd8bb"
+      }
+    },
+    {
+      "scenario": "fast-corrected-8g",
+      "tool": "syq",
+      "repeat": 0,
+      "bytes": 8589934592,
+      "files": 2,
+      "wall_s": 5.272654049098492,
+      "argv": [
+        "env",
+        "SYQ_DEBUG=1",
+        "syq",
+        "rsync",
+        "-rt",
+        "--no-progress",
+        "--syq-no-bootstrap",
+        "--rsync-path",
+        "REMOTE_SYQ",
+        "-e",
+        "SSH_WRAPPER",
+        "SOURCE/",
+        "USER@SERVER:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "file mtimes, whole seconds",
+        "mismatches": 0,
+        "entries": 2
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 90,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "data",
+          "kind": "large-file",
+          "files": 1,
+          "bytes": 8589934592
+        }
+      ],
+      "cache": "evict",
+      "case_error": false,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-5.15.0-126-generic-x86_64-with-glibc2.35",
+        "kernel": "5.15.0-126-generic",
+        "machine": "x86_64",
+        "cpus": 160,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "tmpfs",
+        "destination": "tmpfs"
+      },
+      "tool_identity": {
+        "version": "syq 0.5.2",
+        "sha256": "5e4586bdc9706834cc907ff087afed57180e918e7459f9cefb7fda4e7973dbff"
+      }
+    },
+    {
+      "scenario": "fast-corrected-8g",
+      "tool": "sftp-default",
+      "repeat": 0,
+      "bytes": 8589934592,
+      "files": 2,
+      "wall_s": 31.11586954817176,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--sftp-host",
+        "SERVER",
+        "--sftp-known-hosts-file",
+        "KNOWN_HOSTS",
+        "--sftp-user",
+        "USER",
+        "--sftp-host",
+        "SERVER",
+        "--sftp-port",
+        "PORT",
+        "--sftp-user",
+        "USER",
+        "--sftp-key-file",
+        "KEY_FILE",
+        "--sftp-known-hosts-file",
+        "KNOWN_HOSTS",
+        "--create-empty-src-dirs",
+        "--contimeout",
+        "5s",
+        "--retries",
+        "1",
+        "--",
+        ":local:SOURCE",
+        ":sftp:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "file mtimes, whole seconds",
+        "mismatches": 0,
+        "entries": 2
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 90,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "data",
+          "kind": "large-file",
+          "files": 1,
+          "bytes": 8589934592
+        }
+      ],
+      "cache": "evict",
+      "case_error": false,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-5.15.0-126-generic-x86_64-with-glibc2.35",
+        "kernel": "5.15.0-126-generic",
+        "machine": "x86_64",
+        "cpus": 160,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "tmpfs",
+        "destination": "tmpfs"
+      },
+      "tool_identity": {
+        "version": "rclone v1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      }
+    },
+    {
+      "scenario": "fast-corrected-8g",
+      "tool": "sftp-chunk128",
+      "repeat": 0,
+      "bytes": 8589934592,
+      "files": 2,
+      "wall_s": 30.765353497117758,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--sftp-host",
+        "SERVER",
+        "--sftp-known-hosts-file",
+        "KNOWN_HOSTS",
+        "--sftp-user",
+        "USER",
+        "--sftp-host",
+        "SERVER",
+        "--sftp-port",
+        "PORT",
+        "--sftp-user",
+        "USER",
+        "--sftp-key-file",
+        "KEY_FILE",
+        "--sftp-known-hosts-file",
+        "KNOWN_HOSTS",
+        "--create-empty-src-dirs",
+        "--contimeout",
+        "5s",
+        "--retries",
+        "1",
+        "--sftp-chunk-size",
+        "128Ki",
+        "--sftp-concurrency",
+        "128",
+        "--",
+        ":local:SOURCE",
+        ":sftp:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "file mtimes, whole seconds",
+        "mismatches": 0,
+        "entries": 2
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 90,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "data",
+          "kind": "large-file",
+          "files": 1,
+          "bytes": 8589934592
+        }
+      ],
+      "cache": "evict",
+      "case_error": false,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-5.15.0-126-generic-x86_64-with-glibc2.35",
+        "kernel": "5.15.0-126-generic",
+        "machine": "x86_64",
+        "cpus": 160,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "tmpfs",
+        "destination": "tmpfs"
+      },
+      "tool_identity": {
+        "version": "rclone v1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      }
+    },
+    {
+      "scenario": "fast-corrected-8g",
+      "tool": "webdav-t16",
+      "repeat": 0,
+      "bytes": 8589934592,
+      "files": 2,
+      "wall_s": 30.715141970664263,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--webdav-url",
+        "https://SERVER:PORT/",
+        "--webdav-vendor",
+        "rclone",
+        "--ca-cert",
+        "CA_CERT",
+        "--transfers",
+        "16",
+        "--webdav-pacer-min-sleep",
+        "0s",
+        "--create-empty-src-dirs",
+        "--contimeout",
+        "5s",
+        "--retries",
+        "1",
+        "--",
+        ":local:SOURCE",
+        ":webdav:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "file mtimes, whole seconds",
+        "mismatches": 0,
+        "entries": 2
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 90,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "data",
+          "kind": "large-file",
+          "files": 1,
+          "bytes": 8589934592
+        }
+      ],
+      "cache": "evict",
+      "case_error": false,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-5.15.0-126-generic-x86_64-with-glibc2.35",
+        "kernel": "5.15.0-126-generic",
+        "machine": "x86_64",
+        "cpus": 160,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "tmpfs",
+        "destination": "tmpfs"
+      },
+      "tool_identity": {
+        "version": "rclone v1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      }
+    },
+    {
+      "scenario": "lan-fixed-small",
+      "tool": "syq",
+      "repeat": 0,
+      "bytes": 4096000,
+      "files": 1000,
+      "wall_s": 2.81856875680387,
+      "argv": [
+        "env",
+        "SYQ_DEBUG=1",
+        "syq",
+        "rsync",
+        "-rt",
+        "--no-progress",
+        "--syq-no-bootstrap",
+        "--rsync-path",
+        "REMOTE_SYQ",
+        "-e",
+        "SSH_WRAPPER",
+        "SOURCE/",
+        "USER@SERVER:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "file mtimes, whole seconds",
+        "mismatches": 0,
+        "entries": 1000
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 60,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "data",
+          "kind": "small-files",
+          "files": 1000,
+          "bytes": 4096000
+        }
+      ],
+      "cache": "evict",
+      "case_error": false,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-5.15.0-126-generic-x86_64-with-glibc2.35",
+        "kernel": "5.15.0-126-generic",
+        "machine": "x86_64",
+        "cpus": 160,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "xfs",
+        "destination": "xfs"
+      },
+      "tool_identity": {
+        "version": "syq 0.5.2",
+        "sha256": "5e4586bdc9706834cc907ff087afed57180e918e7459f9cefb7fda4e7973dbff"
+      }
+    },
+    {
+      "scenario": "lan-fixed-small",
+      "tool": "sftp-t16",
+      "repeat": 0,
+      "bytes": 4096000,
+      "files": 1000,
+      "wall_s": 8.076461298391223,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--sftp-host",
+        "SERVER",
+        "--sftp-known-hosts-file",
+        "KNOWN_HOSTS",
+        "--sftp-user",
+        "USER",
+        "--sftp-host",
+        "SERVER",
+        "--sftp-port",
+        "PORT",
+        "--sftp-user",
+        "USER",
+        "--sftp-key-use-agent",
+        "--sftp-known-hosts-file",
+        "KNOWN_HOSTS",
+        "--create-empty-src-dirs",
+        "--contimeout",
+        "5s",
+        "--timeout",
+        "15s",
+        "--retries",
+        "1",
+        "--transfers",
+        "16",
+        "--",
+        ":local:SOURCE",
+        ":sftp:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "file mtimes, whole seconds",
+        "mismatches": 0,
+        "entries": 1000
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 60,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "data",
+          "kind": "small-files",
+          "files": 1000,
+          "bytes": 4096000
+        }
+      ],
+      "cache": "evict",
+      "case_error": false,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-5.15.0-126-generic-x86_64-with-glibc2.35",
+        "kernel": "5.15.0-126-generic",
+        "machine": "x86_64",
+        "cpus": 160,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "xfs",
+        "destination": "xfs"
+      },
+      "tool_identity": {
+        "version": "rclone v1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      }
+    },
+    {
+      "scenario": "lan-fixed-small",
+      "tool": "sftp-t64",
+      "repeat": 0,
+      "bytes": 4096000,
+      "files": 1000,
+      "wall_s": 14.586047092452645,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--sftp-host",
+        "SERVER",
+        "--sftp-known-hosts-file",
+        "KNOWN_HOSTS",
+        "--sftp-user",
+        "USER",
+        "--sftp-host",
+        "SERVER",
+        "--sftp-port",
+        "PORT",
+        "--sftp-user",
+        "USER",
+        "--sftp-key-use-agent",
+        "--sftp-known-hosts-file",
+        "KNOWN_HOSTS",
+        "--create-empty-src-dirs",
+        "--contimeout",
+        "5s",
+        "--timeout",
+        "15s",
+        "--retries",
+        "1",
+        "--transfers",
+        "64",
+        "--",
+        ":local:SOURCE",
+        ":sftp:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "file mtimes, whole seconds",
+        "mismatches": 0,
+        "entries": 1000
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 60,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "data",
+          "kind": "small-files",
+          "files": 1000,
+          "bytes": 4096000
+        }
+      ],
+      "cache": "evict",
+      "case_error": false,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-5.15.0-126-generic-x86_64-with-glibc2.35",
+        "kernel": "5.15.0-126-generic",
+        "machine": "x86_64",
+        "cpus": 160,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "xfs",
+        "destination": "xfs"
+      },
+      "tool_identity": {
+        "version": "rclone v1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      }
+    },
+    {
+      "scenario": "lan-fixed-small",
+      "tool": "webdav-t16",
+      "repeat": 0,
+      "bytes": 4096000,
+      "files": 1000,
+      "wall_s": 34.62118777260184,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--webdav-url",
+        "https://SERVER:PORT/",
+        "--webdav-vendor",
+        "rclone",
+        "--ca-cert",
+        "CA_CERT",
+        "--transfers",
+        "16",
+        "--create-empty-src-dirs",
+        "--contimeout",
+        "5s",
+        "--timeout",
+        "15s",
+        "--retries",
+        "1",
+        "--",
+        ":local:SOURCE",
+        ":webdav:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "file mtimes, whole seconds",
+        "mismatches": 0,
+        "entries": 1000
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 60,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "data",
+          "kind": "small-files",
+          "files": 1000,
+          "bytes": 4096000
+        }
+      ],
+      "cache": "evict",
+      "case_error": false,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-5.15.0-126-generic-x86_64-with-glibc2.35",
+        "kernel": "5.15.0-126-generic",
+        "machine": "x86_64",
+        "cpus": 160,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "xfs",
+        "destination": "xfs"
+      },
+      "tool_identity": {
+        "version": "rclone v1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      }
+    },
+    {
+      "scenario": "lan-pacer-small",
+      "tool": "webdav-t16-pacer0",
+      "repeat": 0,
+      "bytes": 4096000,
+      "files": 1000,
+      "wall_s": 11.53014156408608,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--webdav-url",
+        "https://SERVER:PORT/",
+        "--webdav-vendor",
+        "rclone",
+        "--ca-cert",
+        "CA_CERT",
+        "--transfers",
+        "16",
+        "--create-empty-src-dirs",
+        "--contimeout",
+        "5s",
+        "--timeout",
+        "15s",
+        "--retries",
+        "1",
+        "--webdav-pacer-min-sleep",
+        "0s",
+        "--",
+        ":local:SOURCE",
+        ":webdav:DESTINATION"
+      ],
+      "exit_code": 1,
+      "content_verified": null,
+      "metadata": null,
+      "recorded_status": "failed",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 60,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "data",
+          "kind": "small-files",
+          "files": 1000,
+          "bytes": 4096000
+        }
+      ],
+      "cache": "evict",
+      "case_error": true,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-5.15.0-126-generic-x86_64-with-glibc2.35",
+        "kernel": "5.15.0-126-generic",
+        "machine": "x86_64",
+        "cpus": 160,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "xfs",
+        "destination": "xfs"
+      },
+      "tool_identity": {
+        "version": "rclone v1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      }
+    },
+    {
+      "scenario": "fast-32files-8g",
+      "tool": "syq",
+      "repeat": 0,
+      "bytes": 8589934592,
+      "files": 33,
+      "wall_s": 1.6665368620306253,
+      "argv": [
+        "env",
+        "SYQ_DEBUG=1",
+        "syq",
+        "rsync",
+        "-rt",
+        "--no-progress",
+        "--syq-no-bootstrap",
+        "--rsync-path",
+        "REMOTE_SYQ",
+        "-e",
+        "SSH_WRAPPER",
+        "SOURCE/",
+        "USER@SERVER:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "file mtimes, whole seconds",
+        "mismatches": 0,
+        "entries": 33
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 90,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "data",
+          "kind": "small-files",
+          "files": 32,
+          "bytes": 8589934592
+        }
+      ],
+      "cache": "evict",
+      "case_error": false,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-5.15.0-126-generic-x86_64-with-glibc2.35",
+        "kernel": "5.15.0-126-generic",
+        "machine": "x86_64",
+        "cpus": 160,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "tmpfs",
+        "destination": "tmpfs"
+      },
+      "tool_identity": {
+        "version": "syq 0.5.2",
+        "sha256": "5e4586bdc9706834cc907ff087afed57180e918e7459f9cefb7fda4e7973dbff"
+      }
+    },
+    {
+      "scenario": "fast-32files-8g",
+      "tool": "sftp-t32-chunk128",
+      "repeat": 0,
+      "bytes": 8589934592,
+      "files": 33,
+      "wall_s": 4.671291844919324,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--sftp-host",
+        "SERVER",
+        "--sftp-known-hosts-file",
+        "KNOWN_HOSTS",
+        "--sftp-user",
+        "USER",
+        "--sftp-host",
+        "SERVER",
+        "--sftp-port",
+        "PORT",
+        "--sftp-user",
+        "USER",
+        "--sftp-key-file",
+        "KEY_FILE",
+        "--sftp-known-hosts-file",
+        "KNOWN_HOSTS",
+        "--create-empty-src-dirs",
+        "--contimeout",
+        "5s",
+        "--retries",
+        "1",
+        "--transfers",
+        "32",
+        "--sftp-chunk-size",
+        "128Ki",
+        "--sftp-concurrency",
+        "128",
+        "--",
+        ":local:SOURCE",
+        ":sftp:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "file mtimes, whole seconds",
+        "mismatches": 0,
+        "entries": 33
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 90,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "data",
+          "kind": "small-files",
+          "files": 32,
+          "bytes": 8589934592
+        }
+      ],
+      "cache": "evict",
+      "case_error": false,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-5.15.0-126-generic-x86_64-with-glibc2.35",
+        "kernel": "5.15.0-126-generic",
+        "machine": "x86_64",
+        "cpus": 160,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "tmpfs",
+        "destination": "tmpfs"
+      },
+      "tool_identity": {
+        "version": "rclone v1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      }
+    },
+    {
+      "scenario": "fast-32files-8g",
+      "tool": "webdav-t32",
+      "repeat": 0,
+      "bytes": 8589934592,
+      "files": 33,
+      "wall_s": 32.41794705018401,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--webdav-url",
+        "https://SERVER:PORT/",
+        "--webdav-vendor",
+        "rclone",
+        "--ca-cert",
+        "CA_CERT",
+        "--transfers",
+        "32",
+        "--webdav-pacer-min-sleep",
+        "0s",
+        "--create-empty-src-dirs",
+        "--contimeout",
+        "5s",
+        "--retries",
+        "1",
+        "--",
+        ":local:SOURCE",
+        ":webdav:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "file mtimes, whole seconds",
+        "mismatches": 0,
+        "entries": 33
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 90,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "data",
+          "kind": "small-files",
+          "files": 32,
+          "bytes": 8589934592
+        }
+      ],
+      "cache": "evict",
+      "case_error": false,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-5.15.0-126-generic-x86_64-with-glibc2.35",
+        "kernel": "5.15.0-126-generic",
+        "machine": "x86_64",
+        "cpus": 160,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "tmpfs",
+        "destination": "tmpfs"
+      },
+      "tool_identity": {
+        "version": "rclone v1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      }
+    },
+    {
+      "scenario": "calibration-write",
+      "tool": "syq",
+      "repeat": 0,
+      "bytes": 40960000,
+      "files": 10000,
+      "wall_s": 2.2675722409039736,
+      "argv": [
+        "syq",
+        "rsync",
+        "-a",
+        "--no-progress",
+        "SOURCE/",
+        "DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular files/directories: type, mode, uid, gid, mtime_ns",
+        "mismatches": 0,
+        "entries": 10256
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 900,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "small-files",
+          "kind": "small-files",
+          "files": 10000,
+          "bytes": 40960000
+        }
+      ],
+      "cache": "evict",
+      "case_error": false,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-5.15.0-126-generic-x86_64-with-glibc2.35",
+        "kernel": "5.15.0-126-generic",
+        "machine": "x86_64",
+        "cpus": 160,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "ext2/ext3",
+        "destination": "nfs"
+      },
+      "tool_identity": {
+        "version": "syq 0.5.2",
+        "sha256": "5e4586bdc9706834cc907ff087afed57180e918e7459f9cefb7fda4e7973dbff"
+      }
+    },
+    {
+      "scenario": "calibration-write",
+      "tool": "rclone-default",
+      "repeat": 0,
+      "bytes": 40960000,
+      "files": 10000,
+      "wall_s": 12.281189032830298,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--metadata",
+        "--create-empty-src-dirs",
+        "--",
+        ":local:SOURCE",
+        ":local:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular files/directories: type, mode, uid, gid, mtime_ns",
+        "mismatches": 0,
+        "entries": 10256
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 900,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "small-files",
+          "kind": "small-files",
+          "files": 10000,
+          "bytes": 40960000
+        }
+      ],
+      "cache": "evict",
+      "case_error": false,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-5.15.0-126-generic-x86_64-with-glibc2.35",
+        "kernel": "5.15.0-126-generic",
+        "machine": "x86_64",
+        "cpus": 160,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "ext2/ext3",
+        "destination": "nfs"
+      },
+      "tool_identity": {
+        "version": "rclone v1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      }
+    },
+    {
+      "scenario": "calibration-write",
+      "tool": "rclone-t16",
+      "repeat": 0,
+      "bytes": 40960000,
+      "files": 10000,
+      "wall_s": 5.071746021974832,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--metadata",
+        "--create-empty-src-dirs",
+        "--transfers",
+        "16",
+        "--",
+        ":local:SOURCE",
+        ":local:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular files/directories: type, mode, uid, gid, mtime_ns",
+        "mismatches": 0,
+        "entries": 10256
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 900,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "small-files",
+          "kind": "small-files",
+          "files": 10000,
+          "bytes": 40960000
+        }
+      ],
+      "cache": "evict",
+      "case_error": false,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-5.15.0-126-generic-x86_64-with-glibc2.35",
+        "kernel": "5.15.0-126-generic",
+        "machine": "x86_64",
+        "cpus": 160,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "ext2/ext3",
+        "destination": "nfs"
+      },
+      "tool_identity": {
+        "version": "rclone v1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      }
+    },
+    {
+      "scenario": "calibration-write",
+      "tool": "rclone-t64",
+      "repeat": 0,
+      "bytes": 40960000,
+      "files": 10000,
+      "wall_s": 3.2692263380158693,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--metadata",
+        "--create-empty-src-dirs",
+        "--transfers",
+        "64",
+        "--",
+        ":local:SOURCE",
+        ":local:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular files/directories: type, mode, uid, gid, mtime_ns",
+        "mismatches": 0,
+        "entries": 10256
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 900,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "small-files",
+          "kind": "small-files",
+          "files": 10000,
+          "bytes": 40960000
+        }
+      ],
+      "cache": "evict",
+      "case_error": false,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-5.15.0-126-generic-x86_64-with-glibc2.35",
+        "kernel": "5.15.0-126-generic",
+        "machine": "x86_64",
+        "cpus": 160,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "ext2/ext3",
+        "destination": "nfs"
+      },
+      "tool_identity": {
+        "version": "rclone v1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      }
+    },
+    {
+      "scenario": "raid-explore-local-large",
+      "tool": "syq",
+      "repeat": 0,
+      "bytes": 2147483648,
+      "files": 1,
+      "wall_s": 0.06419695797376335,
+      "argv": [
+        "syq",
+        "rsync",
+        "-a",
+        "--no-progress",
+        "SOURCE/",
+        "DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular files/directories: type, mode, uid, gid, mtime_ns",
+        "mismatches": 0,
+        "entries": 1
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 120,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "data",
+          "kind": "large-file",
+          "files": 1,
+          "bytes": 2147483648
+        }
+      ],
+      "cache": "evict",
+      "case_error": false,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-5.15.0-126-generic-x86_64-with-glibc2.35",
+        "kernel": "5.15.0-126-generic",
+        "machine": "x86_64",
+        "cpus": 160,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "xfs",
+        "destination": "xfs"
+      },
+      "tool_identity": {
+        "version": "syq 0.5.2",
+        "sha256": "5e4586bdc9706834cc907ff087afed57180e918e7459f9cefb7fda4e7973dbff"
+      }
+    },
+    {
+      "scenario": "raid-explore-local-large",
+      "tool": "rclone-default",
+      "repeat": 0,
+      "bytes": 2147483648,
+      "files": 1,
+      "wall_s": 3.61950008594431,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--metadata",
+        "--create-empty-src-dirs",
+        "--",
+        ":local:SOURCE",
+        ":local:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular files/directories: type, mode, uid, gid, mtime_ns",
+        "mismatches": 0,
+        "entries": 1
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 120,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "data",
+          "kind": "large-file",
+          "files": 1,
+          "bytes": 2147483648
+        }
+      ],
+      "cache": "evict",
+      "case_error": false,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-5.15.0-126-generic-x86_64-with-glibc2.35",
+        "kernel": "5.15.0-126-generic",
+        "machine": "x86_64",
+        "cpus": 160,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "xfs",
+        "destination": "xfs"
+      },
+      "tool_identity": {
+        "version": "rclone v1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      }
+    },
+    {
+      "scenario": "raid-explore-local-large",
+      "tool": "rclone-s8",
+      "repeat": 0,
+      "bytes": 2147483648,
+      "files": 1,
+      "wall_s": 3.7699754659552127,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--metadata",
+        "--create-empty-src-dirs",
+        "--multi-thread-streams",
+        "8",
+        "--",
+        ":local:SOURCE",
+        ":local:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular files/directories: type, mode, uid, gid, mtime_ns",
+        "mismatches": 0,
+        "entries": 1
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 120,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "data",
+          "kind": "large-file",
+          "files": 1,
+          "bytes": 2147483648
+        }
+      ],
+      "cache": "evict",
+      "case_error": false,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-5.15.0-126-generic-x86_64-with-glibc2.35",
+        "kernel": "5.15.0-126-generic",
+        "machine": "x86_64",
+        "cpus": 160,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "xfs",
+        "destination": "xfs"
+      },
+      "tool_identity": {
+        "version": "rclone v1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      }
+    },
+    {
+      "scenario": "raid-explore-local-small",
+      "tool": "syq",
+      "repeat": 0,
+      "bytes": 163840000,
+      "files": 40000,
+      "wall_s": 0.9653543520253152,
+      "argv": [
+        "syq",
+        "rsync",
+        "-a",
+        "--no-progress",
+        "SOURCE/",
+        "DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular files/directories: type, mode, uid, gid, mtime_ns",
+        "mismatches": 0,
+        "entries": 40256
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 120,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "data",
+          "kind": "small-files",
+          "files": 40000,
+          "bytes": 163840000
+        }
+      ],
+      "cache": "evict",
+      "case_error": false,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-5.15.0-126-generic-x86_64-with-glibc2.35",
+        "kernel": "5.15.0-126-generic",
+        "machine": "x86_64",
+        "cpus": 160,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "xfs",
+        "destination": "xfs"
+      },
+      "tool_identity": {
+        "version": "syq 0.5.2",
+        "sha256": "5e4586bdc9706834cc907ff087afed57180e918e7459f9cefb7fda4e7973dbff"
+      }
+    },
+    {
+      "scenario": "raid-explore-local-small",
+      "tool": "rclone-default",
+      "repeat": 0,
+      "bytes": 163840000,
+      "files": 40000,
+      "wall_s": 2.6681483681313694,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--metadata",
+        "--create-empty-src-dirs",
+        "--",
+        ":local:SOURCE",
+        ":local:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular files/directories: type, mode, uid, gid, mtime_ns",
+        "mismatches": 0,
+        "entries": 40256
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 120,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "data",
+          "kind": "small-files",
+          "files": 40000,
+          "bytes": 163840000
+        }
+      ],
+      "cache": "evict",
+      "case_error": false,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-5.15.0-126-generic-x86_64-with-glibc2.35",
+        "kernel": "5.15.0-126-generic",
+        "machine": "x86_64",
+        "cpus": 160,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "xfs",
+        "destination": "xfs"
+      },
+      "tool_identity": {
+        "version": "rclone v1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      }
+    },
+    {
+      "scenario": "raid-explore-local-small",
+      "tool": "rclone-t16",
+      "repeat": 0,
+      "bytes": 163840000,
+      "files": 40000,
+      "wall_s": 1.6666384788695723,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--metadata",
+        "--create-empty-src-dirs",
+        "--transfers",
+        "16",
+        "--",
+        ":local:SOURCE",
+        ":local:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular files/directories: type, mode, uid, gid, mtime_ns",
+        "mismatches": 0,
+        "entries": 40256
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 120,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "data",
+          "kind": "small-files",
+          "files": 40000,
+          "bytes": 163840000
+        }
+      ],
+      "cache": "evict",
+      "case_error": false,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-5.15.0-126-generic-x86_64-with-glibc2.35",
+        "kernel": "5.15.0-126-generic",
+        "machine": "x86_64",
+        "cpus": 160,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "xfs",
+        "destination": "xfs"
+      },
+      "tool_identity": {
+        "version": "rclone v1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      }
+    },
+    {
+      "scenario": "raid-explore-local-small",
+      "tool": "rclone-t64",
+      "repeat": 0,
+      "bytes": 163840000,
+      "files": 40000,
+      "wall_s": 1.7169268759898841,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--metadata",
+        "--create-empty-src-dirs",
+        "--transfers",
+        "64",
+        "--",
+        ":local:SOURCE",
+        ":local:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular files/directories: type, mode, uid, gid, mtime_ns",
+        "mismatches": 0,
+        "entries": 40256
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 120,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "data",
+          "kind": "small-files",
+          "files": 40000,
+          "bytes": 163840000
+        }
+      ],
+      "cache": "evict",
+      "case_error": false,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-5.15.0-126-generic-x86_64-with-glibc2.35",
+        "kernel": "5.15.0-126-generic",
+        "machine": "x86_64",
+        "cpus": 160,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "xfs",
+        "destination": "xfs"
+      },
+      "tool_identity": {
+        "version": "rclone v1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      }
+    },
+    {
+      "scenario": "explore-local-small",
+      "tool": "syq",
+      "repeat": 0,
+      "bytes": 40960000,
+      "files": 10000,
+      "wall_s": 0.5149175119586289,
+      "argv": [
+        "syq",
+        "rsync",
+        "-a",
+        "--no-progress",
+        "SOURCE/",
+        "DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular files/directories: type, mode, uid, gid, mtime_ns",
+        "mismatches": 0,
+        "entries": 10256
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 120,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "data",
+          "kind": "small-files",
+          "files": 10000,
+          "bytes": 40960000
+        }
+      ],
+      "cache": "evict",
+      "case_error": false,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-5.15.0-126-generic-x86_64-with-glibc2.35",
+        "kernel": "5.15.0-126-generic",
+        "machine": "x86_64",
+        "cpus": 160,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "ext2/ext3",
+        "destination": "ext2/ext3"
+      },
+      "tool_identity": {
+        "version": "syq 0.5.2",
+        "sha256": "5e4586bdc9706834cc907ff087afed57180e918e7459f9cefb7fda4e7973dbff"
+      }
+    },
+    {
+      "scenario": "explore-local-small",
+      "tool": "rclone-default",
+      "repeat": 0,
+      "bytes": 40960000,
+      "files": 10000,
+      "wall_s": 0.7649231739342213,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--metadata",
+        "--create-empty-src-dirs",
+        "--",
+        ":local:SOURCE",
+        ":local:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular files/directories: type, mode, uid, gid, mtime_ns",
+        "mismatches": 0,
+        "entries": 10256
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 120,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "data",
+          "kind": "small-files",
+          "files": 10000,
+          "bytes": 40960000
+        }
+      ],
+      "cache": "evict",
+      "case_error": false,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-5.15.0-126-generic-x86_64-with-glibc2.35",
+        "kernel": "5.15.0-126-generic",
+        "machine": "x86_64",
+        "cpus": 160,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "ext2/ext3",
+        "destination": "ext2/ext3"
+      },
+      "tool_identity": {
+        "version": "rclone v1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      }
+    },
+    {
+      "scenario": "explore-local-small",
+      "tool": "rclone-t16",
+      "repeat": 0,
+      "bytes": 40960000,
+      "files": 10000,
+      "wall_s": 0.5148475309833884,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--metadata",
+        "--create-empty-src-dirs",
+        "--transfers",
+        "16",
+        "--",
+        ":local:SOURCE",
+        ":local:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular files/directories: type, mode, uid, gid, mtime_ns",
+        "mismatches": 0,
+        "entries": 10256
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 120,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "data",
+          "kind": "small-files",
+          "files": 10000,
+          "bytes": 40960000
+        }
+      ],
+      "cache": "evict",
+      "case_error": false,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-5.15.0-126-generic-x86_64-with-glibc2.35",
+        "kernel": "5.15.0-126-generic",
+        "machine": "x86_64",
+        "cpus": 160,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "ext2/ext3",
+        "destination": "ext2/ext3"
+      },
+      "tool_identity": {
+        "version": "rclone v1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      }
+    },
+    {
+      "scenario": "explore-local-small",
+      "tool": "rclone-t64",
+      "repeat": 0,
+      "bytes": 40960000,
+      "files": 10000,
+      "wall_s": 0.4649231971707195,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--metadata",
+        "--create-empty-src-dirs",
+        "--transfers",
+        "64",
+        "--",
+        ":local:SOURCE",
+        ":local:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular files/directories: type, mode, uid, gid, mtime_ns",
+        "mismatches": 0,
+        "entries": 10256
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 120,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "data",
+          "kind": "small-files",
+          "files": 10000,
+          "bytes": 40960000
+        }
+      ],
+      "cache": "evict",
+      "case_error": false,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-5.15.0-126-generic-x86_64-with-glibc2.35",
+        "kernel": "5.15.0-126-generic",
+        "machine": "x86_64",
+        "cpus": 160,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "ext2/ext3",
+        "destination": "ext2/ext3"
+      },
+      "tool_identity": {
+        "version": "rclone v1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      }
+    },
+    {
+      "scenario": "calibration-read",
+      "tool": "syq",
+      "repeat": 0,
+      "bytes": 40960000,
+      "files": 10000,
+      "wall_s": 0.76506302296184,
+      "argv": [
+        "syq",
+        "rsync",
+        "-a",
+        "--no-progress",
+        "SOURCE/",
+        "DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular files/directories: type, mode, uid, gid, mtime_ns",
+        "mismatches": 0,
+        "entries": 10256
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 900,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "small-files",
+          "kind": "small-files",
+          "files": 10000,
+          "bytes": 40960000
+        }
+      ],
+      "cache": "evict",
+      "case_error": false,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-5.15.0-126-generic-x86_64-with-glibc2.35",
+        "kernel": "5.15.0-126-generic",
+        "machine": "x86_64",
+        "cpus": 160,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "nfs",
+        "destination": "ext2/ext3"
+      },
+      "tool_identity": {
+        "version": "syq 0.5.2",
+        "sha256": "5e4586bdc9706834cc907ff087afed57180e918e7459f9cefb7fda4e7973dbff"
+      }
+    },
+    {
+      "scenario": "calibration-read",
+      "tool": "rclone-default",
+      "repeat": 0,
+      "bytes": 40960000,
+      "files": 10000,
+      "wall_s": 2.3175217169336975,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--metadata",
+        "--create-empty-src-dirs",
+        "--",
+        ":local:SOURCE",
+        ":local:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular files/directories: type, mode, uid, gid, mtime_ns",
+        "mismatches": 0,
+        "entries": 10256
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 900,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "small-files",
+          "kind": "small-files",
+          "files": 10000,
+          "bytes": 40960000
+        }
+      ],
+      "cache": "evict",
+      "case_error": false,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-5.15.0-126-generic-x86_64-with-glibc2.35",
+        "kernel": "5.15.0-126-generic",
+        "machine": "x86_64",
+        "cpus": 160,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "nfs",
+        "destination": "ext2/ext3"
+      },
+      "tool_identity": {
+        "version": "rclone v1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      }
+    },
+    {
+      "scenario": "calibration-read",
+      "tool": "rclone-t16",
+      "repeat": 0,
+      "bytes": 40960000,
+      "files": 10000,
+      "wall_s": 0.8151859068311751,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--metadata",
+        "--create-empty-src-dirs",
+        "--transfers",
+        "16",
+        "--",
+        ":local:SOURCE",
+        ":local:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular files/directories: type, mode, uid, gid, mtime_ns",
+        "mismatches": 0,
+        "entries": 10256
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 900,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "small-files",
+          "kind": "small-files",
+          "files": 10000,
+          "bytes": 40960000
+        }
+      ],
+      "cache": "evict",
+      "case_error": false,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-5.15.0-126-generic-x86_64-with-glibc2.35",
+        "kernel": "5.15.0-126-generic",
+        "machine": "x86_64",
+        "cpus": 160,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "nfs",
+        "destination": "ext2/ext3"
+      },
+      "tool_identity": {
+        "version": "rclone v1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      }
+    },
+    {
+      "scenario": "calibration-read",
+      "tool": "rclone-t64",
+      "repeat": 0,
+      "bytes": 40960000,
+      "files": 10000,
+      "wall_s": 0.8153161308728158,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--metadata",
+        "--create-empty-src-dirs",
+        "--transfers",
+        "64",
+        "--",
+        ":local:SOURCE",
+        ":local:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular files/directories: type, mode, uid, gid, mtime_ns",
+        "mismatches": 0,
+        "entries": 10256
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 900,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "small-files",
+          "kind": "small-files",
+          "files": 10000,
+          "bytes": 40960000
+        }
+      ],
+      "cache": "evict",
+      "case_error": false,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-5.15.0-126-generic-x86_64-with-glibc2.35",
+        "kernel": "5.15.0-126-generic",
+        "machine": "x86_64",
+        "cpus": 160,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "nfs",
+        "destination": "ext2/ext3"
+      },
+      "tool_identity": {
+        "version": "rclone v1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      }
+    },
+    {
+      "scenario": "main-write",
+      "tool": "syq",
+      "repeat": 0,
+      "bytes": 163840000,
+      "files": 40000,
+      "wall_s": 7.725536991143599,
+      "argv": [
+        "syq",
+        "rsync",
+        "-a",
+        "--no-progress",
+        "SOURCE/",
+        "DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular files/directories: type, mode, uid, gid, mtime_ns",
+        "mismatches": 0,
+        "entries": 40256
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 3,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 900,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "small-files",
+          "kind": "small-files",
+          "files": 40000,
+          "bytes": 163840000
+        }
+      ],
+      "cache": "evict",
+      "case_error": false,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-5.15.0-126-generic-x86_64-with-glibc2.35",
+        "kernel": "5.15.0-126-generic",
+        "machine": "x86_64",
+        "cpus": 160,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "ext2/ext3",
+        "destination": "nfs"
+      },
+      "tool_identity": {
+        "version": "syq 0.5.2",
+        "sha256": "5e4586bdc9706834cc907ff087afed57180e918e7459f9cefb7fda4e7973dbff"
+      }
+    },
+    {
+      "scenario": "main-write",
+      "tool": "syq",
+      "repeat": 1,
+      "bytes": 163840000,
+      "files": 40000,
+      "wall_s": 7.174567232141271,
+      "argv": [
+        "syq",
+        "rsync",
+        "-a",
+        "--no-progress",
+        "SOURCE/",
+        "DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular files/directories: type, mode, uid, gid, mtime_ns",
+        "mismatches": 0,
+        "entries": 40256
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 3,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 900,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "small-files",
+          "kind": "small-files",
+          "files": 40000,
+          "bytes": 163840000
+        }
+      ],
+      "cache": "evict",
+      "case_error": false,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-5.15.0-126-generic-x86_64-with-glibc2.35",
+        "kernel": "5.15.0-126-generic",
+        "machine": "x86_64",
+        "cpus": 160,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "ext2/ext3",
+        "destination": "nfs"
+      },
+      "tool_identity": {
+        "version": "syq 0.5.2",
+        "sha256": "5e4586bdc9706834cc907ff087afed57180e918e7459f9cefb7fda4e7973dbff"
+      }
+    },
+    {
+      "scenario": "main-write",
+      "tool": "syq",
+      "repeat": 2,
+      "bytes": 163840000,
+      "files": 40000,
+      "wall_s": 7.424358794,
+      "argv": [
+        "syq",
+        "rsync",
+        "-a",
+        "--no-progress",
+        "SOURCE/",
+        "DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular files/directories: type, mode, uid, gid, mtime_ns",
+        "mismatches": 0,
+        "entries": 40256
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 3,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 900,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "small-files",
+          "kind": "small-files",
+          "files": 40000,
+          "bytes": 163840000
+        }
+      ],
+      "cache": "evict",
+      "case_error": false,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-5.15.0-126-generic-x86_64-with-glibc2.35",
+        "kernel": "5.15.0-126-generic",
+        "machine": "x86_64",
+        "cpus": 160,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "ext2/ext3",
+        "destination": "nfs"
+      },
+      "tool_identity": {
+        "version": "syq 0.5.2",
+        "sha256": "5e4586bdc9706834cc907ff087afed57180e918e7459f9cefb7fda4e7973dbff"
+      }
+    },
+    {
+      "scenario": "main-write",
+      "tool": "rclone-default",
+      "repeat": 0,
+      "bytes": 163840000,
+      "files": 40000,
+      "wall_s": 36.77452195598744,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--metadata",
+        "--create-empty-src-dirs",
+        "--",
+        ":local:SOURCE",
+        ":local:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular files/directories: type, mode, uid, gid, mtime_ns",
+        "mismatches": 0,
+        "entries": 40256
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 3,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 900,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "small-files",
+          "kind": "small-files",
+          "files": 40000,
+          "bytes": 163840000
+        }
+      ],
+      "cache": "evict",
+      "case_error": false,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-5.15.0-126-generic-x86_64-with-glibc2.35",
+        "kernel": "5.15.0-126-generic",
+        "machine": "x86_64",
+        "cpus": 160,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "ext2/ext3",
+        "destination": "nfs"
+      },
+      "tool_identity": {
+        "version": "rclone v1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      }
+    },
+    {
+      "scenario": "main-write",
+      "tool": "rclone-default",
+      "repeat": 1,
+      "bytes": 163840000,
+      "files": 40000,
+      "wall_s": 62.81904753483832,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--metadata",
+        "--create-empty-src-dirs",
+        "--",
+        ":local:SOURCE",
+        ":local:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular files/directories: type, mode, uid, gid, mtime_ns",
+        "mismatches": 0,
+        "entries": 40256
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 3,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 900,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "small-files",
+          "kind": "small-files",
+          "files": 40000,
+          "bytes": 163840000
+        }
+      ],
+      "cache": "evict",
+      "case_error": false,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-5.15.0-126-generic-x86_64-with-glibc2.35",
+        "kernel": "5.15.0-126-generic",
+        "machine": "x86_64",
+        "cpus": 160,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "ext2/ext3",
+        "destination": "nfs"
+      },
+      "tool_identity": {
+        "version": "rclone v1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      }
+    },
+    {
+      "scenario": "main-write",
+      "tool": "rclone-default",
+      "repeat": 2,
+      "bytes": 163840000,
+      "files": 40000,
+      "wall_s": 105.38429212896153,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--metadata",
+        "--create-empty-src-dirs",
+        "--",
+        ":local:SOURCE",
+        ":local:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular files/directories: type, mode, uid, gid, mtime_ns",
+        "mismatches": 0,
+        "entries": 40256
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 3,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 900,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "small-files",
+          "kind": "small-files",
+          "files": 40000,
+          "bytes": 163840000
+        }
+      ],
+      "cache": "evict",
+      "case_error": false,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-5.15.0-126-generic-x86_64-with-glibc2.35",
+        "kernel": "5.15.0-126-generic",
+        "machine": "x86_64",
+        "cpus": 160,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "ext2/ext3",
+        "destination": "nfs"
+      },
+      "tool_identity": {
+        "version": "rclone v1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      }
+    },
+    {
+      "scenario": "main-write",
+      "tool": "rclone-t64",
+      "repeat": 0,
+      "bytes": 163840000,
+      "files": 40000,
+      "wall_s": 14.08390411012806,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--metadata",
+        "--create-empty-src-dirs",
+        "--transfers",
+        "64",
+        "--",
+        ":local:SOURCE",
+        ":local:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular files/directories: type, mode, uid, gid, mtime_ns",
+        "mismatches": 0,
+        "entries": 40256
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 3,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 900,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "small-files",
+          "kind": "small-files",
+          "files": 40000,
+          "bytes": 163840000
+        }
+      ],
+      "cache": "evict",
+      "case_error": false,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-5.15.0-126-generic-x86_64-with-glibc2.35",
+        "kernel": "5.15.0-126-generic",
+        "machine": "x86_64",
+        "cpus": 160,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "ext2/ext3",
+        "destination": "nfs"
+      },
+      "tool_identity": {
+        "version": "rclone v1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      }
+    },
+    {
+      "scenario": "main-write",
+      "tool": "rclone-t64",
+      "repeat": 1,
+      "bytes": 163840000,
+      "files": 40000,
+      "wall_s": 13.934437654912472,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--metadata",
+        "--create-empty-src-dirs",
+        "--transfers",
+        "64",
+        "--",
+        ":local:SOURCE",
+        ":local:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular files/directories: type, mode, uid, gid, mtime_ns",
+        "mismatches": 0,
+        "entries": 40256
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 3,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 900,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "small-files",
+          "kind": "small-files",
+          "files": 40000,
+          "bytes": 163840000
+        }
+      ],
+      "cache": "evict",
+      "case_error": false,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-5.15.0-126-generic-x86_64-with-glibc2.35",
+        "kernel": "5.15.0-126-generic",
+        "machine": "x86_64",
+        "cpus": 160,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "ext2/ext3",
+        "destination": "nfs"
+      },
+      "tool_identity": {
+        "version": "rclone v1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      }
+    },
+    {
+      "scenario": "main-write",
+      "tool": "rclone-t64",
+      "repeat": 2,
+      "bytes": 163840000,
+      "files": 40000,
+      "wall_s": 34.17039665300399,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--metadata",
+        "--create-empty-src-dirs",
+        "--transfers",
+        "64",
+        "--",
+        ":local:SOURCE",
+        ":local:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular files/directories: type, mode, uid, gid, mtime_ns",
+        "mismatches": 0,
+        "entries": 40256
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 3,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 900,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "small-files",
+          "kind": "small-files",
+          "files": 40000,
+          "bytes": 163840000
+        }
+      ],
+      "cache": "evict",
+      "case_error": false,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-5.15.0-126-generic-x86_64-with-glibc2.35",
+        "kernel": "5.15.0-126-generic",
+        "machine": "x86_64",
+        "cpus": 160,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "ext2/ext3",
+        "destination": "nfs"
+      },
+      "tool_identity": {
+        "version": "rclone v1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      }
+    },
+    {
+      "scenario": "main-write",
+      "tool": "rclone-t256",
+      "repeat": 0,
+      "bytes": 163840000,
+      "files": 40000,
+      "wall_s": 21.594700490124524,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--metadata",
+        "--create-empty-src-dirs",
+        "--transfers",
+        "256",
+        "--",
+        ":local:SOURCE",
+        ":local:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular files/directories: type, mode, uid, gid, mtime_ns",
+        "mismatches": 0,
+        "entries": 40256
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 3,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 900,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "small-files",
+          "kind": "small-files",
+          "files": 40000,
+          "bytes": 163840000
+        }
+      ],
+      "cache": "evict",
+      "case_error": false,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-5.15.0-126-generic-x86_64-with-glibc2.35",
+        "kernel": "5.15.0-126-generic",
+        "machine": "x86_64",
+        "cpus": 160,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "ext2/ext3",
+        "destination": "nfs"
+      },
+      "tool_identity": {
+        "version": "rclone v1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      }
+    },
+    {
+      "scenario": "main-write",
+      "tool": "rclone-t256",
+      "repeat": 1,
+      "bytes": 163840000,
+      "files": 40000,
+      "wall_s": 24.698030364932492,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--metadata",
+        "--create-empty-src-dirs",
+        "--transfers",
+        "256",
+        "--",
+        ":local:SOURCE",
+        ":local:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular files/directories: type, mode, uid, gid, mtime_ns",
+        "mismatches": 0,
+        "entries": 40256
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 3,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 900,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "small-files",
+          "kind": "small-files",
+          "files": 40000,
+          "bytes": 163840000
+        }
+      ],
+      "cache": "evict",
+      "case_error": false,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-5.15.0-126-generic-x86_64-with-glibc2.35",
+        "kernel": "5.15.0-126-generic",
+        "machine": "x86_64",
+        "cpus": 160,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "ext2/ext3",
+        "destination": "nfs"
+      },
+      "tool_identity": {
+        "version": "rclone v1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      }
+    },
+    {
+      "scenario": "main-write",
+      "tool": "rclone-t256",
+      "repeat": 2,
+      "bytes": 163840000,
+      "files": 40000,
+      "wall_s": 27.101911179954186,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--metadata",
+        "--create-empty-src-dirs",
+        "--transfers",
+        "256",
+        "--",
+        ":local:SOURCE",
+        ":local:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular files/directories: type, mode, uid, gid, mtime_ns",
+        "mismatches": 0,
+        "entries": 40256
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 3,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 900,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "small-files",
+          "kind": "small-files",
+          "files": 40000,
+          "bytes": 163840000
+        }
+      ],
+      "cache": "evict",
+      "case_error": false,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-5.15.0-126-generic-x86_64-with-glibc2.35",
+        "kernel": "5.15.0-126-generic",
+        "machine": "x86_64",
+        "cpus": 160,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "ext2/ext3",
+        "destination": "nfs"
+      },
+      "tool_identity": {
+        "version": "rclone v1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      }
+    },
+    {
+      "scenario": "raid-explore-nfs-large-read",
+      "tool": "syq",
+      "repeat": 0,
+      "bytes": 2147483648,
+      "files": 1,
+      "wall_s": 1.967681271955371,
+      "argv": [
+        "syq",
+        "rsync",
+        "-a",
+        "--no-progress",
+        "SOURCE/",
+        "DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular files/directories: type, mode, uid, gid, mtime_ns",
+        "mismatches": 0,
+        "entries": 1
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 120,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "data",
+          "kind": "large-file",
+          "files": 1,
+          "bytes": 2147483648
+        }
+      ],
+      "cache": "evict",
+      "case_error": false,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-5.15.0-126-generic-x86_64-with-glibc2.35",
+        "kernel": "5.15.0-126-generic",
+        "machine": "x86_64",
+        "cpus": 160,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "nfs",
+        "destination": "xfs"
+      },
+      "tool_identity": {
+        "version": "syq 0.5.2",
+        "sha256": "5e4586bdc9706834cc907ff087afed57180e918e7459f9cefb7fda4e7973dbff"
+      }
+    },
+    {
+      "scenario": "raid-explore-nfs-large-read",
+      "tool": "rclone-default",
+      "repeat": 0,
+      "bytes": 2147483648,
+      "files": 1,
+      "wall_s": 4.920641570119187,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--metadata",
+        "--create-empty-src-dirs",
+        "--",
+        ":local:SOURCE",
+        ":local:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular files/directories: type, mode, uid, gid, mtime_ns",
+        "mismatches": 0,
+        "entries": 1
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 120,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "data",
+          "kind": "large-file",
+          "files": 1,
+          "bytes": 2147483648
+        }
+      ],
+      "cache": "evict",
+      "case_error": false,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-5.15.0-126-generic-x86_64-with-glibc2.35",
+        "kernel": "5.15.0-126-generic",
+        "machine": "x86_64",
+        "cpus": 160,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "nfs",
+        "destination": "xfs"
+      },
+      "tool_identity": {
+        "version": "rclone v1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      }
+    },
+    {
+      "scenario": "raid-explore-nfs-large-read",
+      "tool": "rclone-s8",
+      "repeat": 0,
+      "bytes": 2147483648,
+      "files": 1,
+      "wall_s": 5.021613724064082,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--metadata",
+        "--create-empty-src-dirs",
+        "--multi-thread-streams",
+        "8",
+        "--",
+        ":local:SOURCE",
+        ":local:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular files/directories: type, mode, uid, gid, mtime_ns",
+        "mismatches": 0,
+        "entries": 1
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 120,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "data",
+          "kind": "large-file",
+          "files": 1,
+          "bytes": 2147483648
+        }
+      ],
+      "cache": "evict",
+      "case_error": false,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-5.15.0-126-generic-x86_64-with-glibc2.35",
+        "kernel": "5.15.0-126-generic",
+        "machine": "x86_64",
+        "cpus": 160,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "nfs",
+        "destination": "xfs"
+      },
+      "tool_identity": {
+        "version": "rclone v1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      }
+    },
+    {
+      "scenario": "raid-explore-nfs-large-write",
+      "tool": "syq",
+      "repeat": 0,
+      "bytes": 2147483648,
+      "files": 1,
+      "wall_s": 3.9693501419387758,
+      "argv": [
+        "syq",
+        "rsync",
+        "-a",
+        "--no-progress",
+        "SOURCE/",
+        "DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular files/directories: type, mode, uid, gid, mtime_ns",
+        "mismatches": 0,
+        "entries": 1
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 120,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "data",
+          "kind": "large-file",
+          "files": 1,
+          "bytes": 2147483648
+        }
+      ],
+      "cache": "evict",
+      "case_error": false,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-5.15.0-126-generic-x86_64-with-glibc2.35",
+        "kernel": "5.15.0-126-generic",
+        "machine": "x86_64",
+        "cpus": 160,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "xfs",
+        "destination": "nfs"
+      },
+      "tool_identity": {
+        "version": "syq 0.5.2",
+        "sha256": "5e4586bdc9706834cc907ff087afed57180e918e7459f9cefb7fda4e7973dbff"
+      }
+    },
+    {
+      "scenario": "raid-explore-nfs-large-write",
+      "tool": "rclone-default",
+      "repeat": 0,
+      "bytes": 2147483648,
+      "files": 1,
+      "wall_s": 6.173711722018197,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--metadata",
+        "--create-empty-src-dirs",
+        "--",
+        ":local:SOURCE",
+        ":local:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular files/directories: type, mode, uid, gid, mtime_ns",
+        "mismatches": 0,
+        "entries": 1
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 120,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "data",
+          "kind": "large-file",
+          "files": 1,
+          "bytes": 2147483648
+        }
+      ],
+      "cache": "evict",
+      "case_error": false,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-5.15.0-126-generic-x86_64-with-glibc2.35",
+        "kernel": "5.15.0-126-generic",
+        "machine": "x86_64",
+        "cpus": 160,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "xfs",
+        "destination": "nfs"
+      },
+      "tool_identity": {
+        "version": "rclone v1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      }
+    },
+    {
+      "scenario": "raid-explore-nfs-large-write",
+      "tool": "rclone-s8",
+      "repeat": 0,
+      "bytes": 2147483648,
+      "files": 1,
+      "wall_s": 8.274498861981556,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--metadata",
+        "--create-empty-src-dirs",
+        "--multi-thread-streams",
+        "8",
+        "--",
+        ":local:SOURCE",
+        ":local:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular files/directories: type, mode, uid, gid, mtime_ns",
+        "mismatches": 0,
+        "entries": 1
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 120,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "data",
+          "kind": "large-file",
+          "files": 1,
+          "bytes": 2147483648
+        }
+      ],
+      "cache": "evict",
+      "case_error": false,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-5.15.0-126-generic-x86_64-with-glibc2.35",
+        "kernel": "5.15.0-126-generic",
+        "machine": "x86_64",
+        "cpus": 160,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "xfs",
+        "destination": "nfs"
+      },
+      "tool_identity": {
+        "version": "rclone v1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      }
+    },
+    {
+      "scenario": "wan-small",
+      "tool": "syq",
+      "repeat": 0,
+      "bytes": 1048576,
+      "files": 256,
+      "wall_s": 9.33490183763206,
+      "argv": [
+        "env",
+        "SYQ_DEBUG=1",
+        "syq",
+        "rsync",
+        "-rt",
+        "--no-progress",
+        "--syq-no-bootstrap",
+        "--rsync-path",
+        "REMOTE_SYQ",
+        "-e",
+        "SSH_WRAPPER",
+        "SOURCE/",
+        "USER@SERVER:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "file mtimes, whole seconds",
+        "mismatches": 0,
+        "entries": 256
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 60,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "data",
+          "kind": "small-files",
+          "files": 256,
+          "bytes": 1048576
+        }
+      ],
+      "cache": "evict",
+      "case_error": false,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-6.8.0-110-generic-x86_64-with-glibc2.39",
+        "kernel": "6.8.0-110-generic",
+        "machine": "x86_64",
+        "cpus": 96,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "ext2/ext3",
+        "destination": "xfs"
+      },
+      "tool_identity": {
+        "version": "syq 0.5.2",
+        "sha256": "5e4586bdc9706834cc907ff087afed57180e918e7459f9cefb7fda4e7973dbff"
+      }
+    },
+    {
+      "scenario": "wan-small",
+      "tool": "sftp-t16",
+      "repeat": 0,
+      "bytes": 1048576,
+      "files": 256,
+      "wall_s": 60.00010765530169,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--sftp-host",
+        "SERVER",
+        "--sftp-known-hosts-file",
+        "KNOWN_HOSTS",
+        "--sftp-user",
+        "USER",
+        "--sftp-host",
+        "SERVER",
+        "--sftp-port",
+        "PORT",
+        "--sftp-user",
+        "USER",
+        "--sftp-key-use-agent",
+        "--sftp-known-hosts-file",
+        "KNOWN_HOSTS",
+        "--create-empty-src-dirs",
+        "--contimeout",
+        "5s",
+        "--retries",
+        "1",
+        "--transfers",
+        "16",
+        "--",
+        ":local:SOURCE",
+        ":sftp:DESTINATION"
+      ],
+      "exit_code": -124,
+      "content_verified": null,
+      "metadata": null,
+      "recorded_status": "timeout",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 60,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "data",
+          "kind": "small-files",
+          "files": 256,
+          "bytes": 1048576
+        }
+      ],
+      "cache": "evict",
+      "case_error": true,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-6.8.0-110-generic-x86_64-with-glibc2.39",
+        "kernel": "6.8.0-110-generic",
+        "machine": "x86_64",
+        "cpus": 96,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "ext2/ext3",
+        "destination": "xfs"
+      },
+      "tool_identity": {
+        "version": "rclone v1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      }
+    },
+    {
+      "scenario": "wan-small",
+      "tool": "sftp-t64",
+      "repeat": 0,
+      "bytes": 1048576,
+      "files": 256,
+      "wall_s": 60.0001648850739,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--sftp-host",
+        "SERVER",
+        "--sftp-known-hosts-file",
+        "KNOWN_HOSTS",
+        "--sftp-user",
+        "USER",
+        "--sftp-host",
+        "SERVER",
+        "--sftp-port",
+        "PORT",
+        "--sftp-user",
+        "USER",
+        "--sftp-key-use-agent",
+        "--sftp-known-hosts-file",
+        "KNOWN_HOSTS",
+        "--create-empty-src-dirs",
+        "--contimeout",
+        "5s",
+        "--retries",
+        "1",
+        "--transfers",
+        "64",
+        "--",
+        ":local:SOURCE",
+        ":sftp:DESTINATION"
+      ],
+      "exit_code": -124,
+      "content_verified": null,
+      "metadata": null,
+      "recorded_status": "timeout",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 60,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "data",
+          "kind": "small-files",
+          "files": 256,
+          "bytes": 1048576
+        }
+      ],
+      "cache": "evict",
+      "case_error": true,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-6.8.0-110-generic-x86_64-with-glibc2.39",
+        "kernel": "6.8.0-110-generic",
+        "machine": "x86_64",
+        "cpus": 96,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "ext2/ext3",
+        "destination": "xfs"
+      },
+      "tool_identity": {
+        "version": "rclone v1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      }
+    },
+    {
+      "scenario": "wan-small",
+      "tool": "webdav-t16",
+      "repeat": 0,
+      "bytes": 1048576,
+      "files": 256,
+      "wall_s": 60.00016736239195,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--webdav-url",
+        "https://SERVER:PORT/",
+        "--webdav-vendor",
+        "rclone",
+        "--ca-cert",
+        "CA_CERT",
+        "--transfers",
+        "16",
+        "--webdav-pacer-min-sleep",
+        "2ms",
+        "--create-empty-src-dirs",
+        "--contimeout",
+        "5s",
+        "--retries",
+        "1",
+        "--",
+        ":local:SOURCE",
+        ":webdav:DESTINATION"
+      ],
+      "exit_code": -124,
+      "content_verified": null,
+      "metadata": null,
+      "recorded_status": "timeout",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 60,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "data",
+          "kind": "small-files",
+          "files": 256,
+          "bytes": 1048576
+        }
+      ],
+      "cache": "evict",
+      "case_error": true,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-6.8.0-110-generic-x86_64-with-glibc2.39",
+        "kernel": "6.8.0-110-generic",
+        "machine": "x86_64",
+        "cpus": 96,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "ext2/ext3",
+        "destination": "xfs"
+      },
+      "tool_identity": {
+        "version": "rclone v1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      }
+    },
+    {
+      "scenario": "wan-compact-small",
+      "tool": "syq",
+      "repeat": 0,
+      "bytes": 1048576,
+      "files": 256,
+      "wall_s": 9.634545335546136,
+      "argv": [
+        "env",
+        "SYQ_DEBUG=1",
+        "syq",
+        "rsync",
+        "-rt",
+        "--no-progress",
+        "--syq-no-bootstrap",
+        "--rsync-path",
+        "REMOTE_SYQ",
+        "-e",
+        "SSH_WRAPPER",
+        "SOURCE/",
+        "USER@SERVER:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "file mtimes, whole seconds",
+        "mismatches": 0,
+        "entries": 256
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 60,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "data",
+          "kind": "small-files",
+          "files": 256,
+          "bytes": 1048576
+        }
+      ],
+      "cache": "evict",
+      "case_error": false,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-6.8.0-110-generic-x86_64-with-glibc2.39",
+        "kernel": "6.8.0-110-generic",
+        "machine": "x86_64",
+        "cpus": 96,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "ext2/ext3",
+        "destination": "xfs"
+      },
+      "tool_identity": {
+        "version": "syq 0.5.2",
+        "sha256": "5e4586bdc9706834cc907ff087afed57180e918e7459f9cefb7fda4e7973dbff"
+      }
+    },
+    {
+      "scenario": "wan-compact-small",
+      "tool": "sftp-t64",
+      "repeat": 0,
+      "bytes": 1048576,
+      "files": 256,
+      "wall_s": 60.00009440816939,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--sftp-host",
+        "SERVER",
+        "--sftp-known-hosts-file",
+        "KNOWN_HOSTS",
+        "--sftp-user",
+        "USER",
+        "--sftp-host",
+        "SERVER",
+        "--sftp-port",
+        "PORT",
+        "--sftp-user",
+        "USER",
+        "--sftp-key-use-agent",
+        "--sftp-known-hosts-file",
+        "KNOWN_HOSTS",
+        "--create-empty-src-dirs",
+        "--contimeout",
+        "5s",
+        "--retries",
+        "1",
+        "--transfers",
+        "64",
+        "--",
+        ":local:SOURCE",
+        ":sftp:DESTINATION"
+      ],
+      "exit_code": -124,
+      "content_verified": null,
+      "metadata": null,
+      "recorded_status": "timeout",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 60,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "data",
+          "kind": "small-files",
+          "files": 256,
+          "bytes": 1048576
+        }
+      ],
+      "cache": "evict",
+      "case_error": true,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-6.8.0-110-generic-x86_64-with-glibc2.39",
+        "kernel": "6.8.0-110-generic",
+        "machine": "x86_64",
+        "cpus": 96,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "ext2/ext3",
+        "destination": "xfs"
+      },
+      "tool_identity": {
+        "version": "rclone v1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      }
+    },
+    {
+      "scenario": "wan-compact-small",
+      "tool": "webdav-t16",
+      "repeat": 0,
+      "bytes": 1048576,
+      "files": 256,
+      "wall_s": 20.56253275461495,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--webdav-url",
+        "https://SERVER:PORT/",
+        "--webdav-vendor",
+        "rclone",
+        "--ca-cert",
+        "CA_CERT",
+        "--transfers",
+        "16",
+        "--webdav-pacer-min-sleep",
+        "2ms",
+        "--create-empty-src-dirs",
+        "--contimeout",
+        "5s",
+        "--retries",
+        "1",
+        "--",
+        ":local:SOURCE",
+        ":webdav:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "file mtimes, whole seconds",
+        "mismatches": 0,
+        "entries": 256
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 60,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "data",
+          "kind": "small-files",
+          "files": 256,
+          "bytes": 1048576
+        }
+      ],
+      "cache": "evict",
+      "case_error": false,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-6.8.0-110-generic-x86_64-with-glibc2.39",
+        "kernel": "6.8.0-110-generic",
+        "machine": "x86_64",
+        "cpus": 96,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "ext2/ext3",
+        "destination": "xfs"
+      },
+      "tool_identity": {
+        "version": "rclone v1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      }
+    },
+    {
+      "scenario": "wan-large64-large",
+      "tool": "syq",
+      "repeat": 0,
+      "bytes": 67108864,
+      "files": 1,
+      "wall_s": 12.039595318958163,
+      "argv": [
+        "env",
+        "SYQ_DEBUG=1",
+        "syq",
+        "rsync",
+        "-rt",
+        "--no-progress",
+        "--syq-no-bootstrap",
+        "--rsync-path",
+        "REMOTE_SYQ",
+        "-e",
+        "SSH_WRAPPER",
+        "SOURCE/",
+        "USER@SERVER:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "file mtimes, whole seconds",
+        "mismatches": 0,
+        "entries": 1
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 60,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "data",
+          "kind": "large-file",
+          "files": 1,
+          "bytes": 67108864
+        }
+      ],
+      "cache": "evict",
+      "case_error": false,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-6.8.0-110-generic-x86_64-with-glibc2.39",
+        "kernel": "6.8.0-110-generic",
+        "machine": "x86_64",
+        "cpus": 96,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "ext2/ext3",
+        "destination": "xfs"
+      },
+      "tool_identity": {
+        "version": "syq 0.5.2",
+        "sha256": "5e4586bdc9706834cc907ff087afed57180e918e7459f9cefb7fda4e7973dbff"
+      }
+    },
+    {
+      "scenario": "wan-large64-large",
+      "tool": "sftp-default",
+      "repeat": 0,
+      "bytes": 67108864,
+      "files": 1,
+      "wall_s": 21.61454257927835,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--sftp-host",
+        "SERVER",
+        "--sftp-known-hosts-file",
+        "KNOWN_HOSTS",
+        "--sftp-user",
+        "USER",
+        "--sftp-host",
+        "SERVER",
+        "--sftp-port",
+        "PORT",
+        "--sftp-user",
+        "USER",
+        "--sftp-key-use-agent",
+        "--sftp-known-hosts-file",
+        "KNOWN_HOSTS",
+        "--create-empty-src-dirs",
+        "--contimeout",
+        "5s",
+        "--retries",
+        "1",
+        "--",
+        ":local:SOURCE",
+        ":sftp:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "file mtimes, whole seconds",
+        "mismatches": 0,
+        "entries": 1
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 60,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "data",
+          "kind": "large-file",
+          "files": 1,
+          "bytes": 67108864
+        }
+      ],
+      "cache": "evict",
+      "case_error": false,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-6.8.0-110-generic-x86_64-with-glibc2.39",
+        "kernel": "6.8.0-110-generic",
+        "machine": "x86_64",
+        "cpus": 96,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "ext2/ext3",
+        "destination": "xfs"
+      },
+      "tool_identity": {
+        "version": "rclone v1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      }
+    },
+    {
+      "scenario": "wan-large64-large",
+      "tool": "sftp-chunk128",
+      "repeat": 0,
+      "bytes": 67108864,
+      "files": 1,
+      "wall_s": 21.66323377378285,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--sftp-host",
+        "SERVER",
+        "--sftp-known-hosts-file",
+        "KNOWN_HOSTS",
+        "--sftp-user",
+        "USER",
+        "--sftp-host",
+        "SERVER",
+        "--sftp-port",
+        "PORT",
+        "--sftp-user",
+        "USER",
+        "--sftp-key-use-agent",
+        "--sftp-known-hosts-file",
+        "KNOWN_HOSTS",
+        "--create-empty-src-dirs",
+        "--contimeout",
+        "5s",
+        "--retries",
+        "1",
+        "--sftp-chunk-size",
+        "128Ki",
+        "--sftp-concurrency",
+        "128",
+        "--",
+        ":local:SOURCE",
+        ":sftp:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "file mtimes, whole seconds",
+        "mismatches": 0,
+        "entries": 1
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 60,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "data",
+          "kind": "large-file",
+          "files": 1,
+          "bytes": 67108864
+        }
+      ],
+      "cache": "evict",
+      "case_error": false,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-6.8.0-110-generic-x86_64-with-glibc2.39",
+        "kernel": "6.8.0-110-generic",
+        "machine": "x86_64",
+        "cpus": 96,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "ext2/ext3",
+        "destination": "xfs"
+      },
+      "tool_identity": {
+        "version": "rclone v1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      }
+    },
+    {
+      "scenario": "wan-large64-large",
+      "tool": "webdav-t16",
+      "repeat": 0,
+      "bytes": 67108864,
+      "files": 1,
+      "wall_s": 10.239192582666874,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--webdav-url",
+        "https://SERVER:PORT/",
+        "--webdav-vendor",
+        "rclone",
+        "--ca-cert",
+        "CA_CERT",
+        "--transfers",
+        "16",
+        "--webdav-pacer-min-sleep",
+        "2ms",
+        "--create-empty-src-dirs",
+        "--contimeout",
+        "5s",
+        "--retries",
+        "1",
+        "--",
+        ":local:SOURCE",
+        ":webdav:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "file mtimes, whole seconds",
+        "mismatches": 0,
+        "entries": 1
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "seed": 9911,
+        "cache": "evict",
+        "durable": false,
+        "verify": true,
+        "probes": false,
+        "tool_timeout": 60,
+        "slow_cutoff": 0
+      },
+      "workload": [
+        {
+          "name": "data",
+          "kind": "large-file",
+          "files": 1,
+          "bytes": 67108864
+        }
+      ],
+      "cache": "evict",
+      "case_error": false,
+      "cache_limitations": [
+        "Fixture fadvise is advisory; metadata caches remain warm.",
+        "NFS server cache and other clients uncontrolled where NFS is used.",
+        "Tmpfs remains memory-resident where used."
+      ],
+      "host": {
+        "platform": "Linux-6.8.0-110-generic-x86_64-with-glibc2.39",
+        "kernel": "6.8.0-110-generic",
+        "machine": "x86_64",
+        "cpus": 96,
+        "python": "3.13.13"
+      },
+      "filesystems": {
+        "source": "ext2/ext3",
+        "destination": "xfs"
+      },
+      "tool_identity": {
+        "version": "rclone v1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      }
+    }
+  ]
+}

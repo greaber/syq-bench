@@ -128,3 +128,13 @@ See [README.md](README.md) for usage, [site/README.md](site/README.md) for page
 selection, [site/BRANDING.md](site/BRANDING.md) for presentation, and the recipes
 under `specs/` and `providers/` for setup. Implementation inventories, experiment
 logs and speculative roadmap items do not belong in this document.
+
+## Exploratory comparisons (2026-09-11)
+
+The separate rclone page reports early measurements to solicit tuning advice.
+It shows every setting and repetition within selected workloads, with elapsed
+seconds instead of speedup bars. Workload placement, backend, commands and
+caveats accompany each case. Short, failed and unfavorable trials stay visible.
+Single exploratory runs do not establish tuned rankings; WAN startup and unequal
+rail selection need follow-up controls. These data stay outside the release
+acceptance catalog until the corresponding publication requirements are met.
