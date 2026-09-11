@@ -6,7 +6,7 @@
     "rclone": "1.75.1"
   },
   "limits": [
-    "Exploratory single runs after initial repeated NFS campaign; not publication-quality estimates.",
+    "WAN replacement cases have three verified runs per setting; other cases retain earlier screening status and still need longer replacement workloads.",
     "Completed copies independently content checked. Metadata scope and missing records are explicit per row: remote file mtimes to whole seconds; filesystem copies additionally mode, uid/gid and directory times.",
     "Whole-command time includes tool-native checksumming but excludes harness verification and cleanup. No final durability flush.",
     "Fixture fadvise is advisory; metadata caches warm; NFS server cache and other clients uncontrolled. Tmpfs data remains memory-resident.",
@@ -17,10 +17,34 @@
     "WebDAV with zero request pacing failed concurrent directory creation in lan-pacer-small. Keep failures and timeouts distinct from completed transfers.",
     "The fast-fabric syq path used eight rail addresses automatically; rclone targeted one 400Gb/s rail. The management-LAN receiver used a 2x10Gb/s management bond.",
     "Sizes, directory layouts and settings vary by scenario; compare tools within a scenario. A selected setting is only best among those tested.",
-    "WAN payloads are too small and startup-heavy to establish sustained throughput or a fully tuned ranking.",
+    "Original WAN screening payloads were too small. Replacement WAN cases use larger memory-resident fixtures; results apply to this 1 Gb/s sender and route, not to faster WAN links.",
     "Original operational logs and exact infrastructure identifiers are private. This sanitized extract preserves timings, commands with endpoint placeholders, verification, workload and protocol. The experimental harness revision is retained privately; its rclone adapters are not yet in the public release."
   ],
   "featured": [
+    {
+      "id": "wan-repeat-one8g",
+      "title": "WAN: one 8 GiB file",
+      "workload": "One 8 GiB regular file. Flat directory, warm tmpfs source \u2192 remote XFS RAID; approximately 250\u2013265 ms RTT. Sender NIC: 1 Gb/s (125 MB/s nominal ceiling).",
+      "caveat": "Three verified copies per setting; one WebDAV run was replaced after local-test overlap. Whole-command time includes startup and native checksumming. The single-file comparison uses rclone\u2019s faster tested backend, HTTPS WebDAV; SFTP single-file calibration remains below.",
+      "preparation": {
+        "files": 1,
+        "size": 8589934592,
+        "directories": 0,
+        "original": "Sequential Python Random(9911).randbytes in 1 MiB blocks; fully written pseudorandom data, no sparse files; flat f0000\u2026 names; file mtimes fixed to 1700000000. Memory-resident tmpfs source."
+      }
+    },
+    {
+      "id": "wan-repeat-many32g",
+      "title": "WAN: 32 \u00d7 1 GiB files",
+      "workload": "32 \u00d7 1 GiB regular files. Flat directory, warm tmpfs source \u2192 remote XFS RAID; approximately 250\u2013265 ms RTT. Sender NIC: 1 Gb/s (125 MB/s nominal ceiling).",
+      "caveat": "Three fresh copies per setting in rotated order. Whole-command time includes startup and native checksumming. SFTP uses the faster configuration from the two 8 GiB calibration runs. syq used its existing automatic tuning cache, so starting worker counts changed between repeats; the diagnostic section includes a fixed-worker control.",
+      "preparation": {
+        "files": 32,
+        "size": 1073741824,
+        "directories": 0,
+        "original": "Sequential Python Random(9911).randbytes in 1 MiB blocks; fully written pseudorandom data, no sparse files; flat f0000\u2026 names; file mtimes fixed to 1700000000. Memory-resident tmpfs source."
+      }
+    },
     {
       "id": "main-write",
       "title": "Small files \u2192 mounted NFS",
@@ -139,30 +163,6 @@
         "size": 268435456,
         "directories": 32,
         "original": "Original screening: generated pseudorandom file contents with seed 9911; one large file per numbered directory. The harness generated data with O_DIRECT where supported and requested fixture-page eviction with fadvise; metadata caches stayed warm. Tmpfs remained memory-resident; the original fixture also included an empty O_DIRECT probe file."
-      }
-    },
-    {
-      "id": "wan-compact-small",
-      "title": "WAN: small files \u2014 inconclusive",
-      "workload": "256 \u00d7 4 KiB files in eight directories. Workstation \u2192 remote XFS RAID, approximately 265 ms RTT.",
-      "caveat": "Startup-heavy single runs; neither tool was fully tuned. These are not reliable evidence of sustained WAN throughput. SFTP was stopped at the 60-second screening limit.",
-      "preparation": {
-        "files": 256,
-        "size": 4096,
-        "directories": 8,
-        "original": "Original screening: generated pseudorandom file contents with seed 9911; round-robin placement in numbered directories. The harness generated data with O_DIRECT where supported and requested fixture-page eviction with fadvise; metadata caches stayed warm. "
-      }
-    },
-    {
-      "id": "wan-large64-large",
-      "title": "WAN: one file \u2014 inconclusive",
-      "workload": "One 64 MiB file. Workstation \u2192 remote XFS RAID, approximately 265 ms RTT.",
-      "caveat": "Too little data to separate startup from sustained throughput. syq logs show 7.34 seconds elapsed before payload planning finished. No WAN capacity baseline or full tuning sweep.",
-      "preparation": {
-        "files": 1,
-        "size": 67108864,
-        "directories": 0,
-        "original": "Original screening: generated pseudorandom file contents with seed 9911; large files in the source tree. The harness generated data with O_DIRECT where supported and requested fixture-page eviction with fadvise; metadata caches stayed warm. "
       }
     }
   ],
@@ -6537,6 +6537,3063 @@
         "version": "rclone v1.75.1",
         "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
       }
+    },
+    {
+      "scenario": "wan-cal-cal-sftp-mux-many8g-t8",
+      "tool": "rclone-sftp",
+      "repeat": 0,
+      "bytes": 8589934592,
+      "files": 32,
+      "wall_s": 177.88859882950783,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--create-empty-src-dirs",
+        "--contimeout",
+        "10s",
+        "--retries",
+        "1",
+        "--stats",
+        "10s",
+        "--stats-one-line",
+        "-vv",
+        "--sftp-host",
+        "SERVER",
+        "--sftp-port",
+        "SSH_PORT",
+        "--sftp-user",
+        "USER",
+        "--sftp-key-use-agent",
+        "--sftp-known-hosts-file",
+        "KNOWN_HOSTS",
+        "--sftp-md5sum-command",
+        "md5sum",
+        "--sftp-sha1sum-command",
+        "sha1sum",
+        "--sftp-chunk-size",
+        "255Ki",
+        "--sftp-concurrency",
+        "256",
+        "--no-check-dest",
+        "--sftp-ssh",
+        "ssh -F /dev/null -p SSH_PORT -o BatchMode=yes -o IdentitiesOnly=yes -i KEY_FILE -o StrictHostKeyChecking=yes -o UserKnownHostsFile=KNOWN_HOSTS -o ControlMaster=auto -o ControlPersist=60 -o ControlPath=SSH_SOCKET_DIR/long8 USER@SERVER",
+        "--transfers",
+        "8",
+        "--checkers",
+        "1",
+        ":local:SOURCE",
+        ":sftp:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular-file sizes and mtimes, whole seconds",
+        "mismatches": 0,
+        "entries": 32
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "cache": "warm tmpfs source; no eviction",
+        "durable": false,
+        "verify": true,
+        "tool_timeout": 360
+      },
+      "workload": [
+        {
+          "name": "flat regular files",
+          "files": 32,
+          "bytes": 8589934592
+        }
+      ],
+      "cache": "warm",
+      "case_error": false,
+      "cache_limitations": [
+        "Memory-resident source; destination and server metadata caches uncontrolled; no final fsync."
+      ],
+      "filesystems": {
+        "source": "tmpfs",
+        "destination": "XFS RAID"
+      },
+      "network": {
+        "sender_nic_mbps": 1000,
+        "sender_congestion_control": "bbr",
+        "rtt_description": "approximately 250\u2013265 ms"
+      },
+      "receiver_load_before": [
+        5.68896484375,
+        4.97119140625,
+        4.20654296875
+      ],
+      "tool_identity": {
+        "version": "1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      },
+      "capture_sha256": "b9b0482e7b44b5553c42136f8de359073cfc5b769640e003aa839cc15f3764ab",
+      "runner_sha256": null,
+      "source_manifest_sha256": "868c55d06c8adafb096b167e408c2c169dfe0358b2350a6911a6d7890d2b9e6a",
+      "stage": "calibration",
+      "payload_started_by_s": 15.88273000717163
+    },
+    {
+      "scenario": "wan-cal-cal-sftp-native-many8g-t32",
+      "tool": "rclone-sftp",
+      "repeat": 0,
+      "bytes": 8589934592,
+      "files": 32,
+      "wall_s": 130.43036657758057,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--create-empty-src-dirs",
+        "--contimeout",
+        "10s",
+        "--retries",
+        "1",
+        "--stats",
+        "10s",
+        "--stats-one-line",
+        "-vv",
+        "--sftp-host",
+        "SERVER",
+        "--sftp-port",
+        "SSH_PORT",
+        "--sftp-user",
+        "USER",
+        "--sftp-key-use-agent",
+        "--sftp-known-hosts-file",
+        "KNOWN_HOSTS",
+        "--sftp-md5sum-command",
+        "md5sum",
+        "--sftp-sha1sum-command",
+        "sha1sum",
+        "--sftp-chunk-size",
+        "255Ki",
+        "--sftp-concurrency",
+        "256",
+        "--no-check-dest",
+        "--sftp-key-use-agent=false",
+        "--sftp-key-file",
+        "KEY_FILE",
+        "--transfers",
+        "32",
+        ":local:SOURCE",
+        ":sftp:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular-file sizes and mtimes, whole seconds",
+        "mismatches": 0,
+        "entries": 32
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "cache": "warm tmpfs source; no eviction",
+        "durable": false,
+        "verify": true,
+        "tool_timeout": 360
+      },
+      "workload": [
+        {
+          "name": "flat regular files",
+          "files": 32,
+          "bytes": 8589934592
+        }
+      ],
+      "cache": "warm",
+      "case_error": false,
+      "cache_limitations": [
+        "Memory-resident source; destination and server metadata caches uncontrolled; no final fsync."
+      ],
+      "filesystems": {
+        "source": "tmpfs",
+        "destination": "XFS RAID"
+      },
+      "network": {
+        "sender_nic_mbps": 1000,
+        "sender_congestion_control": "bbr",
+        "rtt_description": "approximately 250\u2013265 ms"
+      },
+      "receiver_load_before": [
+        4.259765625,
+        4.71875,
+        4.01904296875
+      ],
+      "tool_identity": {
+        "version": "1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      },
+      "capture_sha256": "d91fe06206687520ac6c4bd867464181797d59f24e0e3306708509d05c2260cb",
+      "runner_sha256": null,
+      "source_manifest_sha256": "868c55d06c8adafb096b167e408c2c169dfe0358b2350a6911a6d7890d2b9e6a",
+      "stage": "calibration",
+      "payload_started_by_s": 14.632540941238403
+    },
+    {
+      "scenario": "wan-cal-cal-syq-fixed16-many32g",
+      "tool": "syq",
+      "repeat": 0,
+      "bytes": 34359738368,
+      "files": 32,
+      "wall_s": 317.60080438666046,
+      "argv": [
+        "env",
+        "SYQ_DEBUG=1",
+        "syq",
+        "rsync",
+        "-rt",
+        "--no-progress",
+        "--syq-no-bootstrap",
+        "--rsync-path",
+        "REMOTE_SCRATCH/syq",
+        "-e",
+        "SSH_WRAPPER",
+        "--syq-connections",
+        "16",
+        "SOURCE/",
+        "USER@SERVER:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular-file sizes and mtimes, whole seconds",
+        "mismatches": 0,
+        "entries": 32
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "cache": "warm tmpfs source; no eviction",
+        "durable": false,
+        "verify": true,
+        "tool_timeout": 600
+      },
+      "workload": [
+        {
+          "name": "flat regular files",
+          "files": 32,
+          "bytes": 34359738368
+        }
+      ],
+      "cache": "warm",
+      "case_error": false,
+      "cache_limitations": [
+        "Memory-resident source; destination and server metadata caches uncontrolled; no final fsync."
+      ],
+      "filesystems": {
+        "source": "tmpfs",
+        "destination": "XFS RAID"
+      },
+      "network": {
+        "sender_nic_mbps": 1000,
+        "sender_congestion_control": "bbr",
+        "rtt_description": "approximately 250\u2013265 ms"
+      },
+      "receiver_load_before": [
+        5.005859375,
+        5.80859375,
+        5.65869140625
+      ],
+      "tool_identity": {
+        "version": "0.5.2",
+        "sha256": "5e4586bdc9706834cc907ff087afed57180e918e7459f9cefb7fda4e7973dbff"
+      },
+      "capture_sha256": "05e652ec81b6f206f1e0e8578e236d5281df2ca9aa2a11b35323948f0588d5f0",
+      "runner_sha256": "89f18808af82b4fc6dd8a64cfe1bbbafa64f5f9922bbbd9c00d1330632e415d3",
+      "source_manifest_sha256": "8d21fd63c31e61ff335c21c3009c6812f111eac5218ac0258cb81ab01a040d83",
+      "stage": "calibration",
+      "worker_tuning_log": [],
+      "tuning_cache": "ignored by fixed worker override",
+      "payload_started_by_s": 6.08
+    },
+    {
+      "scenario": "wan-cal-dav-many2g-t16",
+      "tool": "rclone-webdav",
+      "repeat": 0,
+      "bytes": 2147483648,
+      "files": 32,
+      "wall_s": 23.768076298758388,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--create-empty-src-dirs",
+        "--contimeout",
+        "10s",
+        "--retries",
+        "1",
+        "--stats",
+        "10s",
+        "--stats-one-line",
+        "-vv",
+        "--webdav-url",
+        "https://SERVER:HTTPS_PORT/",
+        "--webdav-vendor",
+        "rclone",
+        "--ca-cert",
+        "CA_CERT",
+        "--transfers",
+        "16",
+        "--webdav-pacer-min-sleep",
+        "2ms",
+        "--no-check-dest",
+        ":local:SOURCE",
+        ":webdav:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular-file sizes and mtimes, whole seconds",
+        "mismatches": 0,
+        "entries": 32
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "cache": "warm tmpfs source; no eviction",
+        "durable": false,
+        "verify": true,
+        "tool_timeout": 180
+      },
+      "workload": [
+        {
+          "name": "flat regular files",
+          "files": 32,
+          "bytes": 2147483648
+        }
+      ],
+      "cache": "warm",
+      "case_error": false,
+      "cache_limitations": [
+        "Memory-resident source; destination and server metadata caches uncontrolled; no final fsync."
+      ],
+      "filesystems": {
+        "source": "tmpfs",
+        "destination": "XFS RAID"
+      },
+      "network": {
+        "sender_nic_mbps": 1000,
+        "sender_congestion_control": "bbr",
+        "rtt_description": "approximately 250\u2013265 ms"
+      },
+      "receiver_load_before": [
+        3.6943359375,
+        3.35693359375,
+        3.14013671875
+      ],
+      "tool_identity": {
+        "version": "1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      },
+      "capture_sha256": "56f49ceac90a4b9874cada81a3f8eef9501bf6692e9810785d6ff745e2663772",
+      "runner_sha256": null,
+      "source_manifest_sha256": "c1fdb1c2db592d4cd267db163b8523d3b73f02ed56395162bfad7e5f947f3f90",
+      "stage": "calibration",
+      "payload_started_by_s": 11.574445962905884
+    },
+    {
+      "scenario": "wan-cal-dav-many2g-t4",
+      "tool": "rclone-webdav",
+      "repeat": 0,
+      "bytes": 2147483648,
+      "files": 32,
+      "wall_s": 24.417296707630157,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--create-empty-src-dirs",
+        "--contimeout",
+        "10s",
+        "--retries",
+        "1",
+        "--stats",
+        "10s",
+        "--stats-one-line",
+        "-vv",
+        "--webdav-url",
+        "https://SERVER:HTTPS_PORT/",
+        "--webdav-vendor",
+        "rclone",
+        "--ca-cert",
+        "CA_CERT",
+        "--transfers",
+        "4",
+        "--webdav-pacer-min-sleep",
+        "2ms",
+        "--no-check-dest",
+        ":local:SOURCE",
+        ":webdav:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular-file sizes and mtimes, whole seconds",
+        "mismatches": 0,
+        "entries": 32
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "cache": "warm tmpfs source; no eviction",
+        "durable": false,
+        "verify": true,
+        "tool_timeout": 180
+      },
+      "workload": [
+        {
+          "name": "flat regular files",
+          "files": 32,
+          "bytes": 2147483648
+        }
+      ],
+      "cache": "warm",
+      "case_error": false,
+      "cache_limitations": [
+        "Memory-resident source; destination and server metadata caches uncontrolled; no final fsync."
+      ],
+      "filesystems": {
+        "source": "tmpfs",
+        "destination": "XFS RAID"
+      },
+      "network": {
+        "sender_nic_mbps": 1000,
+        "sender_congestion_control": "bbr",
+        "rtt_description": "approximately 250\u2013265 ms"
+      },
+      "receiver_load_before": [
+        2.69384765625,
+        3.1591796875,
+        3.06787109375
+      ],
+      "tool_identity": {
+        "version": "1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      },
+      "capture_sha256": "39c32f9d75a3b2c4bacc76e6249091f5dcb40fb375984cafd6959cf7dd11dedf",
+      "runner_sha256": null,
+      "source_manifest_sha256": "c1fdb1c2db592d4cd267db163b8523d3b73f02ed56395162bfad7e5f947f3f90",
+      "stage": "calibration",
+      "payload_started_by_s": 11.01357102394104
+    },
+    {
+      "scenario": "wan-cal-dav-one512",
+      "tool": "rclone-webdav",
+      "repeat": 0,
+      "bytes": 536870912,
+      "files": 1,
+      "wall_s": 8.766299907118082,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--create-empty-src-dirs",
+        "--contimeout",
+        "10s",
+        "--retries",
+        "1",
+        "--stats",
+        "10s",
+        "--stats-one-line",
+        "-vv",
+        "--webdav-url",
+        "https://SERVER:HTTPS_PORT/",
+        "--webdav-vendor",
+        "rclone",
+        "--ca-cert",
+        "CA_CERT",
+        "--transfers",
+        "16",
+        "--webdav-pacer-min-sleep",
+        "2ms",
+        "--no-check-dest",
+        ":local:SOURCE",
+        ":webdav:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular-file sizes and mtimes, whole seconds",
+        "mismatches": 0,
+        "entries": 1
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "cache": "warm tmpfs source; no eviction",
+        "durable": false,
+        "verify": true,
+        "tool_timeout": 180
+      },
+      "workload": [
+        {
+          "name": "flat regular files",
+          "files": 1,
+          "bytes": 536870912
+        }
+      ],
+      "cache": "warm",
+      "case_error": false,
+      "cache_limitations": [
+        "Memory-resident source; destination and server metadata caches uncontrolled; no final fsync."
+      ],
+      "filesystems": {
+        "source": "tmpfs",
+        "destination": "XFS RAID"
+      },
+      "network": {
+        "sender_nic_mbps": 1000,
+        "sender_congestion_control": "bbr",
+        "rtt_description": "approximately 250\u2013265 ms"
+      },
+      "receiver_load_before": [
+        2.5244140625,
+        2.6552734375,
+        2.8759765625
+      ],
+      "tool_identity": {
+        "version": "1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      },
+      "capture_sha256": "8a5c5c62727b5c89c1f7b27c354c9e013c88f9292684096825cc40aa287caff5",
+      "runner_sha256": null,
+      "source_manifest_sha256": "79c7d62eceae94ebcc336ae3e67cf1fe99c4272adbeb39b28d41b62c41943b4e",
+      "stage": "calibration",
+      "payload_started_by_s": 9.218080520629883
+    },
+    {
+      "scenario": "wan-cal-dav-one8g",
+      "tool": "rclone-webdav",
+      "repeat": 0,
+      "bytes": 8589934592,
+      "files": 1,
+      "wall_s": 82.17438154295087,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--create-empty-src-dirs",
+        "--contimeout",
+        "10s",
+        "--retries",
+        "1",
+        "--stats",
+        "10s",
+        "--stats-one-line",
+        "-vv",
+        "--webdav-url",
+        "https://SERVER:HTTPS_PORT/",
+        "--webdav-vendor",
+        "rclone",
+        "--ca-cert",
+        "CA_CERT",
+        "--transfers",
+        "16",
+        "--webdav-pacer-min-sleep",
+        "2ms",
+        "--no-check-dest",
+        ":local:SOURCE",
+        ":webdav:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular-file sizes and mtimes, whole seconds",
+        "mismatches": 0,
+        "entries": 1
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "cache": "warm tmpfs source; no eviction",
+        "durable": false,
+        "verify": true,
+        "tool_timeout": 180
+      },
+      "workload": [
+        {
+          "name": "flat regular files",
+          "files": 1,
+          "bytes": 8589934592
+        }
+      ],
+      "cache": "warm",
+      "case_error": false,
+      "cache_limitations": [
+        "Memory-resident source; destination and server metadata caches uncontrolled; no final fsync."
+      ],
+      "filesystems": {
+        "source": "tmpfs",
+        "destination": "XFS RAID"
+      },
+      "network": {
+        "sender_nic_mbps": 1000,
+        "sender_congestion_control": "bbr",
+        "rtt_description": "approximately 250\u2013265 ms"
+      },
+      "receiver_load_before": [
+        2.68408203125,
+        2.6865234375,
+        2.84814453125
+      ],
+      "tool_identity": {
+        "version": "1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      },
+      "capture_sha256": "43e1f1c6a262d9f84a2625e15d8c3a177e1f919dd5905f67f2d6646c776b68cd",
+      "runner_sha256": null,
+      "source_manifest_sha256": "efb1c5c66be4ce95bf6de0c7b5e02151f7ef4f472c0318411920c47f5b6cfb01",
+      "stage": "calibration",
+      "payload_started_by_s": 11.8355712890625
+    },
+    {
+      "scenario": "wan-cal-pub-one8g-webdav-r1",
+      "tool": "rclone-webdav",
+      "repeat": 0,
+      "bytes": 8589934592,
+      "files": 1,
+      "wall_s": 81.57430924475193,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--create-empty-src-dirs",
+        "--contimeout",
+        "10s",
+        "--retries",
+        "1",
+        "--stats",
+        "10s",
+        "--stats-one-line",
+        "-vv",
+        "--webdav-url",
+        "https://SERVER:HTTPS_PORT/",
+        "--webdav-vendor",
+        "rclone",
+        "--ca-cert",
+        "CA_CERT",
+        "--transfers",
+        "16",
+        "--webdav-pacer-min-sleep",
+        "2ms",
+        "--no-check-dest",
+        ":local:SOURCE",
+        ":webdav:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular-file sizes and mtimes, whole seconds",
+        "mismatches": 0,
+        "entries": 1
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "cache": "warm tmpfs source; no eviction",
+        "durable": false,
+        "verify": true,
+        "tool_timeout": 600
+      },
+      "workload": [
+        {
+          "name": "flat regular files",
+          "files": 1,
+          "bytes": 8589934592
+        }
+      ],
+      "cache": "warm",
+      "case_error": false,
+      "cache_limitations": [
+        "Memory-resident source; destination and server metadata caches uncontrolled; no final fsync."
+      ],
+      "filesystems": {
+        "source": "tmpfs",
+        "destination": "XFS RAID"
+      },
+      "network": {
+        "sender_nic_mbps": 1000,
+        "sender_congestion_control": "bbr",
+        "rtt_description": "approximately 250\u2013265 ms"
+      },
+      "receiver_load_before": [
+        5.5576171875,
+        5.47998046875,
+        4.68896484375
+      ],
+      "tool_identity": {
+        "version": "1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      },
+      "capture_sha256": "ae81b2261763c126a8b5008c2db01686f811307fecb490b74955ebeb6edfeae5",
+      "runner_sha256": "89f18808af82b4fc6dd8a64cfe1bbbafa64f5f9922bbbd9c00d1330632e415d3",
+      "source_manifest_sha256": "efb1c5c66be4ce95bf6de0c7b5e02151f7ef4f472c0318411920c47f5b6cfb01",
+      "stage": "calibration",
+      "excluded_reason": "Local page pytest suite overlapped the start of this run. Excluded before completion/inspection of its result; replace after the main series.",
+      "payload_started_by_s": 11.741596937179565
+    },
+    {
+      "scenario": "wan-cal-sftp-key-many2g-t16",
+      "tool": "rclone-sftp",
+      "repeat": 0,
+      "bytes": 2147483648,
+      "files": 32,
+      "wall_s": 74.8751628678292,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--create-empty-src-dirs",
+        "--contimeout",
+        "10s",
+        "--retries",
+        "1",
+        "--stats",
+        "10s",
+        "--stats-one-line",
+        "-vv",
+        "--sftp-host",
+        "SERVER",
+        "--sftp-port",
+        "SSH_PORT",
+        "--sftp-user",
+        "USER",
+        "--sftp-key-use-agent",
+        "--sftp-known-hosts-file",
+        "KNOWN_HOSTS",
+        "--sftp-key-use-agent=false",
+        "--sftp-key-file",
+        "KEY_FILE",
+        "--sftp-md5sum-command",
+        "md5sum",
+        "--sftp-sha1sum-command",
+        "sha1sum",
+        "--no-check-dest",
+        "--transfers",
+        "16",
+        "--sftp-chunk-size",
+        "255Ki",
+        "--sftp-concurrency",
+        "256",
+        ":local:SOURCE",
+        ":sftp:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular-file sizes and mtimes, whole seconds",
+        "mismatches": 0,
+        "entries": 32
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "cache": "warm tmpfs source; no eviction",
+        "durable": false,
+        "verify": true,
+        "tool_timeout": 180
+      },
+      "workload": [
+        {
+          "name": "flat regular files",
+          "files": 32,
+          "bytes": 2147483648
+        }
+      ],
+      "cache": "warm",
+      "case_error": false,
+      "cache_limitations": [
+        "Memory-resident source; destination and server metadata caches uncontrolled; no final fsync."
+      ],
+      "filesystems": {
+        "source": "tmpfs",
+        "destination": "XFS RAID"
+      },
+      "network": {
+        "sender_nic_mbps": 1000,
+        "sender_congestion_control": "bbr",
+        "rtt_description": "approximately 250\u2013265 ms"
+      },
+      "receiver_load_before": [
+        4.19580078125,
+        3.56201171875,
+        3.22314453125
+      ],
+      "tool_identity": {
+        "version": "1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      },
+      "capture_sha256": "3129b20bbcf3f55816258abc001745594be2370a5ac1381a59c86e71203282ee",
+      "runner_sha256": null,
+      "source_manifest_sha256": "c1fdb1c2db592d4cd267db163b8523d3b73f02ed56395162bfad7e5f947f3f90",
+      "stage": "calibration",
+      "payload_started_by_s": 14.909079551696777
+    },
+    {
+      "scenario": "wan-cal-sftp-key-many2g-t32",
+      "tool": "rclone-sftp",
+      "repeat": 0,
+      "bytes": 2147483648,
+      "files": 32,
+      "wall_s": 73.2227061893791,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--create-empty-src-dirs",
+        "--contimeout",
+        "10s",
+        "--retries",
+        "1",
+        "--stats",
+        "10s",
+        "--stats-one-line",
+        "-vv",
+        "--sftp-host",
+        "SERVER",
+        "--sftp-port",
+        "SSH_PORT",
+        "--sftp-user",
+        "USER",
+        "--sftp-key-use-agent",
+        "--sftp-known-hosts-file",
+        "KNOWN_HOSTS",
+        "--sftp-key-use-agent=false",
+        "--sftp-key-file",
+        "KEY_FILE",
+        "--sftp-md5sum-command",
+        "md5sum",
+        "--sftp-sha1sum-command",
+        "sha1sum",
+        "--no-check-dest",
+        "--transfers",
+        "32",
+        "--sftp-chunk-size",
+        "255Ki",
+        "--sftp-concurrency",
+        "256",
+        ":local:SOURCE",
+        ":sftp:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular-file sizes and mtimes, whole seconds",
+        "mismatches": 0,
+        "entries": 32
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "cache": "warm tmpfs source; no eviction",
+        "durable": false,
+        "verify": true,
+        "tool_timeout": 180
+      },
+      "workload": [
+        {
+          "name": "flat regular files",
+          "files": 32,
+          "bytes": 2147483648
+        }
+      ],
+      "cache": "warm",
+      "case_error": false,
+      "cache_limitations": [
+        "Memory-resident source; destination and server metadata caches uncontrolled; no final fsync."
+      ],
+      "filesystems": {
+        "source": "tmpfs",
+        "destination": "XFS RAID"
+      },
+      "network": {
+        "sender_nic_mbps": 1000,
+        "sender_congestion_control": "bbr",
+        "rtt_description": "approximately 250\u2013265 ms"
+      },
+      "receiver_load_before": [
+        4.99267578125,
+        4.07568359375,
+        3.44482421875
+      ],
+      "tool_identity": {
+        "version": "1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      },
+      "capture_sha256": "db4d54d31a9698f673b8630f34fbc695118a9e29fe7db3cf33d47034c98548f3",
+      "runner_sha256": null,
+      "source_manifest_sha256": "c1fdb1c2db592d4cd267db163b8523d3b73f02ed56395162bfad7e5f947f3f90",
+      "stage": "calibration",
+      "payload_started_by_s": 14.482120275497437
+    },
+    {
+      "scenario": "wan-cal-sftp-many2g-t16",
+      "tool": "rclone-sftp",
+      "repeat": 0,
+      "bytes": 2147483648,
+      "files": 32,
+      "wall_s": 78.57524671964347,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--create-empty-src-dirs",
+        "--contimeout",
+        "10s",
+        "--retries",
+        "1",
+        "--stats",
+        "10s",
+        "--stats-one-line",
+        "-vv",
+        "--sftp-host",
+        "SERVER",
+        "--sftp-port",
+        "SSH_PORT",
+        "--sftp-user",
+        "USER",
+        "--sftp-key-use-agent",
+        "--sftp-known-hosts-file",
+        "KNOWN_HOSTS",
+        "--sftp-chunk-size",
+        "255Ki",
+        "--sftp-concurrency",
+        "256",
+        "--sftp-md5sum-command",
+        "md5sum",
+        "--sftp-sha1sum-command",
+        "sha1sum",
+        "--no-check-dest",
+        "--transfers",
+        "16",
+        ":local:SOURCE",
+        ":sftp:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular-file sizes and mtimes, whole seconds",
+        "mismatches": 0,
+        "entries": 32
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "cache": "warm tmpfs source; no eviction",
+        "durable": false,
+        "verify": true,
+        "tool_timeout": 180
+      },
+      "workload": [
+        {
+          "name": "flat regular files",
+          "files": 32,
+          "bytes": 2147483648
+        }
+      ],
+      "cache": "warm",
+      "case_error": false,
+      "cache_limitations": [
+        "Memory-resident source; destination and server metadata caches uncontrolled; no final fsync."
+      ],
+      "filesystems": {
+        "source": "tmpfs",
+        "destination": "XFS RAID"
+      },
+      "network": {
+        "sender_nic_mbps": 1000,
+        "sender_congestion_control": "bbr",
+        "rtt_description": "approximately 250\u2013265 ms"
+      },
+      "receiver_load_before": [
+        3.58984375,
+        3.28271484375,
+        3.06396484375
+      ],
+      "tool_identity": {
+        "version": "1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      },
+      "capture_sha256": "7bcd669d1a12773605baadff8e43838c4acac7a25d829e36a6318eeb5d6787d8",
+      "runner_sha256": null,
+      "source_manifest_sha256": "c1fdb1c2db592d4cd267db163b8523d3b73f02ed56395162bfad7e5f947f3f90",
+      "stage": "calibration",
+      "payload_started_by_s": 16.05466651916504
+    },
+    {
+      "scenario": "wan-cal-sftp-many2g-t32",
+      "tool": "rclone-sftp",
+      "repeat": 0,
+      "bytes": 2147483648,
+      "files": 32,
+      "wall_s": 77.9260601811111,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--create-empty-src-dirs",
+        "--contimeout",
+        "10s",
+        "--retries",
+        "1",
+        "--stats",
+        "10s",
+        "--stats-one-line",
+        "-vv",
+        "--sftp-host",
+        "SERVER",
+        "--sftp-port",
+        "SSH_PORT",
+        "--sftp-user",
+        "USER",
+        "--sftp-key-use-agent",
+        "--sftp-known-hosts-file",
+        "KNOWN_HOSTS",
+        "--sftp-chunk-size",
+        "255Ki",
+        "--sftp-concurrency",
+        "256",
+        "--sftp-md5sum-command",
+        "md5sum",
+        "--sftp-sha1sum-command",
+        "sha1sum",
+        "--no-check-dest",
+        "--transfers",
+        "32",
+        ":local:SOURCE",
+        ":sftp:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular-file sizes and mtimes, whole seconds",
+        "mismatches": 0,
+        "entries": 32
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "cache": "warm tmpfs source; no eviction",
+        "durable": false,
+        "verify": true,
+        "tool_timeout": 180
+      },
+      "workload": [
+        {
+          "name": "flat regular files",
+          "files": 32,
+          "bytes": 2147483648
+        }
+      ],
+      "cache": "warm",
+      "case_error": false,
+      "cache_limitations": [
+        "Memory-resident source; destination and server metadata caches uncontrolled; no final fsync."
+      ],
+      "filesystems": {
+        "source": "tmpfs",
+        "destination": "XFS RAID"
+      },
+      "network": {
+        "sender_nic_mbps": 1000,
+        "sender_congestion_control": "bbr",
+        "rtt_description": "approximately 250\u2013265 ms"
+      },
+      "receiver_load_before": [
+        3.90478515625,
+        3.45361328125,
+        3.14599609375
+      ],
+      "tool_identity": {
+        "version": "1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      },
+      "capture_sha256": "e3ccc601d3f27cde01502e44d4a7670e355f391e244a9df23c82878869bd280e",
+      "runner_sha256": null,
+      "source_manifest_sha256": "c1fdb1c2db592d4cd267db163b8523d3b73f02ed56395162bfad7e5f947f3f90",
+      "stage": "calibration",
+      "payload_started_by_s": 15.839721918106079
+    },
+    {
+      "scenario": "wan-cal-sftp-mux-many2g-t16",
+      "tool": "rclone-sftp",
+      "repeat": 0,
+      "bytes": 2147483648,
+      "files": 32,
+      "wall_s": 69.37230789102614,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--create-empty-src-dirs",
+        "--contimeout",
+        "10s",
+        "--retries",
+        "1",
+        "--stats",
+        "10s",
+        "--stats-one-line",
+        "-vv",
+        "--sftp-host",
+        "SERVER",
+        "--sftp-port",
+        "SSH_PORT",
+        "--sftp-user",
+        "USER",
+        "--sftp-key-use-agent",
+        "--sftp-known-hosts-file",
+        "KNOWN_HOSTS",
+        "--sftp-ssh",
+        "ssh -F /dev/null -p SSH_PORT -o BatchMode=yes -o IdentitiesOnly=yes -i KEY_FILE -o StrictHostKeyChecking=yes -o UserKnownHostsFile=KNOWN_HOSTS -o ControlMaster=auto -o ControlPersist=60 -o ControlPath=SSH_SOCKET_DIR/s16 USER@SERVER",
+        "--sftp-md5sum-command",
+        "md5sum",
+        "--sftp-sha1sum-command",
+        "sha1sum",
+        "--sftp-chunk-size",
+        "255Ki",
+        "--sftp-concurrency",
+        "256",
+        "--no-check-dest",
+        "--transfers",
+        "16",
+        "--checkers",
+        "1",
+        ":local:SOURCE",
+        ":sftp:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular-file sizes and mtimes, whole seconds",
+        "mismatches": 0,
+        "entries": 32
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "cache": "warm tmpfs source; no eviction",
+        "durable": false,
+        "verify": true,
+        "tool_timeout": 180
+      },
+      "workload": [
+        {
+          "name": "flat regular files",
+          "files": 32,
+          "bytes": 2147483648
+        }
+      ],
+      "cache": "warm",
+      "case_error": false,
+      "cache_limitations": [
+        "Memory-resident source; destination and server metadata caches uncontrolled; no final fsync."
+      ],
+      "filesystems": {
+        "source": "tmpfs",
+        "destination": "XFS RAID"
+      },
+      "network": {
+        "sender_nic_mbps": 1000,
+        "sender_congestion_control": "bbr",
+        "rtt_description": "approximately 250\u2013265 ms"
+      },
+      "receiver_load_before": [
+        6.673828125,
+        4.92333984375,
+        3.9736328125
+      ],
+      "tool_identity": {
+        "version": "1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      },
+      "capture_sha256": "738954549fc39bad8491fb100c0f2141da58a4ecb8408e1bf11fe541647a5311",
+      "runner_sha256": null,
+      "source_manifest_sha256": "c1fdb1c2db592d4cd267db163b8523d3b73f02ed56395162bfad7e5f947f3f90",
+      "stage": "calibration",
+      "payload_started_by_s": 15.961808443069458
+    },
+    {
+      "scenario": "wan-cal-sftp-mux-many2g-t8",
+      "tool": "rclone-sftp",
+      "repeat": 0,
+      "bytes": 2147483648,
+      "files": 32,
+      "wall_s": 62.57351793348789,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--create-empty-src-dirs",
+        "--contimeout",
+        "10s",
+        "--retries",
+        "1",
+        "--stats",
+        "10s",
+        "--stats-one-line",
+        "-vv",
+        "--sftp-host",
+        "SERVER",
+        "--sftp-port",
+        "SSH_PORT",
+        "--sftp-user",
+        "USER",
+        "--sftp-key-use-agent",
+        "--sftp-known-hosts-file",
+        "KNOWN_HOSTS",
+        "--sftp-ssh",
+        "ssh -F /dev/null -p SSH_PORT -o BatchMode=yes -o IdentitiesOnly=yes -i KEY_FILE -o StrictHostKeyChecking=yes -o UserKnownHostsFile=KNOWN_HOSTS -o ControlMaster=auto -o ControlPersist=60 -o ControlPath=SSH_SOCKET_DIR/s8 USER@SERVER",
+        "--sftp-md5sum-command",
+        "md5sum",
+        "--sftp-sha1sum-command",
+        "sha1sum",
+        "--sftp-chunk-size",
+        "255Ki",
+        "--sftp-concurrency",
+        "256",
+        "--no-check-dest",
+        "--transfers",
+        "8",
+        "--checkers",
+        "1",
+        ":local:SOURCE",
+        ":sftp:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular-file sizes and mtimes, whole seconds",
+        "mismatches": 0,
+        "entries": 32
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "cache": "warm tmpfs source; no eviction",
+        "durable": false,
+        "verify": true,
+        "tool_timeout": 180
+      },
+      "workload": [
+        {
+          "name": "flat regular files",
+          "files": 32,
+          "bytes": 2147483648
+        }
+      ],
+      "cache": "warm",
+      "case_error": false,
+      "cache_limitations": [
+        "Memory-resident source; destination and server metadata caches uncontrolled; no final fsync."
+      ],
+      "filesystems": {
+        "source": "tmpfs",
+        "destination": "XFS RAID"
+      },
+      "network": {
+        "sender_nic_mbps": 1000,
+        "sender_congestion_control": "bbr",
+        "rtt_description": "approximately 250\u2013265 ms"
+      },
+      "receiver_load_before": [
+        3.87255859375,
+        4.10888671875,
+        3.6533203125
+      ],
+      "tool_identity": {
+        "version": "1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      },
+      "capture_sha256": "7b7cc8828807a912450950472c4ce40f1d7a75b8ea4d07531574c49591b077db",
+      "runner_sha256": null,
+      "source_manifest_sha256": "c1fdb1c2db592d4cd267db163b8523d3b73f02ed56395162bfad7e5f947f3f90",
+      "stage": "calibration",
+      "payload_started_by_s": 15.592391014099121
+    },
+    {
+      "scenario": "wan-cal-sftp-one512-255",
+      "tool": "rclone-sftp",
+      "repeat": 0,
+      "bytes": 536870912,
+      "files": 1,
+      "wall_s": 1.5655584149062634,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--create-empty-src-dirs",
+        "--contimeout",
+        "10s",
+        "--retries",
+        "1",
+        "--stats",
+        "10s",
+        "--stats-one-line",
+        "-vv",
+        "--sftp-host",
+        "SERVER",
+        "--sftp-port",
+        "SSH_PORT",
+        "--sftp-user",
+        "USER",
+        "--sftp-key-use-agent",
+        "--sftp-known-hosts-file",
+        "KNOWN_HOSTS",
+        "--sftp-chunk-size",
+        "255Ki",
+        "--sftp-concurrency",
+        "256",
+        "--no-check-dest",
+        ":local:SOURCE",
+        ":sftp:DESTINATION"
+      ],
+      "exit_code": 1,
+      "content_verified": false,
+      "metadata": null,
+      "recorded_status": "failed",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "cache": "warm tmpfs source; no eviction",
+        "durable": false,
+        "verify": true,
+        "tool_timeout": 180
+      },
+      "workload": [
+        {
+          "name": "flat regular files",
+          "files": 1,
+          "bytes": 536870912
+        }
+      ],
+      "cache": "warm",
+      "case_error": true,
+      "cache_limitations": [
+        "Memory-resident source; destination and server metadata caches uncontrolled; no final fsync."
+      ],
+      "filesystems": {
+        "source": "tmpfs",
+        "destination": "XFS RAID"
+      },
+      "network": {
+        "sender_nic_mbps": 1000,
+        "sender_congestion_control": "bbr",
+        "rtt_description": "approximately 250\u2013265 ms"
+      },
+      "receiver_load_before": [
+        2.75146484375,
+        2.8916015625,
+        2.99462890625
+      ],
+      "tool_identity": {
+        "version": "1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      },
+      "capture_sha256": "ace5f26e6b52c082997c7686768338a7bde1ea5ca7a1b5c599ee44c47b611bef",
+      "runner_sha256": null,
+      "source_manifest_sha256": "79c7d62eceae94ebcc336ae3e67cf1fe99c4272adbeb39b28d41b62c41943b4e",
+      "stage": "calibration",
+      "failure_note": "Host-key mismatch during setup; no copy completed."
+    },
+    {
+      "scenario": "wan-cal-sftp-one512-255-fixed",
+      "tool": "rclone-sftp",
+      "repeat": 0,
+      "bytes": 536870912,
+      "files": 1,
+      "wall_s": 1.4652893114835024,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--create-empty-src-dirs",
+        "--contimeout",
+        "10s",
+        "--retries",
+        "1",
+        "--stats",
+        "10s",
+        "--stats-one-line",
+        "-vv",
+        "--sftp-host",
+        "SERVER",
+        "--sftp-port",
+        "SSH_PORT",
+        "--sftp-user",
+        "USER",
+        "--sftp-key-use-agent",
+        "--sftp-known-hosts-file",
+        "KNOWN_HOSTS",
+        "--sftp-chunk-size",
+        "255Ki",
+        "--sftp-concurrency",
+        "256",
+        "--no-check-dest",
+        ":local:SOURCE",
+        ":sftp:DESTINATION"
+      ],
+      "exit_code": 1,
+      "content_verified": false,
+      "metadata": null,
+      "recorded_status": "failed",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "cache": "warm tmpfs source; no eviction",
+        "durable": false,
+        "verify": true,
+        "tool_timeout": 180
+      },
+      "workload": [
+        {
+          "name": "flat regular files",
+          "files": 1,
+          "bytes": 536870912
+        }
+      ],
+      "cache": "warm",
+      "case_error": true,
+      "cache_limitations": [
+        "Memory-resident source; destination and server metadata caches uncontrolled; no final fsync."
+      ],
+      "filesystems": {
+        "source": "tmpfs",
+        "destination": "XFS RAID"
+      },
+      "network": {
+        "sender_nic_mbps": 1000,
+        "sender_congestion_control": "bbr",
+        "rtt_description": "approximately 250\u2013265 ms"
+      },
+      "receiver_load_before": [
+        2.57470703125,
+        2.81640625,
+        2.96435546875
+      ],
+      "tool_identity": {
+        "version": "1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      },
+      "capture_sha256": "496c100a159e092da825e30d76e03c2db93e6cd0df2cf61e04fc2862f15f4238",
+      "runner_sha256": null,
+      "source_manifest_sha256": "79c7d62eceae94ebcc336ae3e67cf1fe99c4272adbeb39b28d41b62c41943b4e",
+      "stage": "calibration",
+      "failure_note": "Host-key mismatch during setup; no copy completed."
+    },
+    {
+      "scenario": "wan-cal-sftp-one512-255-keys",
+      "tool": "rclone-sftp",
+      "repeat": 0,
+      "bytes": 536870912,
+      "files": 1,
+      "wall_s": 81.62756563909352,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--create-empty-src-dirs",
+        "--contimeout",
+        "10s",
+        "--retries",
+        "1",
+        "--stats",
+        "10s",
+        "--stats-one-line",
+        "-vv",
+        "--sftp-host",
+        "SERVER",
+        "--sftp-port",
+        "SSH_PORT",
+        "--sftp-user",
+        "USER",
+        "--sftp-key-use-agent",
+        "--sftp-known-hosts-file",
+        "KNOWN_HOSTS",
+        "--sftp-chunk-size",
+        "255Ki",
+        "--sftp-concurrency",
+        "256",
+        "--no-check-dest",
+        ":local:SOURCE",
+        ":sftp:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular-file sizes and mtimes, whole seconds",
+        "mismatches": 0,
+        "entries": 1
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "cache": "warm tmpfs source; no eviction",
+        "durable": false,
+        "verify": true,
+        "tool_timeout": 180
+      },
+      "workload": [
+        {
+          "name": "flat regular files",
+          "files": 1,
+          "bytes": 536870912
+        }
+      ],
+      "cache": "warm",
+      "case_error": false,
+      "cache_limitations": [
+        "Memory-resident source; destination and server metadata caches uncontrolled; no final fsync."
+      ],
+      "filesystems": {
+        "source": "tmpfs",
+        "destination": "XFS RAID"
+      },
+      "network": {
+        "sender_nic_mbps": 1000,
+        "sender_congestion_control": "bbr",
+        "rtt_description": "approximately 250\u2013265 ms"
+      },
+      "receiver_load_before": [
+        2.42919921875,
+        2.7265625,
+        2.9228515625
+      ],
+      "tool_identity": {
+        "version": "1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      },
+      "capture_sha256": "f3b5c6e7b59966afe9f0abb5ef81bfcfb23c6e5e112a2bd60e113f28bbce5a8e",
+      "runner_sha256": null,
+      "source_manifest_sha256": "79c7d62eceae94ebcc336ae3e67cf1fe99c4272adbeb39b28d41b62c41943b4e",
+      "stage": "calibration",
+      "payload_started_by_s": 15.707486867904663
+    },
+    {
+      "scenario": "wan-cal-syq-one512",
+      "tool": "syq",
+      "repeat": 0,
+      "bytes": 536870912,
+      "files": 1,
+      "wall_s": 15.616941694170237,
+      "argv": [
+        "env",
+        "SYQ_DEBUG=1",
+        "syq",
+        "rsync",
+        "-rt",
+        "--no-progress",
+        "--syq-no-bootstrap",
+        "--rsync-path",
+        "REMOTE_SCRATCH/syq",
+        "-e",
+        "SSH_WRAPPER",
+        "SOURCE/",
+        "USER@SERVER:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular-file sizes and mtimes, whole seconds",
+        "mismatches": 0,
+        "entries": 1
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "cache": "warm tmpfs source; no eviction",
+        "durable": false,
+        "verify": true,
+        "tool_timeout": 180
+      },
+      "workload": [
+        {
+          "name": "flat regular files",
+          "files": 1,
+          "bytes": 536870912
+        }
+      ],
+      "cache": "warm",
+      "case_error": false,
+      "cache_limitations": [
+        "Memory-resident source; destination and server metadata caches uncontrolled; no final fsync."
+      ],
+      "filesystems": {
+        "source": "tmpfs",
+        "destination": "XFS RAID"
+      },
+      "network": {
+        "sender_nic_mbps": 1000,
+        "sender_congestion_control": "bbr",
+        "rtt_description": "approximately 250\u2013265 ms"
+      },
+      "receiver_load_before": [
+        3.1689453125,
+        2.96875,
+        3.0244140625
+      ],
+      "tool_identity": {
+        "version": "0.5.2",
+        "sha256": "5e4586bdc9706834cc907ff087afed57180e918e7459f9cefb7fda4e7973dbff"
+      },
+      "capture_sha256": "556d8e8fc59805ddf9f3927f71cdf99286fa32f293fa2c6fba6644b992fe1406",
+      "runner_sha256": null,
+      "source_manifest_sha256": "79c7d62eceae94ebcc336ae3e67cf1fe99c4272adbeb39b28d41b62c41943b4e",
+      "stage": "calibration",
+      "worker_tuning_log": [],
+      "tuning_cache": "existing; not reset between runs",
+      "payload_started_by_s": 6.89
+    },
+    {
+      "scenario": "wan-cal-syq-one8g",
+      "tool": "syq",
+      "repeat": 0,
+      "bytes": 8589934592,
+      "files": 1,
+      "wall_s": 90.00974946655333,
+      "argv": [
+        "env",
+        "SYQ_DEBUG=1",
+        "syq",
+        "rsync",
+        "-rt",
+        "--no-progress",
+        "--syq-no-bootstrap",
+        "--rsync-path",
+        "REMOTE_SCRATCH/syq",
+        "-e",
+        "SSH_WRAPPER",
+        "SOURCE/",
+        "USER@SERVER:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular-file sizes and mtimes, whole seconds",
+        "mismatches": 0,
+        "entries": 1
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 1,
+        "cache": "warm tmpfs source; no eviction",
+        "durable": false,
+        "verify": true,
+        "tool_timeout": 180
+      },
+      "workload": [
+        {
+          "name": "flat regular files",
+          "files": 1,
+          "bytes": 8589934592
+        }
+      ],
+      "cache": "warm",
+      "case_error": false,
+      "cache_limitations": [
+        "Memory-resident source; destination and server metadata caches uncontrolled; no final fsync."
+      ],
+      "filesystems": {
+        "source": "tmpfs",
+        "destination": "XFS RAID"
+      },
+      "network": {
+        "sender_nic_mbps": 1000,
+        "sender_congestion_control": "bbr",
+        "rtt_description": "approximately 250\u2013265 ms"
+      },
+      "receiver_load_before": [
+        2.708984375,
+        2.71142578125,
+        2.8798828125
+      ],
+      "tool_identity": {
+        "version": "0.5.2",
+        "sha256": "5e4586bdc9706834cc907ff087afed57180e918e7459f9cefb7fda4e7973dbff"
+      },
+      "capture_sha256": "4c0e9002784512d5ee30850307bc8fba43004eac0e90b97e774a041191efa4ce",
+      "runner_sha256": null,
+      "source_manifest_sha256": "efb1c5c66be4ce95bf6de0c7b5e02151f7ef4f472c0318411920c47f5b6cfb01",
+      "stage": "calibration",
+      "worker_tuning_log": [
+        "syq: tune: candidate 16 -> 21 workers (measured 115.3 MB/s at 16, state Explore { from: 16, base: 115317732.92638697, direction: Up })",
+        "syq: tune: 16 -> 21 workers (candidate ready, state Explore { from: 16, base: 115317732.92638697, direction: Up })",
+        "syq: tune: candidate 21 -> 16 workers (measured 115.7 MB/s at 21, state Hold)",
+        "syq: tune: 21 -> 16 workers (state Hold)"
+      ],
+      "tuning_cache": "existing; not reset between runs",
+      "payload_started_by_s": 7.05
+    },
+    {
+      "scenario": "wan-repeat-many32g",
+      "tool": "syq",
+      "repeat": 0,
+      "bytes": 34359738368,
+      "files": 32,
+      "wall_s": 315.8462211806327,
+      "argv": [
+        "env",
+        "SYQ_DEBUG=1",
+        "syq",
+        "rsync",
+        "-rt",
+        "--no-progress",
+        "--syq-no-bootstrap",
+        "--rsync-path",
+        "REMOTE_SCRATCH/syq",
+        "-e",
+        "SSH_WRAPPER",
+        "SOURCE/",
+        "USER@SERVER:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular-file sizes and mtimes, whole seconds",
+        "mismatches": 0,
+        "entries": 32
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 3,
+        "cache": "warm tmpfs source; no eviction",
+        "durable": false,
+        "verify": true,
+        "tool_timeout": 600
+      },
+      "workload": [
+        {
+          "name": "flat regular files",
+          "files": 32,
+          "bytes": 34359738368
+        }
+      ],
+      "cache": "warm",
+      "case_error": false,
+      "cache_limitations": [
+        "Memory-resident source; destination and server metadata caches uncontrolled; no final fsync."
+      ],
+      "filesystems": {
+        "source": "tmpfs",
+        "destination": "XFS RAID"
+      },
+      "network": {
+        "sender_nic_mbps": 1000,
+        "sender_congestion_control": "bbr",
+        "rtt_description": "approximately 250\u2013265 ms"
+      },
+      "receiver_load_before": [
+        4.41796875,
+        5.43701171875,
+        5.17919921875
+      ],
+      "tool_identity": {
+        "version": "0.5.2",
+        "sha256": "5e4586bdc9706834cc907ff087afed57180e918e7459f9cefb7fda4e7973dbff"
+      },
+      "capture_sha256": "2b2f7a09f54e1443bee828f44aeab299710d634623cb08d517243b5225d1996d",
+      "runner_sha256": "89f18808af82b4fc6dd8a64cfe1bbbafa64f5f9922bbbd9c00d1330632e415d3",
+      "source_manifest_sha256": "8d21fd63c31e61ff335c21c3009c6812f111eac5218ac0258cb81ab01a040d83",
+      "stage": "three-repeat series",
+      "worker_tuning_log": [
+        "syq: tune: candidate 16 -> 21 workers (measured 116.2 MB/s at 16, state Explore { from: 16, base: 116156391.51779598, direction: Up })",
+        "syq: tune: 16 -> 21 workers (candidate ready, state Explore { from: 16, base: 116156391.51779598, direction: Up })",
+        "syq: tune: candidate 21 -> 16 workers (measured 117.0 MB/s at 21, state Hold)",
+        "syq: tune: 21 -> 16 workers (state Hold)",
+        "syq: tune: candidate 16 -> 12 workers (measured 116.6 MB/s at 16, state Explore { from: 16, base: 116574181.85284168, direction: Down })",
+        "syq: tune: 16 -> 12 workers (state Explore { from: 16, base: 116574181.85284168, direction: Down })",
+        "syq: tune: candidate 12 -> 9 workers (measured 113.2 MB/s at 12, state Explore { from: 12, base: 113217810.3568022, direction: Down })",
+        "syq: tune: 12 -> 9 workers (state Explore { from: 12, base: 113217810.3568022, direction: Down })",
+        "syq: tune: candidate 9 -> 7 workers (measured 114.5 MB/s at 9, state Explore { from: 9, base: 114477082.9789542, direction: Down })",
+        "syq: tune: 9 -> 7 workers (state Explore { from: 9, base: 114477082.9789542, direction: Down })",
+        "syq: tune: candidate 7 -> 5 workers (measured 117.8 MB/s at 7, state Explore { from: 7, base: 117830887.65343177, direction: Down })",
+        "syq: tune: 7 -> 5 workers (state Explore { from: 7, base: 117830887.65343177, direction: Down })",
+        "syq: tune: candidate 5 -> 4 workers (measured 117.4 MB/s at 5, state Explore { from: 5, base: 117415988.1901395, direction: Down })",
+        "syq: tune: 5 -> 4 workers (state Explore { from: 5, base: 117415988.1901395, direction: Down })",
+        "syq: tune: candidate 4 -> 5 workers (measured 106.9 MB/s at 4, state Hold)",
+        "syq: tune: 4 -> 5 workers (candidate ready, state Hold)",
+        "syq: tune: candidate 5 -> 6 workers (measured 119.6 MB/s at 5, state Explore { from: 5, base: 119618361.63784572, direction: Up })",
+        "syq: tune: 5 -> 6 workers (candidate ready, state Explore { from: 5, base: 119618361.63784572, direction: Up })",
+        "syq: tune: candidate 6 -> 5 workers (measured 110.0 MB/s at 6, state Hold)",
+        "syq: tune: 6 -> 5 workers (state Hold)"
+      ],
+      "tuning_cache": "existing; not reset between runs",
+      "payload_started_by_s": 6.08
+    },
+    {
+      "scenario": "wan-repeat-many32g",
+      "tool": "syq",
+      "repeat": 1,
+      "bytes": 34359738368,
+      "files": 32,
+      "wall_s": 322.34994466789067,
+      "argv": [
+        "env",
+        "SYQ_DEBUG=1",
+        "syq",
+        "rsync",
+        "-rt",
+        "--no-progress",
+        "--syq-no-bootstrap",
+        "--rsync-path",
+        "REMOTE_SCRATCH/syq",
+        "-e",
+        "SSH_WRAPPER",
+        "SOURCE/",
+        "USER@SERVER:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular-file sizes and mtimes, whole seconds",
+        "mismatches": 0,
+        "entries": 32
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 3,
+        "cache": "warm tmpfs source; no eviction",
+        "durable": false,
+        "verify": true,
+        "tool_timeout": 600
+      },
+      "workload": [
+        {
+          "name": "flat regular files",
+          "files": 32,
+          "bytes": 34359738368
+        }
+      ],
+      "cache": "warm",
+      "case_error": false,
+      "cache_limitations": [
+        "Memory-resident source; destination and server metadata caches uncontrolled; no final fsync."
+      ],
+      "filesystems": {
+        "source": "tmpfs",
+        "destination": "XFS RAID"
+      },
+      "network": {
+        "sender_nic_mbps": 1000,
+        "sender_congestion_control": "bbr",
+        "rtt_description": "approximately 250\u2013265 ms"
+      },
+      "receiver_load_before": [
+        5.42431640625,
+        5.6064453125,
+        5.46630859375
+      ],
+      "tool_identity": {
+        "version": "0.5.2",
+        "sha256": "5e4586bdc9706834cc907ff087afed57180e918e7459f9cefb7fda4e7973dbff"
+      },
+      "capture_sha256": "207e2507998424019be37ec51815769e3df970be47186d46a549c81274d775b0",
+      "runner_sha256": "89f18808af82b4fc6dd8a64cfe1bbbafa64f5f9922bbbd9c00d1330632e415d3",
+      "source_manifest_sha256": "8d21fd63c31e61ff335c21c3009c6812f111eac5218ac0258cb81ab01a040d83",
+      "stage": "three-repeat series",
+      "worker_tuning_log": [
+        "syq: tune: candidate 5 -> 7 workers (measured 115.7 MB/s at 5, state Explore { from: 5, base: 115728761.40569635, direction: Up })",
+        "syq: tune: 5 -> 7 workers (candidate ready, state Explore { from: 5, base: 115728761.40569635, direction: Up })",
+        "syq: tune: candidate 7 -> 5 workers (measured 114.5 MB/s at 7, state Hold)",
+        "syq: tune: 7 -> 5 workers (state Hold)",
+        "syq: tune: candidate 5 -> 4 workers (measured 105.7 MB/s at 5, state Explore { from: 5, base: 105665806.53860849, direction: Down })",
+        "syq: tune: 5 -> 4 workers (state Explore { from: 5, base: 105665806.53860849, direction: Down })",
+        "syq: tune: candidate 4 -> 3 workers (measured 115.7 MB/s at 4, state Explore { from: 4, base: 115728713.09492013, direction: Down })",
+        "syq: tune: 4 -> 3 workers (state Explore { from: 4, base: 115728713.09492013, direction: Down })",
+        "syq: tune: candidate 3 -> 2 workers (measured 116.2 MB/s at 3, state Explore { from: 3, base: 116157450.75443353, direction: Down })",
+        "syq: tune: 3 -> 2 workers (state Explore { from: 3, base: 116157450.75443353, direction: Down })",
+        "syq: tune: candidate 2 -> 3 workers (measured 110.3 MB/s at 2, state Hold)",
+        "syq: tune: 2 -> 3 workers (candidate ready, state Hold)",
+        "syq: tune: candidate 3 -> 2 workers (measured 111.2 MB/s at 3, state Explore { from: 3, base: 111222819.34137595, direction: Down })",
+        "syq: tune: 3 -> 2 workers (state Explore { from: 3, base: 111222819.34137595, direction: Down })",
+        "syq: tune: candidate 2 -> 1 workers (measured 116.6 MB/s at 2, state Explore { from: 2, base: 116571932.08887075, direction: Down })",
+        "syq: tune: 2 -> 1 workers (state Explore { from: 2, base: 116571932.08887075, direction: Down })"
+      ],
+      "tuning_cache": "existing; not reset between runs",
+      "payload_started_by_s": 6.26
+    },
+    {
+      "scenario": "wan-repeat-many32g",
+      "tool": "syq",
+      "repeat": 2,
+      "bytes": 34359738368,
+      "files": 32,
+      "wall_s": 341.3520436324179,
+      "argv": [
+        "env",
+        "SYQ_DEBUG=1",
+        "syq",
+        "rsync",
+        "-rt",
+        "--no-progress",
+        "--syq-no-bootstrap",
+        "--rsync-path",
+        "REMOTE_SCRATCH/syq",
+        "-e",
+        "SSH_WRAPPER",
+        "SOURCE/",
+        "USER@SERVER:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular-file sizes and mtimes, whole seconds",
+        "mismatches": 0,
+        "entries": 32
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 3,
+        "cache": "warm tmpfs source; no eviction",
+        "durable": false,
+        "verify": true,
+        "tool_timeout": 600
+      },
+      "workload": [
+        {
+          "name": "flat regular files",
+          "files": 32,
+          "bytes": 34359738368
+        }
+      ],
+      "cache": "warm",
+      "case_error": false,
+      "cache_limitations": [
+        "Memory-resident source; destination and server metadata caches uncontrolled; no final fsync."
+      ],
+      "filesystems": {
+        "source": "tmpfs",
+        "destination": "XFS RAID"
+      },
+      "network": {
+        "sender_nic_mbps": 1000,
+        "sender_congestion_control": "bbr",
+        "rtt_description": "approximately 250\u2013265 ms"
+      },
+      "receiver_load_before": [
+        5.5712890625,
+        5.75,
+        5.52197265625
+      ],
+      "tool_identity": {
+        "version": "0.5.2",
+        "sha256": "5e4586bdc9706834cc907ff087afed57180e918e7459f9cefb7fda4e7973dbff"
+      },
+      "capture_sha256": "1633c572860676c90a216fc7246dd7c4ada8edb22dadc46bbe6564b0753a89e0",
+      "runner_sha256": "89f18808af82b4fc6dd8a64cfe1bbbafa64f5f9922bbbd9c00d1330632e415d3",
+      "source_manifest_sha256": "8d21fd63c31e61ff335c21c3009c6812f111eac5218ac0258cb81ab01a040d83",
+      "stage": "three-repeat series",
+      "worker_tuning_log": [
+        "syq: tune: candidate 1 -> 2 workers (measured 116.1 MB/s at 1, state Explore { from: 1, base: 116145002.93438497, direction: Up })",
+        "syq: tune: 1 -> 2 workers (candidate ready, state Explore { from: 1, base: 116145002.93438497, direction: Up })",
+        "syq: tune: candidate 2 -> 1 workers (measured 115.7 MB/s at 2, state Hold)",
+        "syq: tune: 2 -> 1 workers (state Hold)"
+      ],
+      "tuning_cache": "existing; not reset between runs",
+      "payload_started_by_s": 6.26
+    },
+    {
+      "scenario": "wan-repeat-many32g",
+      "tool": "rclone-sftp",
+      "repeat": 0,
+      "bytes": 34359738368,
+      "files": 32,
+      "wall_s": 391.8557864241302,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--create-empty-src-dirs",
+        "--contimeout",
+        "10s",
+        "--retries",
+        "1",
+        "--stats",
+        "10s",
+        "--stats-one-line",
+        "-vv",
+        "--sftp-host",
+        "SERVER",
+        "--sftp-port",
+        "SSH_PORT",
+        "--sftp-user",
+        "USER",
+        "--sftp-key-use-agent",
+        "--sftp-known-hosts-file",
+        "KNOWN_HOSTS",
+        "--sftp-md5sum-command",
+        "md5sum",
+        "--sftp-sha1sum-command",
+        "sha1sum",
+        "--sftp-chunk-size",
+        "255Ki",
+        "--sftp-concurrency",
+        "256",
+        "--no-check-dest",
+        "--sftp-key-use-agent=false",
+        "--sftp-key-file",
+        "KEY_FILE",
+        "--transfers",
+        "32",
+        ":local:SOURCE",
+        ":sftp:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular-file sizes and mtimes, whole seconds",
+        "mismatches": 0,
+        "entries": 32
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 3,
+        "cache": "warm tmpfs source; no eviction",
+        "durable": false,
+        "verify": true,
+        "tool_timeout": 600
+      },
+      "workload": [
+        {
+          "name": "flat regular files",
+          "files": 32,
+          "bytes": 34359738368
+        }
+      ],
+      "cache": "warm",
+      "case_error": false,
+      "cache_limitations": [
+        "Memory-resident source; destination and server metadata caches uncontrolled; no final fsync."
+      ],
+      "filesystems": {
+        "source": "tmpfs",
+        "destination": "XFS RAID"
+      },
+      "network": {
+        "sender_nic_mbps": 1000,
+        "sender_congestion_control": "bbr",
+        "rtt_description": "approximately 250\u2013265 ms"
+      },
+      "receiver_load_before": [
+        5.1376953125,
+        5.22607421875,
+        5.1513671875
+      ],
+      "tool_identity": {
+        "version": "1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      },
+      "capture_sha256": "8db37a5dd9a4641ef79a171a1be986700cd57aec30afb9b9483f90bba49458e4",
+      "runner_sha256": "89f18808af82b4fc6dd8a64cfe1bbbafa64f5f9922bbbd9c00d1330632e415d3",
+      "source_manifest_sha256": "8d21fd63c31e61ff335c21c3009c6812f111eac5218ac0258cb81ab01a040d83",
+      "stage": "three-repeat series",
+      "payload_started_by_s": 14.740077257156372
+    },
+    {
+      "scenario": "wan-repeat-many32g",
+      "tool": "rclone-sftp",
+      "repeat": 1,
+      "bytes": 34359738368,
+      "files": 32,
+      "wall_s": 380.65351497381926,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--create-empty-src-dirs",
+        "--contimeout",
+        "10s",
+        "--retries",
+        "1",
+        "--stats",
+        "10s",
+        "--stats-one-line",
+        "-vv",
+        "--sftp-host",
+        "SERVER",
+        "--sftp-port",
+        "SSH_PORT",
+        "--sftp-user",
+        "USER",
+        "--sftp-key-use-agent",
+        "--sftp-known-hosts-file",
+        "KNOWN_HOSTS",
+        "--sftp-md5sum-command",
+        "md5sum",
+        "--sftp-sha1sum-command",
+        "sha1sum",
+        "--sftp-chunk-size",
+        "255Ki",
+        "--sftp-concurrency",
+        "256",
+        "--no-check-dest",
+        "--sftp-key-use-agent=false",
+        "--sftp-key-file",
+        "KEY_FILE",
+        "--transfers",
+        "32",
+        ":local:SOURCE",
+        ":sftp:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular-file sizes and mtimes, whole seconds",
+        "mismatches": 0,
+        "entries": 32
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 3,
+        "cache": "warm tmpfs source; no eviction",
+        "durable": false,
+        "verify": true,
+        "tool_timeout": 600
+      },
+      "workload": [
+        {
+          "name": "flat regular files",
+          "files": 32,
+          "bytes": 34359738368
+        }
+      ],
+      "cache": "warm",
+      "case_error": false,
+      "cache_limitations": [
+        "Memory-resident source; destination and server metadata caches uncontrolled; no final fsync."
+      ],
+      "filesystems": {
+        "source": "tmpfs",
+        "destination": "XFS RAID"
+      },
+      "network": {
+        "sender_nic_mbps": 1000,
+        "sender_congestion_control": "bbr",
+        "rtt_description": "approximately 250\u2013265 ms"
+      },
+      "receiver_load_before": [
+        5.205078125,
+        5.55712890625,
+        5.35107421875
+      ],
+      "tool_identity": {
+        "version": "1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      },
+      "capture_sha256": "04b415c26bba33f8742e3b9d50bb95a664a9478855fdc4160727170062dc1959",
+      "runner_sha256": "89f18808af82b4fc6dd8a64cfe1bbbafa64f5f9922bbbd9c00d1330632e415d3",
+      "source_manifest_sha256": "8d21fd63c31e61ff335c21c3009c6812f111eac5218ac0258cb81ab01a040d83",
+      "stage": "three-repeat series",
+      "payload_started_by_s": 14.708784341812134
+    },
+    {
+      "scenario": "wan-repeat-many32g",
+      "tool": "rclone-sftp",
+      "repeat": 2,
+      "bytes": 34359738368,
+      "files": 32,
+      "wall_s": 394.1097453366965,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--create-empty-src-dirs",
+        "--contimeout",
+        "10s",
+        "--retries",
+        "1",
+        "--stats",
+        "10s",
+        "--stats-one-line",
+        "-vv",
+        "--sftp-host",
+        "SERVER",
+        "--sftp-port",
+        "SSH_PORT",
+        "--sftp-user",
+        "USER",
+        "--sftp-key-use-agent",
+        "--sftp-known-hosts-file",
+        "KNOWN_HOSTS",
+        "--sftp-md5sum-command",
+        "md5sum",
+        "--sftp-sha1sum-command",
+        "sha1sum",
+        "--sftp-chunk-size",
+        "255Ki",
+        "--sftp-concurrency",
+        "256",
+        "--no-check-dest",
+        "--sftp-key-use-agent=false",
+        "--sftp-key-file",
+        "KEY_FILE",
+        "--transfers",
+        "32",
+        ":local:SOURCE",
+        ":sftp:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular-file sizes and mtimes, whole seconds",
+        "mismatches": 0,
+        "entries": 32
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 3,
+        "cache": "warm tmpfs source; no eviction",
+        "durable": false,
+        "verify": true,
+        "tool_timeout": 600
+      },
+      "workload": [
+        {
+          "name": "flat regular files",
+          "files": 32,
+          "bytes": 34359738368
+        }
+      ],
+      "cache": "warm",
+      "case_error": false,
+      "cache_limitations": [
+        "Memory-resident source; destination and server metadata caches uncontrolled; no final fsync."
+      ],
+      "filesystems": {
+        "source": "tmpfs",
+        "destination": "XFS RAID"
+      },
+      "network": {
+        "sender_nic_mbps": 1000,
+        "sender_congestion_control": "bbr",
+        "rtt_description": "approximately 250\u2013265 ms"
+      },
+      "receiver_load_before": [
+        5.25634765625,
+        5.2255859375,
+        5.32763671875
+      ],
+      "tool_identity": {
+        "version": "1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      },
+      "capture_sha256": "74c63b808e593a8e6b74bf32f99be450ec51ea090d6a2ff1476db52f1f8e22fc",
+      "runner_sha256": "89f18808af82b4fc6dd8a64cfe1bbbafa64f5f9922bbbd9c00d1330632e415d3",
+      "source_manifest_sha256": "8d21fd63c31e61ff335c21c3009c6812f111eac5218ac0258cb81ab01a040d83",
+      "stage": "three-repeat series",
+      "payload_started_by_s": 14.176522254943848
+    },
+    {
+      "scenario": "wan-repeat-many32g",
+      "tool": "rclone-webdav",
+      "repeat": 0,
+      "bytes": 34359738368,
+      "files": 32,
+      "wall_s": 307.5935201663524,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--create-empty-src-dirs",
+        "--contimeout",
+        "10s",
+        "--retries",
+        "1",
+        "--stats",
+        "10s",
+        "--stats-one-line",
+        "-vv",
+        "--webdav-url",
+        "https://SERVER:HTTPS_PORT/",
+        "--webdav-vendor",
+        "rclone",
+        "--ca-cert",
+        "CA_CERT",
+        "--transfers",
+        "16",
+        "--webdav-pacer-min-sleep",
+        "2ms",
+        "--no-check-dest",
+        ":local:SOURCE",
+        ":webdav:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular-file sizes and mtimes, whole seconds",
+        "mismatches": 0,
+        "entries": 32
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 3,
+        "cache": "warm tmpfs source; no eviction",
+        "durable": false,
+        "verify": true,
+        "tool_timeout": 600
+      },
+      "workload": [
+        {
+          "name": "flat regular files",
+          "files": 32,
+          "bytes": 34359738368
+        }
+      ],
+      "cache": "warm",
+      "case_error": false,
+      "cache_limitations": [
+        "Memory-resident source; destination and server metadata caches uncontrolled; no final fsync."
+      ],
+      "filesystems": {
+        "source": "tmpfs",
+        "destination": "XFS RAID"
+      },
+      "network": {
+        "sender_nic_mbps": 1000,
+        "sender_congestion_control": "bbr",
+        "rtt_description": "approximately 250\u2013265 ms"
+      },
+      "receiver_load_before": [
+        4.6337890625,
+        5.12353515625,
+        5.15234375
+      ],
+      "tool_identity": {
+        "version": "1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      },
+      "capture_sha256": "ce2aa4b0d1a8dec63116dcbf2c6697f145611ba3dc9d83883e91de9c3882a5fe",
+      "runner_sha256": "89f18808af82b4fc6dd8a64cfe1bbbafa64f5f9922bbbd9c00d1330632e415d3",
+      "source_manifest_sha256": "8d21fd63c31e61ff335c21c3009c6812f111eac5218ac0258cb81ab01a040d83",
+      "stage": "three-repeat series",
+      "payload_started_by_s": 11.309525966644287
+    },
+    {
+      "scenario": "wan-repeat-many32g",
+      "tool": "rclone-webdav",
+      "repeat": 1,
+      "bytes": 34359738368,
+      "files": 32,
+      "wall_s": 312.5998532716185,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--create-empty-src-dirs",
+        "--contimeout",
+        "10s",
+        "--retries",
+        "1",
+        "--stats",
+        "10s",
+        "--stats-one-line",
+        "-vv",
+        "--webdav-url",
+        "https://SERVER:HTTPS_PORT/",
+        "--webdav-vendor",
+        "rclone",
+        "--ca-cert",
+        "CA_CERT",
+        "--transfers",
+        "16",
+        "--webdav-pacer-min-sleep",
+        "2ms",
+        "--no-check-dest",
+        ":local:SOURCE",
+        ":webdav:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular-file sizes and mtimes, whole seconds",
+        "mismatches": 0,
+        "entries": 32
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 3,
+        "cache": "warm tmpfs source; no eviction",
+        "durable": false,
+        "verify": true,
+        "tool_timeout": 600
+      },
+      "workload": [
+        {
+          "name": "flat regular files",
+          "files": 32,
+          "bytes": 34359738368
+        }
+      ],
+      "cache": "warm",
+      "case_error": false,
+      "cache_limitations": [
+        "Memory-resident source; destination and server metadata caches uncontrolled; no final fsync."
+      ],
+      "filesystems": {
+        "source": "tmpfs",
+        "destination": "XFS RAID"
+      },
+      "network": {
+        "sender_nic_mbps": 1000,
+        "sender_congestion_control": "bbr",
+        "rtt_description": "approximately 250\u2013265 ms"
+      },
+      "receiver_load_before": [
+        5.03662109375,
+        5.4130859375,
+        5.35693359375
+      ],
+      "tool_identity": {
+        "version": "1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      },
+      "capture_sha256": "5686234378673a70d2a4f3d26d0c0fcaa88fddd0b6b436c00b0aa1033077e2c9",
+      "runner_sha256": "89f18808af82b4fc6dd8a64cfe1bbbafa64f5f9922bbbd9c00d1330632e415d3",
+      "source_manifest_sha256": "8d21fd63c31e61ff335c21c3009c6812f111eac5218ac0258cb81ab01a040d83",
+      "stage": "three-repeat series",
+      "payload_started_by_s": 11.96599793434143
+    },
+    {
+      "scenario": "wan-repeat-many32g",
+      "tool": "rclone-webdav",
+      "repeat": 2,
+      "bytes": 34359738368,
+      "files": 32,
+      "wall_s": 311.4500422179699,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--create-empty-src-dirs",
+        "--contimeout",
+        "10s",
+        "--retries",
+        "1",
+        "--stats",
+        "10s",
+        "--stats-one-line",
+        "-vv",
+        "--webdav-url",
+        "https://SERVER:HTTPS_PORT/",
+        "--webdav-vendor",
+        "rclone",
+        "--ca-cert",
+        "CA_CERT",
+        "--transfers",
+        "16",
+        "--webdav-pacer-min-sleep",
+        "2ms",
+        "--no-check-dest",
+        ":local:SOURCE",
+        ":webdav:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular-file sizes and mtimes, whole seconds",
+        "mismatches": 0,
+        "entries": 32
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 3,
+        "cache": "warm tmpfs source; no eviction",
+        "durable": false,
+        "verify": true,
+        "tool_timeout": 600
+      },
+      "workload": [
+        {
+          "name": "flat regular files",
+          "files": 32,
+          "bytes": 34359738368
+        }
+      ],
+      "cache": "warm",
+      "case_error": false,
+      "cache_limitations": [
+        "Memory-resident source; destination and server metadata caches uncontrolled; no final fsync."
+      ],
+      "filesystems": {
+        "source": "tmpfs",
+        "destination": "XFS RAID"
+      },
+      "network": {
+        "sender_nic_mbps": 1000,
+        "sender_congestion_control": "bbr",
+        "rtt_description": "approximately 250\u2013265 ms"
+      },
+      "receiver_load_before": [
+        4.68408203125,
+        4.99072265625,
+        5.2099609375
+      ],
+      "tool_identity": {
+        "version": "1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      },
+      "capture_sha256": "fce5cb0cca0fba920256e7195951e0d03f88b7c00c710965fddf25ede906d73c",
+      "runner_sha256": "89f18808af82b4fc6dd8a64cfe1bbbafa64f5f9922bbbd9c00d1330632e415d3",
+      "source_manifest_sha256": "8d21fd63c31e61ff335c21c3009c6812f111eac5218ac0258cb81ab01a040d83",
+      "stage": "three-repeat series",
+      "payload_started_by_s": 11.814051151275635
+    },
+    {
+      "scenario": "wan-repeat-one8g",
+      "tool": "syq",
+      "repeat": 0,
+      "bytes": 8589934592,
+      "files": 1,
+      "wall_s": 86.72352322377264,
+      "argv": [
+        "env",
+        "SYQ_DEBUG=1",
+        "syq",
+        "rsync",
+        "-rt",
+        "--no-progress",
+        "--syq-no-bootstrap",
+        "--rsync-path",
+        "REMOTE_SCRATCH/syq",
+        "-e",
+        "SSH_WRAPPER",
+        "SOURCE/",
+        "USER@SERVER:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular-file sizes and mtimes, whole seconds",
+        "mismatches": 0,
+        "entries": 1
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 3,
+        "cache": "warm tmpfs source; no eviction",
+        "durable": false,
+        "verify": true,
+        "tool_timeout": 600
+      },
+      "workload": [
+        {
+          "name": "flat regular files",
+          "files": 1,
+          "bytes": 8589934592
+        }
+      ],
+      "cache": "warm",
+      "case_error": false,
+      "cache_limitations": [
+        "Memory-resident source; destination and server metadata caches uncontrolled; no final fsync."
+      ],
+      "filesystems": {
+        "source": "tmpfs",
+        "destination": "XFS RAID"
+      },
+      "network": {
+        "sender_nic_mbps": 1000,
+        "sender_congestion_control": "bbr",
+        "rtt_description": "approximately 250\u2013265 ms"
+      },
+      "receiver_load_before": [
+        5.056640625,
+        5.3095703125,
+        4.5390625
+      ],
+      "tool_identity": {
+        "version": "0.5.2",
+        "sha256": "5e4586bdc9706834cc907ff087afed57180e918e7459f9cefb7fda4e7973dbff"
+      },
+      "capture_sha256": "2e3f43ebea2cd572c216c2d95a65a84a8eec2f5c63991cf65a8f243046ec2ef7",
+      "runner_sha256": "89f18808af82b4fc6dd8a64cfe1bbbafa64f5f9922bbbd9c00d1330632e415d3",
+      "source_manifest_sha256": "efb1c5c66be4ce95bf6de0c7b5e02151f7ef4f472c0318411920c47f5b6cfb01",
+      "stage": "three-repeat series",
+      "worker_tuning_log": [
+        "syq: tune: candidate 16 -> 21 workers (measured 117.0 MB/s at 16, state Explore { from: 16, base: 116986127.48626472, direction: Up })",
+        "syq: tune: 16 -> 21 workers (candidate ready, state Explore { from: 16, base: 116986127.48626472, direction: Up })",
+        "syq: tune: candidate 21 -> 16 workers (measured 116.6 MB/s at 21, state Hold)",
+        "syq: tune: 21 -> 16 workers (state Hold)"
+      ],
+      "tuning_cache": "existing; not reset between runs",
+      "payload_started_by_s": 6.05
+    },
+    {
+      "scenario": "wan-repeat-one8g",
+      "tool": "syq",
+      "repeat": 1,
+      "bytes": 8589934592,
+      "files": 1,
+      "wall_s": 86.62439806759357,
+      "argv": [
+        "env",
+        "SYQ_DEBUG=1",
+        "syq",
+        "rsync",
+        "-rt",
+        "--no-progress",
+        "--syq-no-bootstrap",
+        "--rsync-path",
+        "REMOTE_SCRATCH/syq",
+        "-e",
+        "SSH_WRAPPER",
+        "SOURCE/",
+        "USER@SERVER:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular-file sizes and mtimes, whole seconds",
+        "mismatches": 0,
+        "entries": 1
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 3,
+        "cache": "warm tmpfs source; no eviction",
+        "durable": false,
+        "verify": true,
+        "tool_timeout": 600
+      },
+      "workload": [
+        {
+          "name": "flat regular files",
+          "files": 1,
+          "bytes": 8589934592
+        }
+      ],
+      "cache": "warm",
+      "case_error": false,
+      "cache_limitations": [
+        "Memory-resident source; destination and server metadata caches uncontrolled; no final fsync."
+      ],
+      "filesystems": {
+        "source": "tmpfs",
+        "destination": "XFS RAID"
+      },
+      "network": {
+        "sender_nic_mbps": 1000,
+        "sender_congestion_control": "bbr",
+        "rtt_description": "approximately 250\u2013265 ms"
+      },
+      "receiver_load_before": [
+        5.83349609375,
+        5.6767578125,
+        4.939453125
+      ],
+      "tool_identity": {
+        "version": "0.5.2",
+        "sha256": "5e4586bdc9706834cc907ff087afed57180e918e7459f9cefb7fda4e7973dbff"
+      },
+      "capture_sha256": "36b2b2ebb57bc70cd1840266fc5dfb6aebcd80c54ed72853a807547a4e43dcc8",
+      "runner_sha256": "89f18808af82b4fc6dd8a64cfe1bbbafa64f5f9922bbbd9c00d1330632e415d3",
+      "source_manifest_sha256": "efb1c5c66be4ce95bf6de0c7b5e02151f7ef4f472c0318411920c47f5b6cfb01",
+      "stage": "three-repeat series",
+      "worker_tuning_log": [
+        "syq: tune: candidate 16 -> 21 workers (measured 116.6 MB/s at 16, state Explore { from: 16, base: 116566622.77188507, direction: Up })",
+        "syq: tune: 16 -> 21 workers (candidate ready, state Explore { from: 16, base: 116566622.77188507, direction: Up })",
+        "syq: tune: candidate 21 -> 16 workers (measured 117.0 MB/s at 21, state Hold)",
+        "syq: tune: 21 -> 16 workers (state Hold)"
+      ],
+      "tuning_cache": "existing; not reset between runs",
+      "payload_started_by_s": 6.08
+    },
+    {
+      "scenario": "wan-repeat-one8g",
+      "tool": "syq",
+      "repeat": 2,
+      "bytes": 8589934592,
+      "files": 1,
+      "wall_s": 88.27388384565711,
+      "argv": [
+        "env",
+        "SYQ_DEBUG=1",
+        "syq",
+        "rsync",
+        "-rt",
+        "--no-progress",
+        "--syq-no-bootstrap",
+        "--rsync-path",
+        "REMOTE_SCRATCH/syq",
+        "-e",
+        "SSH_WRAPPER",
+        "SOURCE/",
+        "USER@SERVER:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular-file sizes and mtimes, whole seconds",
+        "mismatches": 0,
+        "entries": 1
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 3,
+        "cache": "warm tmpfs source; no eviction",
+        "durable": false,
+        "verify": true,
+        "tool_timeout": 600
+      },
+      "workload": [
+        {
+          "name": "flat regular files",
+          "files": 1,
+          "bytes": 8589934592
+        }
+      ],
+      "cache": "warm",
+      "case_error": false,
+      "cache_limitations": [
+        "Memory-resident source; destination and server metadata caches uncontrolled; no final fsync."
+      ],
+      "filesystems": {
+        "source": "tmpfs",
+        "destination": "XFS RAID"
+      },
+      "network": {
+        "sender_nic_mbps": 1000,
+        "sender_congestion_control": "bbr",
+        "rtt_description": "approximately 250\u2013265 ms"
+      },
+      "receiver_load_before": [
+        5.60302734375,
+        5.80517578125,
+        5.08154296875
+      ],
+      "tool_identity": {
+        "version": "0.5.2",
+        "sha256": "5e4586bdc9706834cc907ff087afed57180e918e7459f9cefb7fda4e7973dbff"
+      },
+      "capture_sha256": "4d1fa27e0f850db38d8ce04be32a6999269b5b991a4a840cc57b6663afe84d65",
+      "runner_sha256": "89f18808af82b4fc6dd8a64cfe1bbbafa64f5f9922bbbd9c00d1330632e415d3",
+      "source_manifest_sha256": "efb1c5c66be4ce95bf6de0c7b5e02151f7ef4f472c0318411920c47f5b6cfb01",
+      "stage": "three-repeat series",
+      "worker_tuning_log": [
+        "syq: tune: candidate 16 -> 21 workers (measured 115.7 MB/s at 16, state Explore { from: 16, base: 115728334.90474918, direction: Up })",
+        "syq: tune: 16 -> 21 workers (candidate ready, state Explore { from: 16, base: 115728334.90474918, direction: Up })",
+        "syq: tune: candidate 21 -> 16 workers (measured 115.7 MB/s at 21, state Hold)",
+        "syq: tune: 21 -> 16 workers (state Hold)"
+      ],
+      "tuning_cache": "existing; not reset between runs",
+      "payload_started_by_s": 6.3
+    },
+    {
+      "scenario": "wan-repeat-one8g",
+      "tool": "rclone-webdav",
+      "repeat": 0,
+      "bytes": 8589934592,
+      "files": 1,
+      "wall_s": 81.2742999792099,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--create-empty-src-dirs",
+        "--contimeout",
+        "10s",
+        "--retries",
+        "1",
+        "--stats",
+        "10s",
+        "--stats-one-line",
+        "-vv",
+        "--webdav-url",
+        "https://SERVER:HTTPS_PORT/",
+        "--webdav-vendor",
+        "rclone",
+        "--ca-cert",
+        "CA_CERT",
+        "--transfers",
+        "16",
+        "--webdav-pacer-min-sleep",
+        "2ms",
+        "--no-check-dest",
+        ":local:SOURCE",
+        ":webdav:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular-file sizes and mtimes, whole seconds",
+        "mismatches": 0,
+        "entries": 1
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 3,
+        "cache": "warm tmpfs source; no eviction",
+        "durable": false,
+        "verify": true,
+        "tool_timeout": 600
+      },
+      "workload": [
+        {
+          "name": "flat regular files",
+          "files": 1,
+          "bytes": 8589934592
+        }
+      ],
+      "cache": "warm",
+      "case_error": false,
+      "cache_limitations": [
+        "Memory-resident source; destination and server metadata caches uncontrolled; no final fsync."
+      ],
+      "filesystems": {
+        "source": "tmpfs",
+        "destination": "XFS RAID"
+      },
+      "network": {
+        "sender_nic_mbps": 1000,
+        "sender_congestion_control": "bbr",
+        "rtt_description": "approximately 250\u2013265 ms"
+      },
+      "receiver_load_before": [
+        5.90478515625,
+        5.255859375,
+        5.41455078125
+      ],
+      "tool_identity": {
+        "version": "1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      },
+      "capture_sha256": "da86ef8092ef83de4ed8fe48bcb50b62be436f0548b2fa026682dd3354a41863",
+      "runner_sha256": "89f18808af82b4fc6dd8a64cfe1bbbafa64f5f9922bbbd9c00d1330632e415d3",
+      "source_manifest_sha256": "efb1c5c66be4ce95bf6de0c7b5e02151f7ef4f472c0318411920c47f5b6cfb01",
+      "stage": "three-repeat series",
+      "replacement_for": "pub-one8g-webdav-r1",
+      "order_note": "Replacement collected after the rotated series.",
+      "payload_started_by_s": 11.155584573745728
+    },
+    {
+      "scenario": "wan-repeat-one8g",
+      "tool": "rclone-webdav",
+      "repeat": 1,
+      "bytes": 8589934592,
+      "files": 1,
+      "wall_s": 82.1230753120035,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--create-empty-src-dirs",
+        "--contimeout",
+        "10s",
+        "--retries",
+        "1",
+        "--stats",
+        "10s",
+        "--stats-one-line",
+        "-vv",
+        "--webdav-url",
+        "https://SERVER:HTTPS_PORT/",
+        "--webdav-vendor",
+        "rclone",
+        "--ca-cert",
+        "CA_CERT",
+        "--transfers",
+        "16",
+        "--webdav-pacer-min-sleep",
+        "2ms",
+        "--no-check-dest",
+        ":local:SOURCE",
+        ":webdav:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular-file sizes and mtimes, whole seconds",
+        "mismatches": 0,
+        "entries": 1
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 3,
+        "cache": "warm tmpfs source; no eviction",
+        "durable": false,
+        "verify": true,
+        "tool_timeout": 600
+      },
+      "workload": [
+        {
+          "name": "flat regular files",
+          "files": 1,
+          "bytes": 8589934592
+        }
+      ],
+      "cache": "warm",
+      "case_error": false,
+      "cache_limitations": [
+        "Memory-resident source; destination and server metadata caches uncontrolled; no final fsync."
+      ],
+      "filesystems": {
+        "source": "tmpfs",
+        "destination": "XFS RAID"
+      },
+      "network": {
+        "sender_nic_mbps": 1000,
+        "sender_congestion_control": "bbr",
+        "rtt_description": "approximately 250\u2013265 ms"
+      },
+      "receiver_load_before": [
+        6.1533203125,
+        5.72021484375,
+        4.86376953125
+      ],
+      "tool_identity": {
+        "version": "1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      },
+      "capture_sha256": "04f48b1c2d35446940c353d7def7370e29cba1045f1e0ac33a49ef30ef6f73c4",
+      "runner_sha256": "89f18808af82b4fc6dd8a64cfe1bbbafa64f5f9922bbbd9c00d1330632e415d3",
+      "source_manifest_sha256": "efb1c5c66be4ce95bf6de0c7b5e02151f7ef4f472c0318411920c47f5b6cfb01",
+      "stage": "three-repeat series",
+      "payload_started_by_s": 11.232782125473022
+    },
+    {
+      "scenario": "wan-repeat-one8g",
+      "tool": "rclone-webdav",
+      "repeat": 2,
+      "bytes": 8589934592,
+      "files": 1,
+      "wall_s": 82.07382765971124,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--create-empty-src-dirs",
+        "--contimeout",
+        "10s",
+        "--retries",
+        "1",
+        "--stats",
+        "10s",
+        "--stats-one-line",
+        "-vv",
+        "--webdav-url",
+        "https://SERVER:HTTPS_PORT/",
+        "--webdav-vendor",
+        "rclone",
+        "--ca-cert",
+        "CA_CERT",
+        "--transfers",
+        "16",
+        "--webdav-pacer-min-sleep",
+        "2ms",
+        "--no-check-dest",
+        ":local:SOURCE",
+        ":webdav:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular-file sizes and mtimes, whole seconds",
+        "mismatches": 0,
+        "entries": 1
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 3,
+        "cache": "warm tmpfs source; no eviction",
+        "durable": false,
+        "verify": true,
+        "tool_timeout": 600
+      },
+      "workload": [
+        {
+          "name": "flat regular files",
+          "files": 1,
+          "bytes": 8589934592
+        }
+      ],
+      "cache": "warm",
+      "case_error": false,
+      "cache_limitations": [
+        "Memory-resident source; destination and server metadata caches uncontrolled; no final fsync."
+      ],
+      "filesystems": {
+        "source": "tmpfs",
+        "destination": "XFS RAID"
+      },
+      "network": {
+        "sender_nic_mbps": 1000,
+        "sender_congestion_control": "bbr",
+        "rtt_description": "approximately 250\u2013265 ms"
+      },
+      "receiver_load_before": [
+        5.615234375,
+        5.92822265625,
+        5.2177734375
+      ],
+      "tool_identity": {
+        "version": "1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      },
+      "capture_sha256": "b09387f3f2a0b55fb829895ea10b1dd121439c290b0fdc07cbb9230df9710e46",
+      "runner_sha256": "89f18808af82b4fc6dd8a64cfe1bbbafa64f5f9922bbbd9c00d1330632e415d3",
+      "source_manifest_sha256": "efb1c5c66be4ce95bf6de0c7b5e02151f7ef4f472c0318411920c47f5b6cfb01",
+      "stage": "three-repeat series",
+      "payload_started_by_s": 11.256967306137085
     }
   ]
 }

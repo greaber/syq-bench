@@ -58,14 +58,16 @@ the private workspace to avoid diverging implementations.
 
 ## Rclone presentation preview (2026-09-11)
 
-Prepare the separate page's presentation before collecting replacement results.
-Existing screening measurements remain labelled as a preview; they are not the
-three-run publication campaign. Replace short workloads with calibrated longer
-ones and collect three verified repetitions per tool/setting before reporting.
+The draft page pairs compact dataset descriptions and exact commands with
+measured speeds, elapsed times and verification scope.
+Existing screening measurements retain their status alongside completed
+three-run WAN replacements. Describe each case using its actual recorded
+repetitions and controls; local, NFS and fast-fabric screening still need the
+agreed longer workloads and repeated measurements.
 Do not merge/deploy this preview as the completed results page.
 
-The standalone preparation recipe is an inspectable proposed replacement for
-the old experimental setup; do not claim it generated the old numbers. Its cache
+The standalone preparation recipe is an inspectable alternative to the
+experimental setup; do not claim it generated the captured numbers. Its cache
 and metadata semantics must be recorded when used. Experimental adapters are not
 yet public; that limitation stays explicit. Matching public measurement code is
 still required for a full reproducible release. Existing release-page acceptance

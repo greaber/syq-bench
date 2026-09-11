@@ -17,16 +17,16 @@ main pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px;line-height:
 @media(max-width:700px){.copy-chart-row{grid-template-columns:minmax(0,1fr) 110px;gap:.2rem .6rem;padding:.5rem 0}.copy-label{grid-column:1/-1}.copy-speed strong{font-size:16px}.copy-chart-row .copy-track{min-width:0}.copy-label small{display:inline;margin-left:.5rem}}
 </style>
 <header class="hero"><h1>syq vs rclone</h1>
-<p>Presentation preview · screening data pending longer, three-run tests</p>
+<p>Preliminary results · three-run WAN comparisons and earlier screening</p>
 <p>syq 0.5.2 and rclone 1.75.1: mounted NFS, local RAID, and copies between servers.
 Each result puts speed, elapsed time, the exact copy command and data preparation in one place.</p>
 <p class="comparison-links"><a href="#results">See the comparisons</a>
 <a href="#manual">Run without the harness</a>
-<a href="data/rclone-exploratory.json" download>Download screening data (JSON)</a></p></header>
+<a href="data/rclone-exploratory.json" download>Download measurements (JSON)</a></p></header>
 <section id="reading">
 <p>Bars share a scale within each test. Speed = dataset bytes ÷ mean elapsed time; the thin line shows the run range.
 Commands A, B, C… below each chart match its rows. SOURCE and DESTINATION are fresh scratch paths; server and key names are placeholders.</p>
-<p><strong>Screening data only:</strong> longer workloads and three verified runs per setting are still pending.
+<p>The WAN comparisons use larger datasets and three verified runs per setting. Other cases retain their earlier screening status and still need longer replacement tests.
 “Local filesystem” includes mounted NFS: the operating system handles NFS access, without SFTP or WebDAV.</p>
 </section>
 <section id="results"><h2>Copy speeds, commands and datasets</h2><!-- RESULTS --></section>
@@ -36,10 +36,10 @@ Use Python 3.9+, Bash, GNU time and coreutils, plus the listed syq/rclone versio
 Download <a href="make-files.py">make-files.py</a> next to your shell session.
 The generator writes seeded pseudorandom bytes, not sparse or all-zero files, checks available space,
 and refuses an existing source directory. It changes no system settings and removes nothing.</p>
-<p><strong>This is a proposed simpler recipe for the replacement campaign.</strong> It matches the specified
-file counts, sizes and directory layout, but uses a different byte generator and buffered preparation.
-It did not produce the screening numbers above. We must record its actual cache state and metadata checks
-when collecting the replacement measurements.</p>
+<p><strong>This optional recipe did not produce the captured runs.</strong> It recreates the requested
+file counts, sizes and directory layout. The WAN capture used the same seeded byte-generation method
+with shorter file names; the older screening used a different generator. The actual preparation,
+cache state and verification scope of the captured runs are recorded with the measurements.</p>
 <h3>1. Create one dataset and inspect it</h3>
 <pre><code>set -euo pipefail
 # Choose existing scratch parents on the filesystems being compared.
@@ -109,8 +109,9 @@ remove only the scratch trees you created when finished.</p>
 <p>Generate the same source dataset locally, create a fresh scratch destination on the receiving filesystem,
 and use the exact network command shown beside the result. Replace SOURCE, DESTINATION, SERVER, PORT, USER,
 KEY_FILE and KNOWN_HOSTS with the selected paths and SSH settings. SFTP needs the existing SSH/SFTP service;
-the measured client used rclone’s built-in SSH implementation. Use a local key for same-data-center tests so
-WAN-forwarded signing does not distort them.</p>
+the selected reporting client used rclone’s built-in SSH implementation. Use a local key to avoid forwarded signing delays. The exact SSH_WRAPPER used for the new WAN syq runs was:</p>
+<pre><code>#!/bin/sh
+exec ssh -F /dev/null -p SSH_PORT -o BatchMode=yes -o IdentitiesOnly=yes   -i KEY_FILE -o StrictHostKeyChecking=yes -o UserKnownHostsFile=KNOWN_HOSTS "$@"</code></pre>
 <p>The measured WebDAV server command, with private values replaced, was:</p>
 <pre><code>rclone serve webdav "$REMOTE_SCRATCH" --config /dev/null   --addr SERVER:PORT --dir-cache-time 0s --cert CERT_FILE --key TLS_KEY_FILE</code></pre>
 <p>Server authentication was provided by <code>RCLONE_USER</code> and <code>RCLONE_PASS</code> in the environment;
@@ -127,22 +128,25 @@ we checked regular-file contents and mtimes to whole seconds, not ownership, mod
 <p>SFTP used rclone’s built-in SSH implementation against the existing SSH/SFTP service, with host-key verification.
 Corrected LAN and fast-fabric tests used a local private key. Earlier LAN tests used an agent forwarded over the WAN;
 the authentication delay affected both tools, and those trials are retained only in the appendix.
-WAN tests used agent authentication.</p>
+The new WAN reporting runs used a source-restricted local key; earlier agent-authenticated trials remain in the appendix. We also tested external OpenSSH connection sharing, starting the first connection inside the timer and closing the master afterward.</p>
 <p>WebDAV used <code>rclone serve webdav</code> with HTTPS, authentication and server-side
 <code>--dir-cache-time 0s</code>. The client used <code>--webdav-vendor rclone</code> and a verified TLS certificate.
-Thus these results describe this particular WebDAV server as well as the client.</p>
+Thus these results describe this particular WebDAV server as well as the client.
+The SFTP and WebDAV services were already running before timing. syq’s remote binary was preinstalled,
+but launching its helper and establishing the copy connections remained inside the timed command.</p>
+<p><code>--transfers</code> limits the number of files copied concurrently; setting it to 16 does not split a single file into 16 transfers.</p>
 <p>We varied <code>--transfers</code>, <code>--multi-thread-streams</code>,
 <code>--sftp-chunk-size</code>, <code>--sftp-concurrency</code> and
 <code>--webdav-pacer-min-sleep</code>. Exact values appear in each row and its command disclosure.
-We kept default hashing enabled and did not sweep checkers, buffer sizes, connection limits or hash options.</p>
-<p>Network screening generally used <code>--contimeout 5s --retries 1</code>.
+We kept hashing enabled. The WAN tuning sweep also compared local-key authentication, explicit <code>md5sum</code>/<code>sha1sum</code> commands to avoid hash-command discovery, and OpenSSH connection sharing with one checker. <code>--no-check-dest</code> is valid here because each destination is fresh and empty. Buffer sizes and ciphers were not swept. “Tuned” means best among the configurations tested, not a proven global optimum.</p>
+<p>The replacement WAN series used <code>--contimeout 10s --retries 1</code>, normal IO timeout, and a separate 600-second whole-command limit. Earlier network screening generally used <code>--contimeout 5s --retries 1</code>.
 Some early tests also used <code>--timeout 15s</code>; this interrupted hashing on the large SFTP test,
 so the corrected fast-fabric test restored the normal IO timeout. Those failed attempts remain in the appendix.
 Zero WebDAV pacing failed concurrent directory creation on one small-file LAN test; a 2 ms follow-up timed out.</p>
 <p>syq filesystem copies used <code>rsync -a --no-progress</code>. Network copies used
 <code>rsync -rt --no-progress --syq-no-bootstrap</code> with an already installed remote binary;
-automatic transport and worker selection remained enabled. WAN logs recorded direct TCP, not SSH fallback.
-We did not sweep syq worker counts or congestion control. “Automatic” does not mean we established optimal tuning.</p>
+automatic transport and worker selection remained enabled in the repeated comparisons. A separate single-run diagnostic fixes syq at 16 workers. WAN logs recorded direct TCP, not SSH fallback.
+The WAN sender already used BBR. syq adjusted its worker count automatically; its existing tuning cache was not reset between runs. The larger repeats progressively started with fewer workers, which is a possible contributor to their variation. A fixed-worker diagnostic checks this separately; it is not part of the repeated average. We did not establish globally optimal worker counts.</p>
 <p>Rclone settings reference: <a href="https://rclone.org/docs/#transfers-n">transfers</a>,
 <a href="https://rclone.org/docs/#multi-thread-streams">multithread streams</a>,
 <a href="https://rclone.org/sftp/">SFTP</a>, <a href="https://rclone.org/webdav/">WebDAV</a>.</p></section>
@@ -162,6 +166,18 @@ We need matched single-rail controls and the multi-process experiment before att
 <p>If you know a better rclone setup for these hosts or workloads, please suggest it in the
 <a href="https://news.ycombinator.com/item?id=49644955">discussion</a>. We want the comparison to give both tools a fair chance.</p></section>
 <section id="method"><h2>What was controlled, and what was not</h2>
+<p>The replacement WAN source was a flat directory of fully written pseudorandom regular files in tmpfs.
+A single Python <code>Random(9911)</code> generator supplied sequential 1 MiB <code>randbytes</code> blocks;
+files were named <code>f0000</code>, <code>f0001</code>, and so on, with mtimes fixed to 1700000000.
+The source stayed memory-resident. Each tool copied the same frozen dataset into a new empty RAID destination.
+Generation, independent SHA256/size/mtime checks and removal were outside the timer. No final fsync was requested.
+One WebDAV run overlapped local page tests; it was excluded before completion and replaced after the rotated series.
+The excluded run remains in the diagnostic data.</p>
+<p>The sender’s outgoing interface reported 1 Gb/s, a nominal ceiling of 125 MB/s before protocol overhead.
+This is a limit for this particular route, not a general WAN performance limit. The old tiny WAN fixtures
+mostly measured setup; their results remain in the appendix. Startup is still included in the replacement
+measurements. The JSON records a conservative bound from syq’s planning log or rclone’s first nonzero
+progress report; it is not subtracted from elapsed time.</p>
 <p>Fixtures and destination trees were generated for the benchmark. Each timed copy was followed by independent
 content verification outside timing. The filesystem cases also checked types, modes, numeric ownership and mtimes;
 network metadata checks covered regular-file mtimes to whole seconds. This is not a test of interrupted-copy recovery,

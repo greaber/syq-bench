@@ -119,3 +119,22 @@ def test_generator_checks_space_before_creating_anything(tmp_path, monkeypatch):
     with pytest.raises(ValueError, match="free bytes"):
         generator.create(tmp_path / "data", 1, 1, 0, 42)
     assert not (tmp_path / "data").exists()
+
+
+def test_wan_startup_note_requires_evidence_for_every_run():
+    from syq_bench.rclone_public import replacement_note
+
+    rows = [sample() for _ in range(3)]
+    for i, row in enumerate(rows):
+        row.update(scenario="wan-long", repeat=i, wall_s=100, payload_started_by_s=10)
+    assert "beyond startup" not in replacement_note(rows)
+    for invalid in (None, True, -1, math.nan, math.inf, 21):
+        rows[2]["payload_started_by_s"] = invalid
+        assert "beyond startup" in replacement_note(rows)
+
+
+def test_excluded_trial_reason_is_visible_and_escaped():
+    row = sample()
+    row["excluded_reason"] = "Concurrent <local checks>"
+    page = results_table([row])
+    assert "Excluded from reporting series: Concurrent &lt;local checks&gt;" in page

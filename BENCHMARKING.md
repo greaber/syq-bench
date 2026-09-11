@@ -131,14 +131,16 @@ logs and speculative roadmap items do not belong in this document.
 
 ## Rclone comparison presentation (2026-09-11)
 
-The separate rclone page is a presentation preview pending replacement runs.
+The separate rclone page combines explicitly labelled screening data with
+replacement WAN measurements as they complete; it remains a draft pending
+publication review.
 Speeds use the same dataset-bytes / mean-command-time calculation and decimal
 units as the main page, with seconds and observed repeat ranges also visible.
 Keep bars adjacent on a shared scale within each case, followed by a compact
 block of exact commands. Describe file sizes, counts, placement and preparation
 in plain language; optional reproduction instructions stay outside the main flow.
-A small standalone generator and shell recipe expose the proposed replacement
-procedure without requiring the full harness. They did not produce the old data.
+A small standalone generator and shell recipe expose an optional procedure
+without requiring the full harness. They did not produce the captured data.
 
 The reporting campaign requires three successful verified runs per setting in
 rotated order. Calibrate the fastest tool to at least ten seconds as a starting
@@ -148,3 +150,19 @@ that. Replace short runs rather than presenting their setup-heavy rates as
 sustained throughput. Preserve old, failed and unfavorable screening data for
 inspection, explicitly outside publication acceptance. Matched rail controls and
 cache, metadata and authentication review remain necessary before publication.
+
+For the WAN replacement, use memory-resident pseudorandom source files and fresh
+remote RAID destinations to isolate the route from source disk throughput.
+Record the outgoing NIC speed and congestion control, keep native hashing and
+whole-command startup inside timing, and verify SHA256, exact file membership,
+sizes and whole-second file mtimes afterward. Larger payloads are calibrated
+before freezing settings and collecting three repetitions. Compare rclone's
+native SFTP with external OpenSSH sharing, as well as authenticated HTTPS
+WebDAV; record local-key authentication and start any shared connection inside
+the timer. Do not call a setting globally optimal after a bounded tuning sweep.
+
+A WAN row may clear the startup reminder only with a recorded positive finite
+upper bound on payload startup at most one fifth of its duration in every repeat.
+Use syq's planning log or the first rclone nonzero progress report (including
+one second for its timestamp precision). This is a conservative screening rule,
+not a subtraction from elapsed time or proof that later coordination is free.

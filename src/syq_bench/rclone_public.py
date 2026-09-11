@@ -53,6 +53,7 @@ def backend(row: dict) -> str:
 def settings(row: dict) -> str:
     args = row["argv"]
     controls = [
+        "--syq-connections",
         "--transfers",
         "--multi-thread-streams",
         "--sftp-chunk-size",
@@ -90,7 +91,14 @@ def replacement_note(rows: list[dict]) -> str:
         reasons.append("needs successful, verified copies")
     elif min(r["wall_s"] for r in rows) < 10:
         reasons.append("needs a larger workload (fastest run below 10 s)")
-    if rows[0]["scenario"].startswith("wan-"):
+    if rows[0]["scenario"].startswith("wan-") and not all(
+        values is not None
+        and isinstance(r.get("payload_started_by_s"), (int, float))
+        and not isinstance(r["payload_started_by_s"], bool)
+        and math.isfinite(r["payload_started_by_s"])
+        and 0 < r["payload_started_by_s"] <= r["wall_s"] / 5
+        for r in rows
+    ):
         reasons.append("needs payload time well beyond startup")
     return "; ".join(reasons) or "three runs recorded; publication controls still require review"
 
@@ -140,6 +148,8 @@ def results_table(rows: list[dict]) -> str:
             item = measurements([r])
             speed_text = rate(item[0]) + " · " if item else ""
             details.append(f"<li>Run {r['repeat'] + 1}: {speed_text}{escape(timing(r))}. {escape(status(r))}.</li>")
+            if r.get("excluded_reason"):
+                details.append(f"<li>Excluded from reporting series: {escape(r['excluded_reason'])}</li>")
         scope = row["metadata"]["scope"] if row["metadata"] else "unrecorded"
         details.append(
             f"</ul><p>Metadata checked: {escape(scope)}. "
