@@ -129,12 +129,20 @@ selection, [site/BRANDING.md](site/BRANDING.md) for presentation, and the recipe
 under `specs/` and `providers/` for setup. Implementation inventories, experiment
 logs and speculative roadmap items do not belong in this document.
 
-## Exploratory comparisons (2026-09-11)
+## Rclone comparison presentation (2026-09-11)
 
-The separate rclone page reports early measurements to solicit tuning advice.
-It shows every setting and repetition within selected workloads, with elapsed
-seconds instead of speedup bars. Workload placement, backend, commands and
-caveats accompany each case. Short, failed and unfavorable trials stay visible.
-Single exploratory runs do not establish tuned rankings; WAN startup and unequal
-rail selection need follow-up controls. These data stay outside the release
-acceptance catalog until the corresponding publication requirements are met.
+The separate rclone page is a presentation preview pending replacement runs.
+Speeds use the same dataset-bytes / mean-command-time calculation and decimal
+units as the main page, with seconds and observed repeat ranges also visible.
+Each result shows the exact command; dataset preparation sits beside the case.
+A small standalone generator and shell recipe expose the proposed replacement
+procedure without requiring the full harness. They did not produce the old data.
+
+The reporting campaign requires three successful verified runs per setting in
+rotated order. Calibrate the fastest tool to at least ten seconds as a starting
+target, preserving the workload's file-size distribution. WAN payload time must
+also substantially exceed startup; elapsed duration alone does not establish
+that. Replace short runs rather than presenting their setup-heavy rates as
+sustained throughput. Preserve old, failed and unfavorable screening data for
+inspection, explicitly outside publication acceptance. Matched rail controls and
+cache, metadata and authentication review remain necessary before publication.

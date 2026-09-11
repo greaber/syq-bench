@@ -56,12 +56,17 @@ review both content and commit messages before a public PR. Never merge private
 branches wholesale or push private refs. Bring public harness releases back into
 the private workspace to avoid diverging implementations.
 
-## Preliminary rclone page (2026-09-11)
+## Rclone presentation preview (2026-09-11)
 
-The separate rclone comparison publishes exploratory single runs to invite tuning
-feedback before a full benchmark release. It retains unsuccessful trials and
-shows workload, settings, timing boundaries, verification and limitations next
-to the results. It does not enter the release-page catalog or weaken its
-acceptance checks. The experimental adapters are not yet public: the page says
-so explicitly, and retains original source provenance privately. Publishing
-matching measurement code remains necessary for a full reproducible release.
+Prepare the separate page's presentation before collecting replacement results.
+Existing screening measurements remain labelled as a preview; they are not the
+three-run publication campaign. Replace short workloads with calibrated longer
+ones and collect three verified repetitions per tool/setting before reporting.
+Do not merge/deploy this preview as the completed results page.
+
+The standalone preparation recipe is an inspectable proposed replacement for
+the old experimental setup; do not claim it generated the old numbers. Its cache
+and metadata semantics must be recorded when used. Experimental adapters are not
+yet public; that limitation stays explicit. Matching public measurement code is
+still required for a full reproducible release. Existing release-page acceptance
+and the private/public provenance boundary remain unchanged.

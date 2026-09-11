@@ -1,42 +1,135 @@
 <style>
 .comparison-case{margin:2.5rem 0;padding-top:1rem;border-top:1px solid var(--border,#8886)}
 .comparison-note{border-left:3px solid #be8835;padding:.4rem 1rem}
-.comparison-scroll{overflow-x:auto;max-width:100%;margin:1rem 0}
-.comparison-table{border-collapse:collapse;width:100%;font-size:.85rem;min-width:620px}
-.comparison-table th,.comparison-table td{text-align:left;vertical-align:top;padding:.7rem;border-bottom:1px solid #8885}
-.comparison-table th:first-child{width:19%}.comparison-table td:nth-child(2){width:32%}
-.comparison-table code{white-space:normal;overflow-wrap:anywhere}.times{font-variant-numeric:tabular-nums}
-main pre{white-space:pre-wrap;overflow-wrap:anywhere}main details{margin:1rem 0}main summary{cursor:pointer}
+main pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px;line-height:1.7}main pre code{font-size:inherit}main details{margin:1rem 0}main summary{cursor:pointer}
 .comparison-links{display:flex;flex-wrap:wrap;gap:1rem}
-@media(max-width:700px){
-.comparison-table{min-width:0;font-size:.9rem}.comparison-table,.comparison-table tbody,.comparison-table tr{display:block}
-.comparison-table thead{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
-.comparison-table tr{border-bottom:1px solid #8886;padding:.75rem 0}
-.comparison-table th,.comparison-table td,.comparison-table th:first-child,.comparison-table td:nth-child(2){display:block;width:auto;border:0;padding:.3rem 0}
-.comparison-table td:before{content:attr(data-label);display:block;font-weight:600;font-size:.8rem;margin-bottom:.2rem}
-}
+.copy-result{padding:1.2rem 0;border-top:1px solid #8885}.copy-result h4{margin:0}
+.copy-settings{font-size:.85rem;margin:.3rem 0}.copy-speed{display:flex;gap:1rem;align-items:baseline;flex-wrap:wrap}
+.copy-speed strong{font-size:1.35rem;font-variant-numeric:tabular-nums}.copy-speed span{font-size:.85rem}
+.copy-track{position:relative;height:24px;background:#8881;margin:.5rem 0}
+.copy-bar{position:absolute;height:12px;top:6px;background:#808892;border-radius:2px}
+.copy-bar.syq{background:var(--syq,#0875cd)}
+.copy-range{position:absolute;height:4px;top:10px;background:var(--fg,#333);border-left:2px solid;border-right:2px solid}
+.copy-pending{font-size:.8rem;margin:.3rem 0}.copy-command{margin:.75rem 0;padding:12px;background:#8881}
+.copy-preparation{border-left:3px solid #8885;padding-left:1rem;margin:1.5rem 0}
+.copy-preparation p{font-size:.9rem}.copy-result details{font-size:.85rem}
 </style>
 <header class="hero"><h1>syq vs rclone</h1>
-<p>Preliminary file-copy results · 11 September 2026</p>
-<p>We tried syq 0.5.2 and rclone 1.75.1 on mounted NFS, local RAID, and connections between servers.
-These are exploratory measurements shared by syq’s author to invite scrutiny and rclone tuning suggestions.</p>
-<p class="comparison-links"><a href="#results">See what we copied</a>
-<a href="data/rclone-exploratory.json" download>Download the measurements (JSON)</a>
-<a href="https://news.ycombinator.com/item?id=49644955">Discuss on Hacker News ↗</a></p></header>
-<section id="reading"><h2>What the numbers mean</h2>
-<p>Each table describes one copy into a fresh, empty destination. It shows elapsed command time in seconds,
-including startup and the tool’s own checksum work. Lower means that particular job finished sooner.
-Every tested setting for that case is shown; there is no aggregate score or selected “winning” speed bar.</p>
-<p>Most settings have one run. The earlier small-file NFS write test has three; we show all three rather than hiding
-its variability in an average. Times below two seconds are marked because overhead and noise can dominate.</p>
-<p><strong>This is not a fully tuned ranking.</strong> The WAN tests are too small to judge sustained throughput.
-The fast-fabric tests used different numbers of network rails and a busy receiver.
-Those limitations appear next to the affected results.</p>
+<p>Presentation preview · screening data pending longer, three-run tests</p>
+<p>syq 0.5.2 and rclone 1.75.1: mounted NFS, local RAID, and copies between servers.
+Each result puts speed, elapsed time, the exact copy command and data preparation in one place.</p>
+<p class="comparison-links"><a href="#results">See the comparisons</a>
+<a href="#manual">Run without the harness</a>
+<a href="data/rclone-exploratory.json" download>Download screening data (JSON)</a></p></header>
+<section id="reading"><h2>How to read the results</h2>
+<p><strong>Speeds are dataset bytes divided by mean command time</strong>, using decimal MB/s and GB/s,
+just like the main benchmark page. Seconds remain visible. The thin line shows the observed speed range
+when multiple runs exist; individual times and speeds are directly below each command.
+This is effective copy throughput, including startup and native checksum work—not a measurement of wire speed
+or durable storage bandwidth.</p>
+<p><strong>These are old screening measurements used to preview the layout.</strong>
+They have not been replaced by the longer campaign yet. The publication campaign will use three successful,
+verified runs per tool and setting, with rotated order. We will calibrate workload size so the fastest tool
+runs for at least 10 seconds as a starting target; WAN payload work must also clearly outweigh measured startup.
+A duration threshold alone cannot prove that overhead is negligible.</p>
+<p>Short or incomplete cases are marked beside the bars. Existing timings remain inspectable; they are not
+relabelled as results of larger datasets. The final comparisons need new measurements and a review of cache,
+metadata, authentication and rail controls before publication.</p>
 <p><strong>“Local filesystem” includes mounted NFS.</strong> Both programs access normal paths; the operating system’s
 NFS client talks to the NFS server. No SFTP or WebDAV service is involved in those tests.
 For server-to-server copies we tested rclone’s SFTP and HTTPS/WebDAV backends separately.
 See <a href="https://rclone.org/local/">rclone’s local backend documentation</a>.</p></section>
-<section id="results"><h2>What we copied, and how long it took</h2><!-- RESULTS --></section>
+<section id="results"><h2>Copy speeds, commands and datasets</h2><!-- RESULTS --></section>
+<section id="manual"><h2>Try a copy without the benchmark harness</h2>
+<p>The following is an inspectable Linux recipe for a filesystem copy, including mounted NFS.
+Use Python 3.9+, Bash, GNU time and coreutils, plus the listed syq/rclone versions.
+Download <a href="make-files.py">make-files.py</a> next to your shell session.
+The generator writes seeded pseudorandom bytes, not sparse or all-zero files, checks available space,
+and refuses an existing source directory. It changes no system settings and removes nothing.</p>
+<p><strong>This is a proposed simpler recipe for the replacement campaign.</strong> It matches the specified
+file counts, sizes and directory layout, but uses a different byte generator and buffered preparation.
+It did not produce the screening numbers above. We must record its actual cache state and metadata checks
+when collecting the replacement measurements.</p>
+<h3>1. Create one dataset and inspect it</h3>
+<pre><code>set -euo pipefail
+# Choose existing scratch parents on the filesystems being compared.
+SOURCE_PARENT=/path/to/source/scratch
+DEST_PARENT=/path/to/destination/scratch
+CASE=$(mktemp -d "$SOURCE_PARENT/rclone-comparison.XXXXXX")
+SRC="$CASE/source"
+python3 make-files.py "$SRC" --files 40000 --size 4096 --directories 256 --seed 9911
+find "$SRC" -type f | wc -l
+du --apparent-size --bytes --summarize "$SRC"
+(cd "$SRC" &amp;&amp; find . -type f -print0 | LC_ALL=C sort -z | xargs -0 sha256sum) &gt; "$CASE/source.sha256"</code></pre>
+<p>Use the count, size and directory arguments printed beside the desired case above.
+The file sizes sum to the payload; <code>du</code> also counts directory entries. For longer tests, increase
+file count while retaining 4 KiB files, or increase bytes per large file while retaining the intended file count.
+Calibrate against the fastest tool, then freeze the same dataset for all three runs of every setting.</p>
+<h3>2. Prepare cache state outside the timer</h3>
+<p>This requests eviction of source file pages only. It cannot evict NFS server caches or metadata caches;
+tmpfs remains memory-resident. Source flushing below is preparation, not a destination durability flush.
+If eviction fails, record the failure instead of calling the test cold. Run this before <em>every</em> timed copy:</p>
+<pre><code>python3 - "$SRC" &lt;&lt;'PY'
+import os, pathlib, sys
+for p in pathlib.Path(sys.argv[1]).rglob('*'):
+    if p.is_file():
+        with p.open('rb') as f:
+            os.fsync(f.fileno())
+            os.posix_fadvise(f.fileno(), 0, 0, os.POSIX_FADV_DONTNEED)
+print('Source eviction requested; metadata and server cache remain uncontrolled.')
+PY</code></pre>
+<h3>3. Run one exact command into a fresh destination</h3>
+<pre><code># Check free bytes AND inodes before each copy; allow room for all retained runs.
+df -B1 "$DEST_PARENT"
+df -i "$DEST_PARENT"
+DST=$(mktemp -d "$DEST_PARENT/rclone-copy.XXXXXX")
+RUN=1                 # Use 1, 2, 3; retain a separate time file for each setting/run.
+LABEL=rclone-t64
+/usr/bin/time -f 'elapsed_seconds=%e exit_status=%x' -o "$CASE/$LABEL-r$RUN.time"   rclone copy --config /dev/null --metadata --create-empty-src-dirs   --transfers 64 -- "$SRC" "$DST"</code></pre>
+<p>Check the command’s exit status before using its timing. For syq, allocate another fresh destination,
+repeat the cache preparation and time <code>syq rsync -a --no-progress "$SRC/" "$DST"</code>.
+For another rclone setting, substitute the exact flags printed beside its result.
+Do not copy over a previous destination: that would measure an update instead of a new copy.</p>
+<h3>4. Check contents after timing</h3>
+<pre><code>(cd "$DST" &amp;&amp; sha256sum --check "$CASE/source.sha256")
+# Also check that there are no unexpected files.
+(cd "$SRC" &amp;&amp; find . -type f -print0 | LC_ALL=C sort -z) &gt; "$CASE/source-files"
+(cd "$DST" &amp;&amp; find . -type f -print0 | LC_ALL=C sort -z) &gt; "$CASE/destination-files"
+cmp "$CASE/source-files" "$CASE/destination-files"</code></pre>
+<p>This checks file names and contents. For filesystem copies, compare metadata separately (excluding the root,
+whose permissions come from <code>mktemp</code>):</p>
+<pre><code>python3 - "$SRC" "$DST" &lt;&lt;'PY'
+import pathlib, sys
+def metadata(root):
+    return {str(p.relative_to(root)): (s.st_mode, s.st_uid, s.st_gid, s.st_mtime_ns)
+            for p in root.rglob('*') for s in [p.lstat()]}
+a, b = (metadata(pathlib.Path(p)) for p in sys.argv[1:])
+if a != b:
+    raise SystemExit('Metadata mismatch: do not count this as a verified copy')
+print('File/directory types, modes, numeric ownership and mtimes match.')
+PY</code></pre>
+<p>This covers the regular-file/directory fixtures here, not ACLs, extended attributes, hard links or symlinks.
+Network tests used the narrower metadata check of regular-file mtimes to whole seconds; do not apply the
+filesystem check to SFTP/WebDAV and assume they promise archive-equivalent preservation.</p>
+<p>Repeat the prepare → fresh destination → timed command → verification sequence three times per setting,
+rotating tool order each round. Retain each time and exit status. Do not include generation, cache preparation,
+verification or cleanup in elapsed copy time. These commands leave generated directories in place for inspection;
+remove only the scratch trees you created when finished.</p>
+<h3>For SFTP and WebDAV</h3>
+<p>Generate the same source dataset locally, create a fresh scratch destination on the receiving filesystem,
+and use the exact network command shown beside the result. Replace SOURCE, DESTINATION, SERVER, PORT, USER,
+KEY_FILE and KNOWN_HOSTS with the selected paths and SSH settings. SFTP needs the existing SSH/SFTP service;
+the measured client used rclone’s built-in SSH implementation. Use a local key for same-data-center tests so
+WAN-forwarded signing does not distort them.</p>
+<p>The measured WebDAV server command, with private values replaced, was:</p>
+<pre><code>rclone serve webdav "$REMOTE_SCRATCH" --config /dev/null   --addr SERVER:PORT --dir-cache-time 0s --cert CERT_FILE --key TLS_KEY_FILE</code></pre>
+<p>Server authentication was provided by <code>RCLONE_USER</code> and <code>RCLONE_PASS</code> in the environment;
+clients used <code>RCLONE_WEBDAV_USER</code> and rclone-obscured <code>RCLONE_WEBDAV_PASS</code>.
+The client URL is HTTPS, with <code>--webdav-vendor rclone --ca-cert CA_CERT</code>.
+Start a listener only on your authorized server and scratch root, and stop it when finished.
+Check free space and perform content/metadata verification on the receiving host outside the timed client command.
+These endpoint steps depend on your server; the local recipe alone is not a complete network reproduction.</p>
+</section>
 <section id="settings"><h2>Settings and server setup</h2>
 <p>Every rclone command used <code>copy --config /dev/null --create-empty-src-dirs</code>.
 Filesystem copies added <code>--metadata</code>. Network copies did not request archive-equivalent metadata:
@@ -87,7 +180,7 @@ atomic replacement, archive fidelity or crash durability.</p>
 <p>The download contains individual timings, exit status, verification fields, workload size, seed, protocol and
 commands with endpoint placeholders. It preserves failed and unfavorable trials as well as successful copies.
 Private operational logs are not public. The experimental rclone harness adapters have not yet been released,
-so this is a transparent preliminary report, not yet a complete independently reproducible benchmark package.</p>
+so the existing data are not yet a complete independently reproducible benchmark package. The small standalone recipe above makes the replacement procedure inspectable without those adapters.</p>
 <p>The separate <a href="index.html">syq/rsync benchmark page</a> has a different measurement protocol.
 Do not combine numbers across the two pages as if they came from the same campaign.</p></section>
 <section id="appendix"><h2>Other screening and diagnostic trials</h2>
