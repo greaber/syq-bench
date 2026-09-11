@@ -67,18 +67,6 @@ def test_speed_uses_bytes_over_mean_time_not_mean_of_speeds():
     assert measurements([a, b]) is None
 
 
-def test_publication_rerun_note_checks_every_repeat():
-    from syq_bench.rclone_public import replacement_note
-
-    rows = [sample() for _ in range(3)]
-    for i, row in enumerate(rows):
-        row.update(repeat=i, wall_s=12)
-    assert "three runs recorded" in replacement_note(rows)
-    rows[2]["wall_s"] = 0.5
-    assert "larger workload" in replacement_note(rows)
-    assert "needs three runs" in replacement_note(rows[:1])
-
-
 def test_copy_command_visible_without_opening_details():
     page = results_table([sample()])
     assert page.index("copy-command") < page.index("<details>")
@@ -121,20 +109,47 @@ def test_generator_checks_space_before_creating_anything(tmp_path, monkeypatch):
     assert not (tmp_path / "data").exists()
 
 
-def test_wan_startup_note_requires_evidence_for_every_run():
-    from syq_bench.rclone_public import replacement_note
-
-    rows = [sample() for _ in range(3)]
-    for i, row in enumerate(rows):
-        row.update(scenario="wan-long", repeat=i, wall_s=100, payload_started_by_s=10)
-    assert "beyond startup" not in replacement_note(rows)
-    for invalid in (None, True, -1, math.nan, math.inf, 21):
-        rows[2]["payload_started_by_s"] = invalid
-        assert "beyond startup" in replacement_note(rows)
-
-
 def test_excluded_trial_reason_is_visible_and_escaped():
     row = sample()
     row["excluded_reason"] = "Concurrent <local checks>"
     page = results_table([row])
     assert "Excluded from reporting series: Concurrent &lt;local checks&gt;" in page
+
+
+@pytest.mark.parametrize("value", [0, -1, math.nan, math.inf, True])
+def test_invalid_ceiling_is_rejected(value):
+    from syq_bench.rclone_public import nominal_ceiling
+
+    with pytest.raises(ValueError):
+        nominal_ceiling([{"network": {"sender_nic_mbps": value}}])
+
+
+def test_ceiling_requires_shared_recorded_rating_and_does_not_clamp_speed():
+    from syq_bench.rclone_public import nominal_ceiling
+
+    a, b = sample(), sample()
+    a.update(network={"sender_nic_mbps": 1000}, bytes=300_000_000, wall_s=2)
+    assert nominal_ceiling([a]) == 125
+    assert nominal_ceiling([a, b]) is None
+    b["network"] = {"sender_nic_mbps": 2000}
+    assert nominal_ceiling([a, b]) is None
+    page = results_table([a])
+    assert "125.0 MB/s" in page
+    assert "150.0 MB/s" in page
+    assert "left:81.699%" in page
+
+
+def test_page_only_renders_selected_comparisons_with_sidebar_links(tmp_path):
+    import shutil
+
+    from syq_bench.rclone_public import build
+
+    shutil.copytree(ROOT / "site", tmp_path / "site")
+    page = build(tmp_path).read_text()
+    data = json.loads((ROOT / "site/data/rclone-exploratory.json").read_text())
+    for case in data["featured"]:
+        assert f'href="#{case["id"]}"' in page
+        assert f'id="{case["id"]}"' in page
+    assert page.count('class="comparison-case"') == len(data["featured"])
+    for text in ('id="appendix"', 'href="#manual"', "needs three runs", "publication controls"):
+        assert text not in page

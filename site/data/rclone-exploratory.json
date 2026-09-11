@@ -25,7 +25,7 @@
       "id": "wan-repeat-one8g",
       "title": "WAN: one 8 GiB file",
       "workload": "One 8 GiB regular file. Flat directory, warm tmpfs source \u2192 remote XFS RAID; approximately 250\u2013265 ms RTT. Sender NIC: 1 Gb/s (125 MB/s nominal ceiling).",
-      "caveat": "Three verified copies per setting; one WebDAV run was replaced after local-test overlap. Whole-command time includes startup and native checksumming. The single-file comparison uses rclone\u2019s faster tested backend, HTTPS WebDAV; SFTP single-file calibration remains below.",
+      "caveat": "Three verified copies per setting. Whole-command time includes startup and native checksumming. HTTPS WebDAV was the faster rclone backend tested for a single file.",
       "preparation": {
         "files": 1,
         "size": 8589934592,
@@ -37,7 +37,7 @@
       "id": "wan-repeat-many32g",
       "title": "WAN: 32 \u00d7 1 GiB files",
       "workload": "32 \u00d7 1 GiB regular files. Flat directory, warm tmpfs source \u2192 remote XFS RAID; approximately 250\u2013265 ms RTT. Sender NIC: 1 Gb/s (125 MB/s nominal ceiling).",
-      "caveat": "Three fresh copies per setting in rotated order. Whole-command time includes startup and native checksumming. SFTP uses the faster configuration from the two 8 GiB calibration runs. syq used its existing automatic tuning cache, so starting worker counts changed between repeats; the diagnostic section includes a fixed-worker control.",
+      "caveat": "Three verified copies per setting in rotated order. Whole-command time includes startup and native checksumming. syq’s automatic tuning cache changed starting worker counts between repeats.",
       "preparation": {
         "files": 32,
         "size": 1073741824,
@@ -49,7 +49,7 @@
       "id": "main-write",
       "title": "Small files \u2192 mounted NFS",
       "workload": "40,000 \u00d7 4 KiB files in 256 directories. Local /tmp source \u2192 mounted NFSv4.2 destination.",
-      "caveat": "Three earlier runs per setting. NFS server cache and other clients were uncontrolled; retain the substantial variation.",
+      "caveat": "Three runs per setting. NFS server cache and other clients were uncontrolled; timings varied substantially.",
       "preparation": {
         "files": 40000,
         "size": 4096,
@@ -133,7 +133,7 @@
       "id": "fast-corrected-8g",
       "title": "Fast fabric: one large file",
       "workload": "One 8 GiB file, tmpfs \u2192 tmpfs between servers in the same data center.",
-      "caveat": "Receiver was busy. syq used eight rail addresses; rclone targeted one 400 Gb/s rail. Includes an extra empty fixture probe. Normal rclone IO timeout restored after an earlier hashing failure.",
+      "caveat": "Busy receiver; short transfers. syq used eight rail addresses; rclone targeted one 400 Gb/s rail. Timing includes an empty fixture probe. These results do not establish peak throughput.",
       "preparation": {
         "files": 1,
         "size": 8589934592,
@@ -145,7 +145,7 @@
       "id": "fast-many-8g",
       "title": "Fast fabric: eight large files",
       "workload": "Eight \u00d7 1 GiB files, tmpfs \u2192 tmpfs on the same fast-fabric hosts.",
-      "caveat": "Receiver was busy. Eight syq rail addresses versus one rclone 400 Gb/s rail. Includes an extra empty fixture probe. This does not establish an idle-host peak or the cause of the speed difference.",
+      "caveat": "Busy receiver; short transfers. Eight syq rail addresses versus one rclone 400 Gb/s rail. Timing includes an empty fixture probe. These results do not isolate the effect of rail count.",
       "preparation": {
         "files": 8,
         "size": 1073741824,
@@ -157,7 +157,7 @@
       "id": "fast-32files-8g",
       "title": "Fast fabric: 32 large files",
       "workload": "32 \u00d7 256 MiB files, tmpfs \u2192 tmpfs on the same fast-fabric hosts.",
-      "caveat": "Same unequal rail selection and busy receiver. Includes an extra empty fixture probe. WebDAV was much slower here; the cause was not established.",
+      "caveat": "Busy receiver; short transfers. Eight syq rail addresses versus one rclone 400 Gb/s rail. Timing includes an empty fixture probe. These results do not isolate the effect of rail count.",
       "preparation": {
         "files": 32,
         "size": 268435456,

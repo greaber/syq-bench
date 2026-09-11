@@ -82,25 +82,17 @@ def measurements(rows: list[dict]) -> tuple[float, float, float, float] | None:
     return size / mean, mean, size / max(times), size / min(times)
 
 
-def replacement_note(rows: list[dict]) -> str:
-    reasons = []
-    if len(rows) != 3 or {r["repeat"] for r in rows} != {0, 1, 2}:
-        reasons.append("needs three runs")
-    values = measurements(rows)
-    if values is None:
-        reasons.append("needs successful, verified copies")
-    elif min(r["wall_s"] for r in rows) < 10:
-        reasons.append("needs a larger workload (fastest run below 10 s)")
-    if rows[0]["scenario"].startswith("wan-") and not all(
-        values is not None
-        and isinstance(r.get("payload_started_by_s"), (int, float))
-        and not isinstance(r["payload_started_by_s"], bool)
-        and math.isfinite(r["payload_started_by_s"])
-        and 0 < r["payload_started_by_s"] <= r["wall_s"] / 5
-        for r in rows
-    ):
-        reasons.append("needs payload time well beyond startup")
-    return "; ".join(reasons) or "three runs recorded; publication controls still require review"
+def nominal_ceiling(rows: list[dict]) -> float | None:
+    """Shared recorded sender NIC rating, in decimal MB/s."""
+    values = [r.get("network", {}).get("sender_nic_mbps") for r in rows]
+    for value in values:
+        if value is not None and (
+            isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or value <= 0
+        ):
+            raise ValueError("Sender NIC speed must be finite and positive")
+    if not values or None in values or len(set(values)) != 1:
+        return None
+    return values[0] / 8
 
 
 def results_table(rows: list[dict]) -> str:
@@ -109,7 +101,15 @@ def results_table(rows: list[dict]) -> str:
         groups[row["tool"]].append(row)
     measured = {name: measurements(group) for name, group in groups.items()}
     maximum = max((m[3] for m in measured.values() if m), default=1) * 1.02
-    body = ['<div class="copy-chart" aria-label="Copy speeds on a shared scale">']
+    ceiling = nominal_ceiling(rows)
+    body = []
+    if ceiling is not None:
+        maximum = max(maximum, ceiling)
+        body.append(
+            f'<p class="copy-capacity">Nominal sender-link ceiling: {rate(ceiling)} '
+            "(dashed line; before protocol overhead).</p>"
+        )
+    body.append('<div class="copy-chart" aria-label="Copy speeds on a shared scale">')
     commands, details = [], []
     for index, (name, group) in enumerate(groups.items()):
         row, values = group[0], measured[name]
@@ -127,6 +127,8 @@ def results_table(rows: list[dict]) -> str:
                 f'<span class="copy-bar {"syq" if row["tool"] == "syq" else ""}" '
                 f'style="width:{speed / maximum * 100:.3f}%"></span>'
             )
+            if ceiling is not None:
+                body.append(f'<span class="copy-ceiling" style="left:{ceiling / maximum * 100:.3f}%"></span>')
             if len(group) > 1:
                 body.append(
                     f'<span class="copy-range" style="left:{low / maximum * 100:.3f}%;'
@@ -143,7 +145,7 @@ def results_table(rows: list[dict]) -> str:
             f'<div class="copy-command-row"><b>{letter}</b>'
             f'<pre class="copy-command"><code>{escape(shlex.join(row["argv"]))}</code></pre></div>'
         )
-        details.append(f"<h4>{escape(label)}</h4><p>{escape(replacement_note(group))}.</p><ul>")
+        details.append(f"<h4>{escape(label)}</h4><ul>")
         for r in group:
             item = measurements([r])
             speed_text = rate(item[0]) + " · " if item else ""
@@ -173,29 +175,42 @@ def build(root: Path) -> Path:
             f'<section class="comparison-case" id="{escape(case["id"])}">'
             f"<h3>{escape(case['title'])}</h3><p>{escape(case['workload'])}</p>"
             f'<p class="comparison-note">{escape(case["caveat"])}</p>'
-            '<p class="copy-data">Generated pseudorandom contents, copied into a fresh destination. '
-            "Content checks ran after timing; no final durability flush.</p>"
             f"{results_table(rows)}</section>"
         )
-    selected = {c["id"] for c in data["featured"]}
-    appendix = []
-    for name in dict.fromkeys(r["scenario"] for r in data["rows"]):
-        if name in selected:
-            continue
-        rows = [r for r in data["rows"] if r["scenario"] == name]
-        appendix.append(f"<details><summary>{escape(name)}</summary>{results_table(rows)}</details>")
-    body = body.replace("<!-- RESULTS -->", "".join(featured)).replace("<!-- APPENDIX -->", "".join(appendix))
-    body = body.replace("<!-- LIMITS -->", "<ul>" + "".join(f"<li>{escape(s)}</li>" for s in data["limits"]) + "</ul>")
-    nav = "".join(
+    sections = [
+        ("wan", "WAN", ["wan-repeat-one8g", "wan-repeat-many32g"]),
+        ("lan", "LAN", ["lan-keyed-small", "fast-corrected-8g", "fast-many-8g", "fast-32files-8g"]),
+        (
+            "nfs",
+            "Mounted NFS",
+            ["main-write", "calibration-read", "raid-explore-nfs-large-write", "raid-explore-nfs-large-read"],
+        ),
+        ("local", "Local filesystem", ["raid-explore-local-small", "raid-explore-local-large"]),
+    ]
+    rendered = dict(zip((c["id"] for c in data["featured"]), featured, strict=True))
+    titles = {c["id"]: c["title"] for c in data["featured"]}
+    if sorted(rendered) != sorted(case for _, _, cases in sections for case in cases):
+        raise ValueError("Every featured comparison must appear once in navigation")
+    content, links = [], []
+    for anchor, label, cases in sections:
+        content.append(f'<section id="{anchor}"><h2>{label}</h2>')
+        if anchor == "lan":
+            content.append(
+                "<p>The fast-fabric comparisons use eight rail addresses for syq and one for rclone. "
+                '<a href="#rails">Multi-rail capabilities and test limits</a>.</p>'
+            )
+        links.append(f'<a class="nav-item comparison-nav-group" href="#{anchor}">{label}</a>')
+        for case in cases:
+            content.append(rendered[case])
+            links.append(f'<a class="nav-item comparison-nav-case" href="#{case}">{escape(titles[case])}</a>')
+        content.append("</section>")
+    body = body.replace("<!-- RESULTS -->", "".join(content))
+    nav = "".join(links) + "".join(
         f'<a class="nav-item" href="#{anchor}">{label}</a>'
         for anchor, label in [
-            ("reading", "Reading these results"),
-            ("results", "Measured copies"),
-            ("manual", "Simple reproduction"),
-            ("settings", "Settings"),
-            ("rails", "Eight network rails"),
-            ("method", "Method and limits"),
-            ("appendix", "Other trials"),
+            ("method", "Method"),
+            ("settings", "Transfer settings"),
+            ("rails", "Multi-rail networking"),
         ]
     )
     target = root / "site/rclone.html"

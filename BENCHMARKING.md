@@ -139,8 +139,12 @@ units as the main page, with seconds and observed repeat ranges also visible.
 Keep bars adjacent on a shared scale within each case, followed by a compact
 block of exact commands. Describe file sizes, counts, placement and preparation
 in plain language; optional reproduction instructions stay outside the main flow.
-A small standalone generator and shell recipe expose an optional procedure
-without requiring the full harness. They did not produce the captured data.
+A linked standalone generator provides an optional procedure; it did not produce
+the captured data. The page groups selected comparisons by WAN, LAN, NFS and
+local filesystem, with each comparison linked in the sidebar. Unreported trials
+remain in the raw data but are not rendered as an appendix or a details page.
+Show nominal sender ceilings only from consistent recorded NIC ratings, without
+treating per-rail ratings as measured end-to-end throughput.
 
 The reporting campaign requires three successful verified runs per setting in
 rotated order. Calibrate the fastest tool to at least ten seconds as a starting
@@ -161,7 +165,7 @@ native SFTP with external OpenSSH sharing, as well as authenticated HTTPS
 WebDAV; record local-key authentication and start any shared connection inside
 the timer. Do not call a setting globally optimal after a bounded tuning sweep.
 
-A WAN row may clear the startup reminder only with a recorded positive finite
+WAN startup screening uses a recorded positive finite
 upper bound on payload startup at most one fifth of its duration in every repeat.
 Use syq's planning log or the first rclone nonzero progress report (including
 one second for its timestamp precision). This is a conservative screening rule,
