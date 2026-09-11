@@ -73,7 +73,7 @@
       "id": "raid-explore-local-small",
       "title": "Small files on local RAID",
       "workload": "40,000 \u00d7 4 KiB files in 256 directories. Copy between directories on the same XFS RAID filesystem.",
-      "caveat": "Single runs; warm metadata caches.",
+      "caveat": "Preliminary: each configuration was measured once.",
       "preparation": {
         "files": 40000,
         "size": 4096,
@@ -85,7 +85,7 @@
       "id": "raid-explore-nfs-large-write",
       "title": "Large file \u2192 mounted NFS",
       "workload": "One 2 GiB file. XFS RAID source \u2192 mounted NFSv4.2 destination.",
-      "caveat": "Single runs; uncontrolled NFS server cache.",
+      "caveat": "Preliminary: each configuration was measured once. Caching on the NFS server was uncontrolled.",
       "preparation": {
         "files": 1,
         "size": 2147483648,
@@ -97,7 +97,7 @@
       "id": "raid-explore-nfs-large-read",
       "title": "Large file \u2190 mounted NFS",
       "workload": "One 2 GiB file. Mounted NFSv4.2 source \u2192 XFS RAID destination.",
-      "caveat": "Single runs; file eviction does not establish a cold NFS server cache.",
+      "caveat": "Preliminary: each configuration was measured once. Evicting client file data does not empty the NFS server\u2019s cache.",
       "preparation": {
         "files": 1,
         "size": 2147483648,
@@ -118,15 +118,15 @@
       }
     },
     {
-      "id": "lan-keyed-small",
-      "title": "Small files between nearby servers",
-      "workload": "1,000 \u00d7 4 KiB files. XFS RAID \u2192 XFS RAID, approximately 0.2 ms RTT; receiver has a 2 \u00d7 10 Gb/s bond.",
-      "caveat": "Both tools use the same two-port bond. A separate SFTP check confirmed rclone can use both ports, with uneven traffic distribution. WebDAV failed endpoint validation before copying.",
+      "id": "lan-repeat-small",
+      "title": "LAN: 600,000 small files",
+      "workload": "600,000 \u00d7 4 KiB files in 256 directories (2.29 GiB total). RAID \u2192 RAID, approximately 0.2 ms RTT; both servers use 2 \u00d7 10 Gb/s bonds.",
+      "caveat": "Port checks confirmed that rclone SFTP and WebDAV both use the bond\u2019s two ports.",
       "preparation": {
-        "files": 1000,
+        "files": 600000,
         "size": 4096,
         "directories": 256,
-        "original": "Original screening: generated pseudorandom file contents with seed 9911; round-robin placement in numbered directories. The harness generated data with O_DIRECT where supported and requested fixture-page eviction with fadvise; metadata caches stayed warm. "
+        "seed": 9911
       }
     },
     {
@@ -9594,6 +9594,885 @@
       "source_manifest_sha256": "efb1c5c66be4ce95bf6de0c7b5e02151f7ef4f472c0318411920c47f5b6cfb01",
       "stage": "three-repeat series",
       "payload_started_by_s": 11.256967306137085
+    },
+    {
+      "scenario": "lan-repeat-small",
+      "tool": "syq",
+      "repeat": 0,
+      "bytes": 2457600000,
+      "files": 600000,
+      "wall_s": 23.26733935624361,
+      "argv": [
+        "syq",
+        "rsync",
+        "-rt",
+        "--no-progress",
+        "--syq-no-bootstrap",
+        "--rsync-path",
+        "REMOTE_SCRATCH/syq",
+        "-e",
+        "SSH_WRAPPER",
+        "SOURCE/",
+        "USER@SERVER:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular-file sizes and mtimes, whole seconds; file and directory membership",
+        "mismatches": 0,
+        "entries": 600000
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 3,
+        "cache": "source files read before every timed copy",
+        "durable": false,
+        "verify": true,
+        "tool_timeout": 900
+      },
+      "workload": [
+        {
+          "name": "small regular files in 256 directories",
+          "files": 600000,
+          "bytes": 2457600000
+        }
+      ],
+      "cache": "warm source data and metadata",
+      "case_error": false,
+      "cache_limitations": [
+        "Fresh destination; shared server activity and destination caches uncontrolled; no final fsync."
+      ],
+      "filesystems": {
+        "source": "XFS RAID",
+        "destination": "XFS RAID"
+      },
+      "network": {
+        "sender_bond_mbps": 20000,
+        "receiver_bond_mbps": 20000,
+        "ports_per_bond": 2,
+        "port_mbps": 10000,
+        "bond_mode": "802.3ad",
+        "transmit_hash_policy": "layer3+4",
+        "rtt_description": "approximately 0.2 ms"
+      },
+      "receiver_load_before": [
+        7.85498046875,
+        10.91064453125,
+        7.6591796875
+      ],
+      "tool_identity": {
+        "version": "0.5.2",
+        "sha256": "5e4586bdc9706834cc907ff087afed57180e918e7459f9cefb7fda4e7973dbff"
+      },
+      "capture_sha256": "1a0a5f83958220d749c9786a2eaef83dfe5126e7e9c98a3169888456c61c7eda",
+      "runner_sha256": "80d9adbf5ba35f8ad83fa812a31f06b438007f7cd6a7f331876229848460a1ed",
+      "verifier_sha256": "4408cbb0a342e39ada31992b0e0e9cc5070e57b30df93ed8719afbcff7af3131",
+      "source_manifest_sha256": "2a049fa2fc231c5a5a69aabcb19d1c599b8bcee4bb9cd661ab411168754321b9",
+      "stage": "three-repeat series",
+      "tuning_cache": "existing automatic settings; not reset"
+    },
+    {
+      "scenario": "lan-repeat-small",
+      "tool": "syq",
+      "repeat": 1,
+      "bytes": 2457600000,
+      "files": 600000,
+      "wall_s": 21.967397831380367,
+      "argv": [
+        "syq",
+        "rsync",
+        "-rt",
+        "--no-progress",
+        "--syq-no-bootstrap",
+        "--rsync-path",
+        "REMOTE_SCRATCH/syq",
+        "-e",
+        "SSH_WRAPPER",
+        "SOURCE/",
+        "USER@SERVER:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular-file sizes and mtimes, whole seconds; file and directory membership",
+        "mismatches": 0,
+        "entries": 600000
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 3,
+        "cache": "source files read before every timed copy",
+        "durable": false,
+        "verify": true,
+        "tool_timeout": 900
+      },
+      "workload": [
+        {
+          "name": "small regular files in 256 directories",
+          "files": 600000,
+          "bytes": 2457600000
+        }
+      ],
+      "cache": "warm source data and metadata",
+      "case_error": false,
+      "cache_limitations": [
+        "Fresh destination; shared server activity and destination caches uncontrolled; no final fsync."
+      ],
+      "filesystems": {
+        "source": "XFS RAID",
+        "destination": "XFS RAID"
+      },
+      "network": {
+        "sender_bond_mbps": 20000,
+        "receiver_bond_mbps": 20000,
+        "ports_per_bond": 2,
+        "port_mbps": 10000,
+        "bond_mode": "802.3ad",
+        "transmit_hash_policy": "layer3+4",
+        "rtt_description": "approximately 0.2 ms"
+      },
+      "receiver_load_before": [
+        18.8994140625,
+        25.3466796875,
+        17.41162109375
+      ],
+      "tool_identity": {
+        "version": "0.5.2",
+        "sha256": "5e4586bdc9706834cc907ff087afed57180e918e7459f9cefb7fda4e7973dbff"
+      },
+      "capture_sha256": "5528c660032fd12c07c89b29a42e8e3d26f3ba1b4dbf24726322904ff36df819",
+      "runner_sha256": "80d9adbf5ba35f8ad83fa812a31f06b438007f7cd6a7f331876229848460a1ed",
+      "verifier_sha256": "4408cbb0a342e39ada31992b0e0e9cc5070e57b30df93ed8719afbcff7af3131",
+      "source_manifest_sha256": "2a049fa2fc231c5a5a69aabcb19d1c599b8bcee4bb9cd661ab411168754321b9",
+      "stage": "three-repeat series",
+      "tuning_cache": "existing automatic settings; not reset"
+    },
+    {
+      "scenario": "lan-repeat-small",
+      "tool": "syq",
+      "repeat": 2,
+      "bytes": 2457600000,
+      "files": 600000,
+      "wall_s": 22.316725915297866,
+      "argv": [
+        "syq",
+        "rsync",
+        "-rt",
+        "--no-progress",
+        "--syq-no-bootstrap",
+        "--rsync-path",
+        "REMOTE_SCRATCH/syq",
+        "-e",
+        "SSH_WRAPPER",
+        "SOURCE/",
+        "USER@SERVER:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular-file sizes and mtimes, whole seconds; file and directory membership",
+        "mismatches": 0,
+        "entries": 600000
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 3,
+        "cache": "source files read before every timed copy",
+        "durable": false,
+        "verify": true,
+        "tool_timeout": 900
+      },
+      "workload": [
+        {
+          "name": "small regular files in 256 directories",
+          "files": 600000,
+          "bytes": 2457600000
+        }
+      ],
+      "cache": "warm source data and metadata",
+      "case_error": false,
+      "cache_limitations": [
+        "Fresh destination; shared server activity and destination caches uncontrolled; no final fsync."
+      ],
+      "filesystems": {
+        "source": "XFS RAID",
+        "destination": "XFS RAID"
+      },
+      "network": {
+        "sender_bond_mbps": 20000,
+        "receiver_bond_mbps": 20000,
+        "ports_per_bond": 2,
+        "port_mbps": 10000,
+        "bond_mode": "802.3ad",
+        "transmit_hash_policy": "layer3+4",
+        "rtt_description": "approximately 0.2 ms"
+      },
+      "receiver_load_before": [
+        21.55078125,
+        24.8046875,
+        18.44677734375
+      ],
+      "tool_identity": {
+        "version": "0.5.2",
+        "sha256": "5e4586bdc9706834cc907ff087afed57180e918e7459f9cefb7fda4e7973dbff"
+      },
+      "capture_sha256": "34231e6e031b466a10083c09730ef1da8fe4dd48216433019cc77a7fd33b74f1",
+      "runner_sha256": "80d9adbf5ba35f8ad83fa812a31f06b438007f7cd6a7f331876229848460a1ed",
+      "verifier_sha256": "4408cbb0a342e39ada31992b0e0e9cc5070e57b30df93ed8719afbcff7af3131",
+      "source_manifest_sha256": "2a049fa2fc231c5a5a69aabcb19d1c599b8bcee4bb9cd661ab411168754321b9",
+      "stage": "three-repeat series",
+      "tuning_cache": "existing automatic settings; not reset"
+    },
+    {
+      "scenario": "lan-repeat-small",
+      "tool": "rclone-sftp",
+      "repeat": 0,
+      "bytes": 2457600000,
+      "files": 600000,
+      "wall_s": 82.8750991281122,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--create-empty-src-dirs",
+        "--contimeout",
+        "10s",
+        "--timeout",
+        "60s",
+        "--retries",
+        "1",
+        "--stats",
+        "5s",
+        "--stats-one-line",
+        "--stats-log-level",
+        "NOTICE",
+        "--no-check-dest",
+        "--sftp-host",
+        "SERVER",
+        "--sftp-port",
+        "SSH_PORT",
+        "--sftp-user",
+        "USER",
+        "--sftp-key-file",
+        "KEY_FILE",
+        "--sftp-known-hosts-file",
+        "KNOWN_HOSTS",
+        "--sftp-md5sum-command",
+        "md5sum",
+        "--sftp-sha1sum-command",
+        "sha1sum",
+        "--transfers",
+        "64",
+        ":local:SOURCE",
+        ":sftp:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular-file sizes and mtimes, whole seconds; file and directory membership",
+        "mismatches": 0,
+        "entries": 600000
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 3,
+        "cache": "source files read before every timed copy",
+        "durable": false,
+        "verify": true,
+        "tool_timeout": 900
+      },
+      "workload": [
+        {
+          "name": "small regular files in 256 directories",
+          "files": 600000,
+          "bytes": 2457600000
+        }
+      ],
+      "cache": "warm source data and metadata",
+      "case_error": false,
+      "cache_limitations": [
+        "Fresh destination; shared server activity and destination caches uncontrolled; no final fsync."
+      ],
+      "filesystems": {
+        "source": "XFS RAID",
+        "destination": "XFS RAID"
+      },
+      "network": {
+        "sender_bond_mbps": 20000,
+        "receiver_bond_mbps": 20000,
+        "ports_per_bond": 2,
+        "port_mbps": 10000,
+        "bond_mode": "802.3ad",
+        "transmit_hash_policy": "layer3+4",
+        "rtt_description": "approximately 0.2 ms"
+      },
+      "receiver_load_before": [
+        9.1455078125,
+        10.97900390625,
+        8.08154296875
+      ],
+      "tool_identity": {
+        "version": "1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      },
+      "capture_sha256": "22353ad5b03fb5e6b85b5394fa12ff6826c74ac349c03c9324244c02494c0eac",
+      "runner_sha256": "80d9adbf5ba35f8ad83fa812a31f06b438007f7cd6a7f331876229848460a1ed",
+      "verifier_sha256": "4408cbb0a342e39ada31992b0e0e9cc5070e57b30df93ed8719afbcff7af3131",
+      "source_manifest_sha256": "2a049fa2fc231c5a5a69aabcb19d1c599b8bcee4bb9cd661ab411168754321b9",
+      "stage": "three-repeat series",
+      "tuning_cache": "not applicable"
+    },
+    {
+      "scenario": "lan-repeat-small",
+      "tool": "rclone-sftp",
+      "repeat": 1,
+      "bytes": 2457600000,
+      "files": 600000,
+      "wall_s": 96.47538308426738,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--create-empty-src-dirs",
+        "--contimeout",
+        "10s",
+        "--timeout",
+        "60s",
+        "--retries",
+        "1",
+        "--stats",
+        "5s",
+        "--stats-one-line",
+        "--stats-log-level",
+        "NOTICE",
+        "--no-check-dest",
+        "--sftp-host",
+        "SERVER",
+        "--sftp-port",
+        "SSH_PORT",
+        "--sftp-user",
+        "USER",
+        "--sftp-key-file",
+        "KEY_FILE",
+        "--sftp-known-hosts-file",
+        "KNOWN_HOSTS",
+        "--sftp-md5sum-command",
+        "md5sum",
+        "--sftp-sha1sum-command",
+        "sha1sum",
+        "--transfers",
+        "64",
+        ":local:SOURCE",
+        ":sftp:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular-file sizes and mtimes, whole seconds; file and directory membership",
+        "mismatches": 0,
+        "entries": 600000
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 3,
+        "cache": "source files read before every timed copy",
+        "durable": false,
+        "verify": true,
+        "tool_timeout": 900
+      },
+      "workload": [
+        {
+          "name": "small regular files in 256 directories",
+          "files": 600000,
+          "bytes": 2457600000
+        }
+      ],
+      "cache": "warm source data and metadata",
+      "case_error": false,
+      "cache_limitations": [
+        "Fresh destination; shared server activity and destination caches uncontrolled; no final fsync."
+      ],
+      "filesystems": {
+        "source": "XFS RAID",
+        "destination": "XFS RAID"
+      },
+      "network": {
+        "sender_bond_mbps": 20000,
+        "receiver_bond_mbps": 20000,
+        "ports_per_bond": 2,
+        "port_mbps": 10000,
+        "bond_mode": "802.3ad",
+        "transmit_hash_policy": "layer3+4",
+        "rtt_description": "approximately 0.2 ms"
+      },
+      "receiver_load_before": [
+        29.56689453125,
+        25.482421875,
+        14.8623046875
+      ],
+      "tool_identity": {
+        "version": "1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      },
+      "capture_sha256": "8a63bfa3536caecae57bb6b0cb5572276e231a0dd292563b400c7add75a2a9f9",
+      "runner_sha256": "80d9adbf5ba35f8ad83fa812a31f06b438007f7cd6a7f331876229848460a1ed",
+      "verifier_sha256": "4408cbb0a342e39ada31992b0e0e9cc5070e57b30df93ed8719afbcff7af3131",
+      "source_manifest_sha256": "2a049fa2fc231c5a5a69aabcb19d1c599b8bcee4bb9cd661ab411168754321b9",
+      "stage": "three-repeat series",
+      "tuning_cache": "not applicable"
+    },
+    {
+      "scenario": "lan-repeat-small",
+      "tool": "rclone-sftp",
+      "repeat": 2,
+      "bytes": 2457600000,
+      "files": 600000,
+      "wall_s": 84.00999372825027,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--create-empty-src-dirs",
+        "--contimeout",
+        "10s",
+        "--timeout",
+        "60s",
+        "--retries",
+        "1",
+        "--stats",
+        "5s",
+        "--stats-one-line",
+        "--stats-log-level",
+        "NOTICE",
+        "--no-check-dest",
+        "--sftp-host",
+        "SERVER",
+        "--sftp-port",
+        "SSH_PORT",
+        "--sftp-user",
+        "USER",
+        "--sftp-key-file",
+        "KEY_FILE",
+        "--sftp-known-hosts-file",
+        "KNOWN_HOSTS",
+        "--sftp-md5sum-command",
+        "md5sum",
+        "--sftp-sha1sum-command",
+        "sha1sum",
+        "--transfers",
+        "64",
+        ":local:SOURCE",
+        ":sftp:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular-file sizes and mtimes, whole seconds; file and directory membership",
+        "mismatches": 0,
+        "entries": 600000
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 3,
+        "cache": "source files read before every timed copy",
+        "durable": false,
+        "verify": true,
+        "tool_timeout": 900
+      },
+      "workload": [
+        {
+          "name": "small regular files in 256 directories",
+          "files": 600000,
+          "bytes": 2457600000
+        }
+      ],
+      "cache": "warm source data and metadata",
+      "case_error": false,
+      "cache_limitations": [
+        "Fresh destination; shared server activity and destination caches uncontrolled; no final fsync."
+      ],
+      "filesystems": {
+        "source": "XFS RAID",
+        "destination": "XFS RAID"
+      },
+      "network": {
+        "sender_bond_mbps": 20000,
+        "receiver_bond_mbps": 20000,
+        "ports_per_bond": 2,
+        "port_mbps": 10000,
+        "bond_mode": "802.3ad",
+        "transmit_hash_policy": "layer3+4",
+        "rtt_description": "approximately 0.2 ms"
+      },
+      "receiver_load_before": [
+        13.751953125,
+        21.89306640625,
+        17.90087890625
+      ],
+      "tool_identity": {
+        "version": "1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      },
+      "capture_sha256": "44be977e7ec3f88928a239dedebe951e07757ebcc5c0d589d11e91a10dbd4bee",
+      "runner_sha256": "80d9adbf5ba35f8ad83fa812a31f06b438007f7cd6a7f331876229848460a1ed",
+      "verifier_sha256": "4408cbb0a342e39ada31992b0e0e9cc5070e57b30df93ed8719afbcff7af3131",
+      "source_manifest_sha256": "2a049fa2fc231c5a5a69aabcb19d1c599b8bcee4bb9cd661ab411168754321b9",
+      "stage": "three-repeat series",
+      "tuning_cache": "not applicable"
+    },
+    {
+      "scenario": "lan-repeat-small",
+      "tool": "rclone-webdav",
+      "repeat": 0,
+      "bytes": 2457600000,
+      "files": 600000,
+      "wall_s": 45.870338432490826,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--create-empty-src-dirs",
+        "--contimeout",
+        "10s",
+        "--timeout",
+        "60s",
+        "--retries",
+        "1",
+        "--stats",
+        "5s",
+        "--stats-one-line",
+        "--stats-log-level",
+        "NOTICE",
+        "--no-check-dest",
+        "--webdav-url",
+        "https://SERVER:HTTPS_PORT/",
+        "--webdav-vendor",
+        "rclone",
+        "--ca-cert",
+        "CA_CERT",
+        "--transfers",
+        "64",
+        "--webdav-pacer-min-sleep",
+        "0s",
+        ":local:SOURCE",
+        ":webdav:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular-file sizes and mtimes, whole seconds; file and directory membership",
+        "mismatches": 0,
+        "entries": 600000
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 3,
+        "cache": "source files read before every timed copy",
+        "durable": false,
+        "verify": true,
+        "tool_timeout": 900
+      },
+      "workload": [
+        {
+          "name": "small regular files in 256 directories",
+          "files": 600000,
+          "bytes": 2457600000
+        }
+      ],
+      "cache": "warm source data and metadata",
+      "case_error": false,
+      "cache_limitations": [
+        "Fresh destination; shared server activity and destination caches uncontrolled; no final fsync."
+      ],
+      "filesystems": {
+        "source": "XFS RAID",
+        "destination": "XFS RAID"
+      },
+      "network": {
+        "sender_bond_mbps": 20000,
+        "receiver_bond_mbps": 20000,
+        "ports_per_bond": 2,
+        "port_mbps": 10000,
+        "bond_mode": "802.3ad",
+        "transmit_hash_policy": "layer3+4",
+        "rtt_description": "approximately 0.2 ms"
+      },
+      "receiver_load_before": [
+        30.68359375,
+        20.53759765625,
+        12.12548828125
+      ],
+      "tool_identity": {
+        "version": "1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      },
+      "capture_sha256": "c452155d9a426a931a017fb2a27011d67949c693bb8d005fb2089d0902cd5949",
+      "runner_sha256": "80d9adbf5ba35f8ad83fa812a31f06b438007f7cd6a7f331876229848460a1ed",
+      "verifier_sha256": "4408cbb0a342e39ada31992b0e0e9cc5070e57b30df93ed8719afbcff7af3131",
+      "source_manifest_sha256": "2a049fa2fc231c5a5a69aabcb19d1c599b8bcee4bb9cd661ab411168754321b9",
+      "stage": "three-repeat series",
+      "tuning_cache": "not applicable",
+      "server_configuration": {
+        "tool": "rclone 1.75.1",
+        "command": [
+          "rclone",
+          "serve",
+          "webdav",
+          "REMOTE_SCRATCH/data",
+          "--config",
+          "/dev/null",
+          "--addr",
+          "SERVER:HTTPS_PORT",
+          "--dir-cache-time",
+          "5m",
+          "--cert",
+          "CA_CERT",
+          "--key",
+          "TLS_KEY_FILE"
+        ],
+        "authentication": "username/password via environment; client password obscured; certificate verified"
+      }
+    },
+    {
+      "scenario": "lan-repeat-small",
+      "tool": "rclone-webdav",
+      "repeat": 1,
+      "bytes": 2457600000,
+      "files": 600000,
+      "wall_s": 41.870082691311836,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--create-empty-src-dirs",
+        "--contimeout",
+        "10s",
+        "--timeout",
+        "60s",
+        "--retries",
+        "1",
+        "--stats",
+        "5s",
+        "--stats-one-line",
+        "--stats-log-level",
+        "NOTICE",
+        "--no-check-dest",
+        "--webdav-url",
+        "https://SERVER:HTTPS_PORT/",
+        "--webdav-vendor",
+        "rclone",
+        "--ca-cert",
+        "CA_CERT",
+        "--transfers",
+        "64",
+        "--webdav-pacer-min-sleep",
+        "0s",
+        ":local:SOURCE",
+        ":webdav:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular-file sizes and mtimes, whole seconds; file and directory membership",
+        "mismatches": 0,
+        "entries": 600000
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 3,
+        "cache": "source files read before every timed copy",
+        "durable": false,
+        "verify": true,
+        "tool_timeout": 900
+      },
+      "workload": [
+        {
+          "name": "small regular files in 256 directories",
+          "files": 600000,
+          "bytes": 2457600000
+        }
+      ],
+      "cache": "warm source data and metadata",
+      "case_error": false,
+      "cache_limitations": [
+        "Fresh destination; shared server activity and destination caches uncontrolled; no final fsync."
+      ],
+      "filesystems": {
+        "source": "XFS RAID",
+        "destination": "XFS RAID"
+      },
+      "network": {
+        "sender_bond_mbps": 20000,
+        "receiver_bond_mbps": 20000,
+        "ports_per_bond": 2,
+        "port_mbps": 10000,
+        "bond_mode": "802.3ad",
+        "transmit_hash_policy": "layer3+4",
+        "rtt_description": "approximately 0.2 ms"
+      },
+      "receiver_load_before": [
+        18.61962890625,
+        24.98828125,
+        16.35791015625
+      ],
+      "tool_identity": {
+        "version": "1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      },
+      "capture_sha256": "43574485a98fdd084454f91bc99c2458a6481473d83da274b11b07e3094d4a50",
+      "runner_sha256": "80d9adbf5ba35f8ad83fa812a31f06b438007f7cd6a7f331876229848460a1ed",
+      "verifier_sha256": "4408cbb0a342e39ada31992b0e0e9cc5070e57b30df93ed8719afbcff7af3131",
+      "source_manifest_sha256": "2a049fa2fc231c5a5a69aabcb19d1c599b8bcee4bb9cd661ab411168754321b9",
+      "stage": "three-repeat series",
+      "tuning_cache": "not applicable",
+      "server_configuration": {
+        "tool": "rclone 1.75.1",
+        "command": [
+          "rclone",
+          "serve",
+          "webdav",
+          "REMOTE_SCRATCH/data",
+          "--config",
+          "/dev/null",
+          "--addr",
+          "SERVER:HTTPS_PORT",
+          "--dir-cache-time",
+          "5m",
+          "--cert",
+          "CA_CERT",
+          "--key",
+          "TLS_KEY_FILE"
+        ],
+        "authentication": "username/password via environment; client password obscured; certificate verified"
+      }
+    },
+    {
+      "scenario": "lan-repeat-small",
+      "tool": "rclone-webdav",
+      "repeat": 2,
+      "bytes": 2457600000,
+      "files": 600000,
+      "wall_s": 42.21915041655302,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--create-empty-src-dirs",
+        "--contimeout",
+        "10s",
+        "--timeout",
+        "60s",
+        "--retries",
+        "1",
+        "--stats",
+        "5s",
+        "--stats-one-line",
+        "--stats-log-level",
+        "NOTICE",
+        "--no-check-dest",
+        "--webdav-url",
+        "https://SERVER:HTTPS_PORT/",
+        "--webdav-vendor",
+        "rclone",
+        "--ca-cert",
+        "CA_CERT",
+        "--transfers",
+        "64",
+        "--webdav-pacer-min-sleep",
+        "0s",
+        ":local:SOURCE",
+        ":webdav:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular-file sizes and mtimes, whole seconds; file and directory membership",
+        "mismatches": 0,
+        "entries": 600000
+      },
+      "recorded_status": "verified",
+      "seed": 9911,
+      "protocol": {
+        "repeats": 3,
+        "cache": "source files read before every timed copy",
+        "durable": false,
+        "verify": true,
+        "tool_timeout": 900
+      },
+      "workload": [
+        {
+          "name": "small regular files in 256 directories",
+          "files": 600000,
+          "bytes": 2457600000
+        }
+      ],
+      "cache": "warm source data and metadata",
+      "case_error": false,
+      "cache_limitations": [
+        "Fresh destination; shared server activity and destination caches uncontrolled; no final fsync."
+      ],
+      "filesystems": {
+        "source": "XFS RAID",
+        "destination": "XFS RAID"
+      },
+      "network": {
+        "sender_bond_mbps": 20000,
+        "receiver_bond_mbps": 20000,
+        "ports_per_bond": 2,
+        "port_mbps": 10000,
+        "bond_mode": "802.3ad",
+        "transmit_hash_policy": "layer3+4",
+        "rtt_description": "approximately 0.2 ms"
+      },
+      "receiver_load_before": [
+        10.71044921875,
+        21.81640625,
+        16.77880859375
+      ],
+      "tool_identity": {
+        "version": "1.75.1",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      },
+      "capture_sha256": "8dc1f51405ba976211ae710a4c7f008f5a7b755c30ebd2b9839cd4e2c1eca4e9",
+      "runner_sha256": "80d9adbf5ba35f8ad83fa812a31f06b438007f7cd6a7f331876229848460a1ed",
+      "verifier_sha256": "4408cbb0a342e39ada31992b0e0e9cc5070e57b30df93ed8719afbcff7af3131",
+      "source_manifest_sha256": "2a049fa2fc231c5a5a69aabcb19d1c599b8bcee4bb9cd661ab411168754321b9",
+      "stage": "three-repeat series",
+      "tuning_cache": "not applicable",
+      "server_configuration": {
+        "tool": "rclone 1.75.1",
+        "command": [
+          "rclone",
+          "serve",
+          "webdav",
+          "REMOTE_SCRATCH/data",
+          "--config",
+          "/dev/null",
+          "--addr",
+          "SERVER:HTTPS_PORT",
+          "--dir-cache-time",
+          "5m",
+          "--cert",
+          "CA_CERT",
+          "--key",
+          "TLS_KEY_FILE"
+        ],
+        "authentication": "username/password via environment; client password obscured; certificate verified"
+      }
     }
   ],
   "network_checks": [
@@ -9662,6 +10541,21 @@
           }
         }
       }
+    },
+    {
+      "id": "bond-webdav-port-distribution",
+      "purpose": "Passive port observation during LAN WebDAV repeat 3; not a separate speed sample.",
+      "tool": "rclone 1.75.1",
+      "backend": "HTTPS WebDAV",
+      "during_scenario": "lan-repeat-small",
+      "repeat": 2,
+      "sample_seconds": 5.005275011062622,
+      "sender_port_tx_bytes": [
+        221531281,
+        179865566
+      ],
+      "established_connections": 144,
+      "counter_scope": "Sender physical-port counters include protocol and SSH control traffic. Both ports carried over 100 MB during the five-second sample."
     }
   ]
 }

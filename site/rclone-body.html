@@ -29,8 +29,8 @@ main pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px;line-height:
 <a href="data/rclone-exploratory.json" download>Measurement data (JSON)</a></p></header>
 <section id="reading">
 <p>Bars show dataset bytes / mean elapsed time; thin lines show the run range.
-Dashed lines mark nominal link ceilings. WAN results use three copies per setting;
-other results are exploratory. Commands use placeholder paths and servers.</p>
+Dashed lines mark nominal link ceilings. Each chart uses three verified copies per configuration,
+all lasting at least ten seconds. Commands use placeholder paths and servers.</p>
 </section>
 <div id="results"><!-- RESULTS --></div>
 <!-- MULTIRAIL -->
@@ -50,8 +50,9 @@ setup and native checksumming; preparation, independent verification and cleanup
 No final durability flush was requested. Mounted NFS uses rclone’s local-filesystem backend,
 with no SFTP or WebDAV server.</p>
 <p>Contents and stated metadata were checked after each copy; verification scope appears under each chart.
-WAN tool order rotated. One WebDAV run overlapping unrelated work was replaced.
-Cache and workload limitations are noted beside the results.</p>
+Tool order rotated. One WebDAV run overlapping unrelated work was replaced.
+Before each timed LAN copy, we read the source files; each tool copies into a new empty destination.
+WAN sources remain in memory (tmpfs).</p>
 <p><a href="data/rclone-exploratory.json">Raw data</a> includes timings, commands and tool hashes.
 The optional <a href="make-files.py">dataset generator</a> reproduces the file layout;
 it is separate from the unreleased measurement harness.</p>
@@ -59,14 +60,15 @@ it is separate from the unreleased measurement harness.</p>
 <section id="settings"><h2>Transfer settings</h2>
 <p><code>--transfers</code> controls concurrent files; <code>--multi-thread-streams</code>
 controls streams within a file for supported destinations. We tested transfer counts,
-SFTP packet sizes and concurrency, SSH connection sharing, and WebDAV pacing.</p>
+SFTP packet sizes and concurrency, SSH connection sharing, and WebDAV cache and pacing settings.</p>
 <p>SFTP used verified SSH host keys; WebDAV used authenticated HTTPS with a verified certificate.
 Services were started before timing. Remote copies preserved file mtimes, but did not request
 Unix ownership, permissions or ACLs.</p>
 <details><summary>Server command and SSH wrapper</summary>
-<pre><code>rclone serve webdav "$REMOTE_SCRATCH" --config /dev/null --addr SERVER:PORT --dir-cache-time 0s --cert CERT_FILE --key TLS_KEY_FILE
+<pre><code># LAN server below; WAN used --dir-cache-time 0s.
+rclone serve webdav "$REMOTE_SCRATCH" --config /dev/null --addr SERVER:PORT --dir-cache-time 5m --cert CERT_FILE --key TLS_KEY_FILE
 
-# SSH_WRAPPER used by syq in the WAN tests:
+# SSH_WRAPPER used by syq:
 #!/bin/sh
 exec ssh -F /dev/null -p SSH_PORT -o BatchMode=yes -o IdentitiesOnly=yes -i KEY_FILE -o StrictHostKeyChecking=yes -o UserKnownHostsFile=KNOWN_HOSTS "$@"</code></pre>
 <p>The WebDAV server received <code>RCLONE_USER</code> and <code>RCLONE_PASS</code> through its environment;

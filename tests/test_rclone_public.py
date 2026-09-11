@@ -142,15 +142,20 @@ def test_ceiling_requires_shared_recorded_rating_and_does_not_clamp_speed():
 def test_page_only_renders_selected_comparisons_with_sidebar_links(tmp_path):
     import shutil
 
-    from syq_bench.rclone_public import build
+    from syq_bench.rclone_public import build, reportable
 
     shutil.copytree(ROOT / "site", tmp_path / "site")
     page = build(tmp_path).read_text()
     data = json.loads((ROOT / "site/data/rclone-exploratory.json").read_text())
+    count = 0
     for case in data["featured"]:
-        assert f'href="#{case["id"]}"' in page
-        assert f'id="{case["id"]}"' in page
-    assert page.count('class="comparison-case"') == len(data["featured"])
+        shown = reportable([r for r in data["rows"] if r["scenario"] == case["id"]])
+        assert (f'href="#{case["id"]}"' in page) == shown
+        assert (f'id="{case["id"]}"' in page) == shown
+        count += shown
+    assert page.count('class="comparison-case"') == count
+    positions = [page.index(f'<section id="{name}">') for name in ["lan", "wan", "nfs", "local", "rails"]]
+    assert positions == sorted(positions)
     for text in ('id="appendix"', 'href="#manual"', "needs three runs", "publication controls"):
         assert text not in page
 
@@ -161,10 +166,37 @@ def test_multi_rail_notice_is_scoped_to_three_fast_fabric_cases(tmp_path):
     from syq_bench.rclone_public import build
 
     shutil.copytree(ROOT / "site", tmp_path / "site")
+    data_path = tmp_path / "site/data/rclone-exploratory.json"
+    data = json.loads(data_path.read_text())
+    rows = []
+    for row in data["rows"]:
+        if row["scenario"] in {"fast-corrected-8g", "fast-many-8g", "fast-32files-8g"}:
+            for repeat in range(3):
+                rows.append(dict(row, repeat=repeat, wall_s=max(15, row["wall_s"])))
+        else:
+            rows.append(row)
+    data["rows"] = rows
+    data_path.write_text(json.dumps(data))
     page = build(tmp_path).read_text()
-    start, end = page.index('<section id="rails">'), page.index('<section id="nfs">')
+    start, end = page.index('<section id="rails">'), page.index('<section id="method">')
     scoped = page[start:end]
     assert scoped.count('class="comparison-case"') == 3
     assert "<strong>Only these three comparisons" in scoped
-    assert 'id="lan-keyed-small"' not in scoped
+    assert 'id="lan-repeat-small"' not in scoped
     assert page.count("<strong>Only these three comparisons") == 1
+
+
+def test_short_single_failed_or_incomplete_series_are_not_reported():
+    from syq_bench.rclone_public import reportable
+
+    rows = [dict(sample(), repeat=i, wall_s=20) for i in range(3)]
+    assert reportable(rows)
+    assert not reportable(rows[:1])
+    rows[2]["wall_s"] = 9.9
+    assert not reportable(rows)
+    rows[2]["wall_s"] = 20
+    rows[2]["content_verified"] = False
+    assert not reportable(rows)
+    rows[2]["content_verified"] = True
+    rows[2]["repeat"] = 1
+    assert not reportable(rows)

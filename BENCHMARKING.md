@@ -131,9 +131,10 @@ logs and speculative roadmap items do not belong in this document.
 
 ## Rclone comparison presentation (2026-09-11)
 
-The separate rclone page combines explicitly labelled screening data with
-replacement WAN measurements as they complete; it remains a draft pending
-publication review.
+The separate rclone page charts only configurations with three verified copies,
+all taking at least ten seconds. Earlier screening data remains downloadable but
+is not charted. Sections awaiting replacements have a short placeholder. The
+page remains a draft pending publication review.
 Speeds use the same dataset-bytes / mean-command-time calculation and decimal
 units as the main page, with seconds and observed repeat ranges also visible.
 Keep bars adjacent on a shared scale within each case, followed by a compact
@@ -150,6 +151,12 @@ not pooled into the timing results or treated as maximum-throughput evidence. Un
 remain in the raw data but are not rendered as an appendix or a details page.
 Show nominal sender ceilings only from consistent recorded NIC ratings, without
 treating per-rail ratings as measured end-to-end throughput.
+
+For the replacement LAN small-file series, use identical source preparation for
+each tool: read all source files before timing and copy to a new empty destination.
+Describe this once as the procedure, without repeated cache warnings. Keep precise
+cache controls in the data. The public section order is LAN, WAN, mounted NFS,
+local filesystem, then multi-rail LAN.
 
 The reporting campaign requires three successful verified runs per setting in
 rotated order. Calibrate the fastest tool to at least ten seconds as a starting

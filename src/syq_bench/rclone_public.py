@@ -136,7 +136,8 @@ def results_table(rows: list[dict]) -> str:
                 )
             body.append(
                 f'</div><div class="copy-speed"><strong>{rate(speed)}</strong>'
-                f"<small>{seconds:.3f} s mean · {len(group)} run(s)</small></div>"
+                f"<small>{seconds:.3f} s mean · {len(group)} measured "
+                f"{'copy' if len(group) == 1 else 'copies'}</small></div>"
             )
         else:
             body.append('<div class="copy-track"></div><div class="copy-speed">No verified speed</div>')
@@ -163,6 +164,20 @@ def results_table(rows: list[dict]) -> str:
     return "".join(body)
 
 
+def reportable(rows: list[dict]) -> bool:
+    """Only show repeated, verified copies whose fastest duration is at least ten seconds."""
+    groups = defaultdict(list)
+    for row in rows:
+        groups[row["tool"]].append(row)
+    return bool(groups) and all(
+        len(group) == 3
+        and {r["repeat"] for r in group} == {0, 1, 2}
+        and measurements(group) is not None
+        and min(r["wall_s"] for r in group) >= 10
+        for group in groups.values()
+    )
+
+
 def build(root: Path) -> Path:
     data = json.loads((root / "site/data/rclone-exploratory.json").read_text())
     body = (root / "site/rclone-body.html").read_text()
@@ -170,10 +185,13 @@ def build(root: Path) -> Path:
     rail_intro, after = remainder.split("<!-- /MULTIRAIL -->")
     body = before + after
     featured = []
+    eligible = set()
     for case in data["featured"]:
         rows = [r for r in data["rows"] if r["scenario"] == case["id"]]
         if not rows:
             raise ValueError(f"Missing case: {case['id']}")
+        if reportable(rows):
+            eligible.add(case["id"])
         featured.append(
             f'<section class="comparison-case" id="{escape(case["id"])}">'
             f"<h3>{escape(case['title'])}</h3><p>{escape(case['workload'])}</p>"
@@ -181,15 +199,15 @@ def build(root: Path) -> Path:
             f"{results_table(rows)}</section>"
         )
     sections = [
+        ("lan", "LAN", ["lan-repeat-small"]),
         ("wan", "WAN", ["wan-repeat-one8g", "wan-repeat-many32g"]),
-        ("lan", "LAN", ["lan-keyed-small"]),
-        ("rails", "Multi-rail LAN", ["fast-corrected-8g", "fast-many-8g", "fast-32files-8g"]),
         (
             "nfs",
             "Mounted NFS",
             ["main-write", "calibration-read", "raid-explore-nfs-large-write", "raid-explore-nfs-large-read"],
         ),
         ("local", "Local filesystem", ["raid-explore-local-small", "raid-explore-local-large"]),
+        ("rails", "Multi-rail LAN", ["fast-corrected-8g", "fast-many-8g", "fast-32files-8g"]),
     ]
     rendered = dict(zip((c["id"] for c in data["featured"]), featured, strict=True))
     titles = {c["id"]: c["title"] for c in data["featured"]}
@@ -198,10 +216,13 @@ def build(root: Path) -> Path:
     content, links = [], []
     for anchor, label, cases in sections:
         content.append(f'<section id="{anchor}"><h2>{label}</h2>')
-        if anchor == "rails":
+        available = [case for case in cases if case in eligible]
+        if not available:
+            content.append("<p>Results forthcoming.</p>")
+        if anchor == "rails" and available:
             content.append(rail_intro)
         links.append(f'<a class="nav-item comparison-nav-group" href="#{anchor}">{label}</a>')
-        for case in cases:
+        for case in available:
             content.append(rendered[case])
             links.append(f'<a class="nav-item comparison-nav-case" href="#{case}">{escape(titles[case])}</a>')
         content.append("</section>")
