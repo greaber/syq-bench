@@ -210,10 +210,10 @@ def build(root: Path) -> Path:
         (
             "nfs",
             "Mounted NFS",
-            ["main-write", "calibration-read", "raid-explore-nfs-large-write", "raid-explore-nfs-large-read"],
+            ["main-write", "nfs-repeat-small-read", "raid-explore-nfs-large-write", "raid-explore-nfs-large-read"],
         ),
         ("local", "Local filesystem", ["raid-explore-local-small", "raid-explore-local-large"]),
-        ("rails", "Multi-rail LAN", ["fast-corrected-8g", "fast-many-8g", "fast-32files-8g"]),
+        ("rails", "Multi-rail LAN", ["fast-corrected-8g"]),
     ]
     rendered = dict(zip((c["id"] for c in data["featured"]), featured, strict=True))
     titles = {c["id"]: c["title"] for c in data["featured"]}
@@ -233,7 +233,8 @@ def build(root: Path) -> Path:
             content.append("<p>Results forthcoming.</p>")
         if anchor == "rails" and available:
             content.append(rail_intro)
-        links.append(f'<a class="nav-item comparison-nav-group" href="#{anchor}">{label}</a>')
+        nav_class = "comparison-nav-subgroup" if anchor in {"local", "rails"} else "comparison-nav-group"
+        links.append(f'<a class="nav-item {nav_class}" href="#{anchor}">{label}</a>')
         for case in available:
             content.append(rendered[case])
             links.append(f'<a class="nav-item comparison-nav-case" href="#{case}">{escape(titles[case])}</a>')

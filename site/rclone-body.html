@@ -18,6 +18,7 @@ main pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px;line-height:
 .copy-commands{padding:.6rem;background:#8881}.copy-data,.comparison-note{font-size:15px}
 .comparison-case{margin:1.5rem 0}.comparison-case>p{margin:.5rem 0}
 #benchmark-sidebar .comparison-nav-group{font-weight:700;margin-top:.8rem;border-top:1px solid var(--border,#8886);padding-top:.6rem}
+#benchmark-sidebar .comparison-nav-subgroup{font-weight:600;padding-left:1rem;margin-top:.5rem}
 #benchmark-sidebar .comparison-nav-case{font-size:12px;padding-left:1rem}
 @media(max-width:700px){.copy-chart-row{grid-template-columns:minmax(0,1fr) 110px;gap:.2rem .6rem;padding:.5rem 0}.copy-label{grid-column:1/-1}.copy-speed strong{font-size:16px}.copy-track{min-width:0}.copy-label small{display:inline;margin-left:.5rem}}
 </style>
@@ -34,7 +35,7 @@ Commands use placeholder paths and servers.</p>
 </section>
 <div id="results"><!-- RESULTS --></div>
 <!-- MULTIRAIL -->
-<p><strong>Only these three comparisons use eight network paths for syq versus one for rclone.
+<p><strong>Only this comparison uses eight network paths for syq versus one for rclone.
 This is not a comparison with equal network resources.</strong></p>
 <p>A rail is an independent network path, usually a NIC port, not necessarily a separate card.
 Each is rated at 400 Gb/s (50 GB/s). The receiver was busy and transfers were short,

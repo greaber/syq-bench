@@ -134,7 +134,7 @@ logs and speculative roadmap items do not belong in this document.
 As of 2026-09-12, main comparisons require three verified copies per setting.
 Ten seconds is a screening threshold for competitor copies, not a reason to hide
 faster syq copies. Short syq timings alone do not establish setup domination.
-Selected same-filesystem large-copy and multi-rail cases appear separately under
+One same-filesystem large-copy example and one single-file multi-rail example appear under
 “Filesystem and network capabilities”; verified single measurements are accepted
 there, with counts shown normally beside speeds. These demonstrate the tested
 capabilities, not stable peak throughput or proof of the entire speedup's cause.
@@ -147,8 +147,8 @@ block of exact commands. Describe file sizes, counts, placement and preparation
 in plain language; optional reproduction instructions stay outside the main flow.
 A linked standalone generator provides an optional procedure; it did not produce
 the captured data. The page groups selected comparisons by WAN, LAN, NFS and
-local filesystem, with each comparison linked in the sidebar. The three fast-fabric
-cases have their own multi-rail section, with one bold notice of unequal rail use.
+local filesystem, with each comparison linked in the sidebar. One fast-fabric
+case appears in the multi-rail subsection, with one bold notice of unequal rail use.
 Other sections do not inherit that limitation. A separate rate-capped SFTP
 diagnostic confirmed that rclone can use both bonded ports, with uneven traffic
 distribution. Its counters and idle baseline are retained as diagnostic data,
@@ -157,7 +157,7 @@ remain in the raw data but are not rendered as an appendix or a details page.
 Show nominal sender ceilings only from consistent recorded NIC ratings, without
 treating per-rail ratings as measured end-to-end throughput.
 
-For the replacement LAN small-file series, use identical source preparation for
+For the replacement LAN and NFS-read small-file series, use identical source preparation for
 each tool: read all source files before timing and copy to a new empty destination.
 Describe this once as the procedure, without repeated cache warnings. Keep precise
 cache controls in the data. The public section order is LAN, WAN, mounted NFS,

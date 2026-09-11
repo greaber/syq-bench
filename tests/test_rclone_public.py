@@ -163,7 +163,7 @@ def test_page_only_renders_selected_comparisons_with_sidebar_links(tmp_path):
         assert text not in page
 
 
-def test_multi_rail_notice_is_scoped_to_three_fast_fabric_cases(tmp_path):
+def test_multi_rail_notice_is_scoped_to_one_fast_fabric_case(tmp_path):
     import shutil
 
     from syq_bench.rclone_public import build
@@ -172,10 +172,15 @@ def test_multi_rail_notice_is_scoped_to_three_fast_fabric_cases(tmp_path):
     page = build(tmp_path).read_text()
     start, end = page.index('<section id="rails">'), page.index('<section id="method">')
     scoped = page[start:end]
-    assert scoped.count('class="comparison-case"') == 3
-    assert "<strong>Only these three comparisons" in scoped
+    assert scoped.count('class="comparison-case"') == 1
+    assert "<strong>Only this comparison" in scoped
     assert 'id="lan-repeat-small"' not in scoped
-    assert page.count("<strong>Only these three comparisons") == 1
+    assert page.count("<strong>Only this comparison") == 1
+    start = page.index('<section id="capabilities">')
+    end = page.index('<section id="method">')
+    assert page[start:end].count('class="comparison-case"') == 2
+    assert 'id="fast-many-8g"' not in page
+    assert 'id="fast-32files-8g"' not in page
 
 
 def test_short_single_failed_or_incomplete_series_are_not_reported():

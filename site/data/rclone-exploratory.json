@@ -58,15 +58,15 @@
       }
     },
     {
-      "id": "calibration-read",
+      "id": "nfs-repeat-small-read",
       "title": "Small files \u2190 mounted NFS",
-      "workload": "10,000 \u00d7 4 KiB files in 256 directories. Mounted NFSv4.2 source \u2192 local /tmp destination.",
-      "caveat": "Subsecond runs: too short for a dependable ranking.",
+      "workload": "400,000 \u00d7 4 KiB files in 256 directories (1.53 GiB total). Mounted NFSv4.2 source \u2192 local XFS RAID destination.",
+      "caveat": "Source file contents and metadata were read before every timed copy; each destination started empty.",
       "preparation": {
-        "files": 10000,
+        "files": 400000,
         "size": 4096,
         "directories": 256,
-        "original": "Original screening: generated pseudorandom file contents with seed 9911; round-robin placement in numbered directories. The harness generated data with O_DIRECT where supported and requested fixture-page eviction with fadvise; metadata caches stayed warm. NFS server cache was not controlled."
+        "seed": 9911
       }
     },
     {
@@ -140,32 +140,6 @@
         "size": 8589934592,
         "directories": 0,
         "original": "Original screening: generated pseudorandom file contents with seed 9911; large files in the source tree. The harness generated data with O_DIRECT where supported and requested fixture-page eviction with fadvise; metadata caches stayed warm. Tmpfs remained memory-resident; the original fixture also included an empty O_DIRECT probe file."
-      },
-      "presentation": "capability"
-    },
-    {
-      "id": "fast-many-8g",
-      "title": "Fast fabric: eight large files",
-      "workload": "Eight \u00d7 1 GiB files, tmpfs \u2192 tmpfs on the same fast-fabric hosts.",
-      "caveat": "Timing includes an empty fixture probe.",
-      "preparation": {
-        "files": 8,
-        "size": 1073741824,
-        "directories": 8,
-        "original": "Original screening: generated pseudorandom file contents with seed 9911; one large file per numbered directory. The harness generated data with O_DIRECT where supported and requested fixture-page eviction with fadvise; metadata caches stayed warm. Tmpfs remained memory-resident; the original fixture also included an empty O_DIRECT probe file."
-      },
-      "presentation": "capability"
-    },
-    {
-      "id": "fast-32files-8g",
-      "title": "Fast fabric: 32 large files",
-      "workload": "32 \u00d7 256 MiB files, tmpfs \u2192 tmpfs on the same fast-fabric hosts.",
-      "caveat": "Timing includes an empty fixture probe.",
-      "preparation": {
-        "files": 32,
-        "size": 268435456,
-        "directories": 32,
-        "original": "Original screening: generated pseudorandom file contents with seed 9911; one large file per numbered directory. The harness generated data with O_DIRECT where supported and requested fixture-page eviction with fadvise; metadata caches stayed warm. Tmpfs remained memory-resident; the original fixture also included an empty O_DIRECT probe file."
       },
       "presentation": "capability"
     }
@@ -10476,6 +10450,399 @@
           "TLS_KEY_FILE"
         ],
         "authentication": "username/password via environment; client password obscured; certificate verified"
+      }
+    },
+    {
+      "scenario": "nfs-repeat-small-read",
+      "tool": "syq",
+      "repeat": 0,
+      "bytes": 1638400000,
+      "files": 400000,
+      "wall_s": 20.94273946597241,
+      "argv": [
+        "syq",
+        "rsync",
+        "-a",
+        "--no-progress",
+        "SOURCE/",
+        "DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular files and directories: membership, type, mode, uid, gid, mtime_ns; file contents SHA256; root excluded",
+        "mismatches": 0,
+        "entries": 400256
+      },
+      "recorded_status": "verified",
+      "case_error": false,
+      "seed": 9911,
+      "protocol": {
+        "repeats": 3,
+        "cache": "source file contents and metadata read before every timed copy",
+        "durable": false,
+        "verify": true,
+        "tool_timeout": 900
+      },
+      "cache": "warm source data and metadata",
+      "cache_limitations": [
+        "NFS server caches and other clients uncontrolled; shared host; no final durability flush."
+      ],
+      "filesystems": {
+        "source": "mounted NFSv4.2",
+        "destination": "XFS RAID"
+      },
+      "tool_identity": {
+        "version": "syq 0.5.2\n",
+        "sha256": "5e4586bdc9706834cc907ff087afed57180e918e7459f9cefb7fda4e7973dbff"
+      },
+      "runner_sha256": "07c92bf2c0129cec1bcf58c92100c952cc3a533366a51af338723ed75a86f3ab",
+      "source_manifest_sha256": "2c6bef5d1c6b0189faf701038e058e2c793832b04c3cab742e2efba7a751a8af",
+      "capture_sha256": "1918c6049673538c1a5e68d81cf01a5f66ae5b2f88d44679988eaf90247bdb71",
+      "load_after": [
+        20.25390625,
+        14.40966796875,
+        10.3916015625
+      ],
+      "stage": "three-repeat series",
+      "preparation": {
+        "files": 400000,
+        "size": 4096,
+        "directories": 256,
+        "seed": 9911,
+        "algorithm": "Sequential Python Random.randbytes per file; round-robin directories; mtime fixed to 1700000000."
+      }
+    },
+    {
+      "scenario": "nfs-repeat-small-read",
+      "tool": "syq",
+      "repeat": 1,
+      "bytes": 1638400000,
+      "files": 400000,
+      "wall_s": 26.850945543963462,
+      "argv": [
+        "syq",
+        "rsync",
+        "-a",
+        "--no-progress",
+        "SOURCE/",
+        "DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular files and directories: membership, type, mode, uid, gid, mtime_ns; file contents SHA256; root excluded",
+        "mismatches": 0,
+        "entries": 400256
+      },
+      "recorded_status": "verified",
+      "case_error": false,
+      "seed": 9911,
+      "protocol": {
+        "repeats": 3,
+        "cache": "source file contents and metadata read before every timed copy",
+        "durable": false,
+        "verify": true,
+        "tool_timeout": 900
+      },
+      "cache": "warm source data and metadata",
+      "cache_limitations": [
+        "NFS server caches and other clients uncontrolled; shared host; no final durability flush."
+      ],
+      "filesystems": {
+        "source": "mounted NFSv4.2",
+        "destination": "XFS RAID"
+      },
+      "tool_identity": {
+        "version": "syq 0.5.2\n",
+        "sha256": "5e4586bdc9706834cc907ff087afed57180e918e7459f9cefb7fda4e7973dbff"
+      },
+      "runner_sha256": "07c92bf2c0129cec1bcf58c92100c952cc3a533366a51af338723ed75a86f3ab",
+      "source_manifest_sha256": "2c6bef5d1c6b0189faf701038e058e2c793832b04c3cab742e2efba7a751a8af",
+      "capture_sha256": "c64c368e84be176a34e76a62ea30f51fa7f1db07b0bd7b2af73a70ed47240914",
+      "load_after": [
+        22.8505859375,
+        18.68212890625,
+        13.5927734375
+      ],
+      "stage": "three-repeat series",
+      "preparation": {
+        "files": 400000,
+        "size": 4096,
+        "directories": 256,
+        "seed": 9911,
+        "algorithm": "Sequential Python Random.randbytes per file; round-robin directories; mtime fixed to 1700000000."
+      }
+    },
+    {
+      "scenario": "nfs-repeat-small-read",
+      "tool": "syq",
+      "repeat": 2,
+      "bytes": 1638400000,
+      "files": 400000,
+      "wall_s": 22.095957934157923,
+      "argv": [
+        "syq",
+        "rsync",
+        "-a",
+        "--no-progress",
+        "SOURCE/",
+        "DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular files and directories: membership, type, mode, uid, gid, mtime_ns; file contents SHA256; root excluded",
+        "mismatches": 0,
+        "entries": 400256
+      },
+      "recorded_status": "verified",
+      "case_error": false,
+      "seed": 9911,
+      "protocol": {
+        "repeats": 3,
+        "cache": "source file contents and metadata read before every timed copy",
+        "durable": false,
+        "verify": true,
+        "tool_timeout": 900
+      },
+      "cache": "warm source data and metadata",
+      "cache_limitations": [
+        "NFS server caches and other clients uncontrolled; shared host; no final durability flush."
+      ],
+      "filesystems": {
+        "source": "mounted NFSv4.2",
+        "destination": "XFS RAID"
+      },
+      "tool_identity": {
+        "version": "syq 0.5.2\n",
+        "sha256": "5e4586bdc9706834cc907ff087afed57180e918e7459f9cefb7fda4e7973dbff"
+      },
+      "runner_sha256": "07c92bf2c0129cec1bcf58c92100c952cc3a533366a51af338723ed75a86f3ab",
+      "source_manifest_sha256": "2c6bef5d1c6b0189faf701038e058e2c793832b04c3cab742e2efba7a751a8af",
+      "capture_sha256": "ab43149a20a8ed128bd57c8fd520e8c32741d329a1ac3ab52f097d1cab76cfc7",
+      "load_after": [
+        21.2626953125,
+        17.955078125,
+        13.8095703125
+      ],
+      "stage": "three-repeat series",
+      "preparation": {
+        "files": 400000,
+        "size": 4096,
+        "directories": 256,
+        "seed": 9911,
+        "algorithm": "Sequential Python Random.randbytes per file; round-robin directories; mtime fixed to 1700000000."
+      }
+    },
+    {
+      "scenario": "nfs-repeat-small-read",
+      "tool": "rclone-t64",
+      "repeat": 0,
+      "bytes": 1638400000,
+      "files": 400000,
+      "wall_s": 31.012333240825683,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--metadata",
+        "--create-empty-src-dirs",
+        "--transfers",
+        "64",
+        "--stats",
+        "5s",
+        "--stats-one-line",
+        "--stats-log-level",
+        "NOTICE",
+        ":local:SOURCE",
+        ":local:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular files and directories: membership, type, mode, uid, gid, mtime_ns; file contents SHA256; root excluded",
+        "mismatches": 0,
+        "entries": 400256
+      },
+      "recorded_status": "verified",
+      "case_error": false,
+      "seed": 9911,
+      "protocol": {
+        "repeats": 3,
+        "cache": "source file contents and metadata read before every timed copy",
+        "durable": false,
+        "verify": true,
+        "tool_timeout": 900
+      },
+      "cache": "warm source data and metadata",
+      "cache_limitations": [
+        "NFS server caches and other clients uncontrolled; shared host; no final durability flush."
+      ],
+      "filesystems": {
+        "source": "mounted NFSv4.2",
+        "destination": "XFS RAID"
+      },
+      "tool_identity": {
+        "version": "rclone v1.75.1\n- os/version: ubuntu 22.04 (64 bit)\n- os/kernel: 5.15.0-126-generic (x86_64)\n- os/type: linux\n- os/arch: amd64\n- go/version: go1.26.8\n- go/linking: static\n- go/tags: none\n",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      },
+      "runner_sha256": "07c92bf2c0129cec1bcf58c92100c952cc3a533366a51af338723ed75a86f3ab",
+      "source_manifest_sha256": "2c6bef5d1c6b0189faf701038e058e2c793832b04c3cab742e2efba7a751a8af",
+      "capture_sha256": "a0bb1f3bcea81ebb2c2340fe953a1cb350f6ee90a4ab951495f685994cf698db",
+      "load_after": [
+        31.61572265625,
+        17.4326171875,
+        11.76318359375
+      ],
+      "stage": "three-repeat series",
+      "preparation": {
+        "files": 400000,
+        "size": 4096,
+        "directories": 256,
+        "seed": 9911,
+        "algorithm": "Sequential Python Random.randbytes per file; round-robin directories; mtime fixed to 1700000000."
+      }
+    },
+    {
+      "scenario": "nfs-repeat-small-read",
+      "tool": "rclone-t64",
+      "repeat": 1,
+      "bytes": 1638400000,
+      "files": 400000,
+      "wall_s": 52.238320246106014,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--metadata",
+        "--create-empty-src-dirs",
+        "--transfers",
+        "64",
+        "--stats",
+        "5s",
+        "--stats-one-line",
+        "--stats-log-level",
+        "NOTICE",
+        ":local:SOURCE",
+        ":local:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular files and directories: membership, type, mode, uid, gid, mtime_ns; file contents SHA256; root excluded",
+        "mismatches": 0,
+        "entries": 400256
+      },
+      "recorded_status": "verified",
+      "case_error": false,
+      "seed": 9911,
+      "protocol": {
+        "repeats": 3,
+        "cache": "source file contents and metadata read before every timed copy",
+        "durable": false,
+        "verify": true,
+        "tool_timeout": 900
+      },
+      "cache": "warm source data and metadata",
+      "cache_limitations": [
+        "NFS server caches and other clients uncontrolled; shared host; no final durability flush."
+      ],
+      "filesystems": {
+        "source": "mounted NFSv4.2",
+        "destination": "XFS RAID"
+      },
+      "tool_identity": {
+        "version": "rclone v1.75.1\n- os/version: ubuntu 22.04 (64 bit)\n- os/kernel: 5.15.0-126-generic (x86_64)\n- os/type: linux\n- os/arch: amd64\n- go/version: go1.26.8\n- go/linking: static\n- go/tags: none\n",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      },
+      "runner_sha256": "07c92bf2c0129cec1bcf58c92100c952cc3a533366a51af338723ed75a86f3ab",
+      "source_manifest_sha256": "2c6bef5d1c6b0189faf701038e058e2c793832b04c3cab742e2efba7a751a8af",
+      "capture_sha256": "b71d561431ff8a7d49427920643cf4653ee11e2dbde909512dc468d838481d3e",
+      "load_after": [
+        34.8369140625,
+        20.49267578125,
+        13.4404296875
+      ],
+      "stage": "three-repeat series",
+      "preparation": {
+        "files": 400000,
+        "size": 4096,
+        "directories": 256,
+        "seed": 9911,
+        "algorithm": "Sequential Python Random.randbytes per file; round-robin directories; mtime fixed to 1700000000."
+      }
+    },
+    {
+      "scenario": "nfs-repeat-small-read",
+      "tool": "rclone-t64",
+      "repeat": 2,
+      "bytes": 1638400000,
+      "files": 400000,
+      "wall_s": 47.332721411949024,
+      "argv": [
+        "rclone",
+        "copy",
+        "--config",
+        "/dev/null",
+        "--metadata",
+        "--create-empty-src-dirs",
+        "--transfers",
+        "64",
+        "--stats",
+        "5s",
+        "--stats-one-line",
+        "--stats-log-level",
+        "NOTICE",
+        ":local:SOURCE",
+        ":local:DESTINATION"
+      ],
+      "exit_code": 0,
+      "content_verified": true,
+      "metadata": {
+        "scope": "regular files and directories: membership, type, mode, uid, gid, mtime_ns; file contents SHA256; root excluded",
+        "mismatches": 0,
+        "entries": 400256
+      },
+      "recorded_status": "verified",
+      "case_error": false,
+      "seed": 9911,
+      "protocol": {
+        "repeats": 3,
+        "cache": "source file contents and metadata read before every timed copy",
+        "durable": false,
+        "verify": true,
+        "tool_timeout": 900
+      },
+      "cache": "warm source data and metadata",
+      "cache_limitations": [
+        "NFS server caches and other clients uncontrolled; shared host; no final durability flush."
+      ],
+      "filesystems": {
+        "source": "mounted NFSv4.2",
+        "destination": "XFS RAID"
+      },
+      "tool_identity": {
+        "version": "rclone v1.75.1\n- os/version: ubuntu 22.04 (64 bit)\n- os/kernel: 5.15.0-126-generic (x86_64)\n- os/type: linux\n- os/arch: amd64\n- go/version: go1.26.8\n- go/linking: static\n- go/tags: none\n",
+        "sha256": "f66d8c1d552ad90296a11bc8b46d56a7fa5da1a7fa05e7ca522d95df92c4a4c0"
+      },
+      "runner_sha256": "07c92bf2c0129cec1bcf58c92100c952cc3a533366a51af338723ed75a86f3ab",
+      "source_manifest_sha256": "2c6bef5d1c6b0189faf701038e058e2c793832b04c3cab742e2efba7a751a8af",
+      "capture_sha256": "5f8d082a2bfee6979950404494f9a310df20f48550d3434080fce0d9875cb687",
+      "load_after": [
+        33.076171875,
+        20.64453125,
+        15.13818359375
+      ],
+      "stage": "three-repeat series",
+      "preparation": {
+        "files": 400000,
+        "size": 4096,
+        "directories": 256,
+        "seed": 9911,
+        "algorithm": "Sequential Python Random.randbytes per file; round-robin directories; mtime fixed to 1700000000."
       }
     }
   ],
