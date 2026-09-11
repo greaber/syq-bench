@@ -164,17 +164,23 @@ def results_table(rows: list[dict]) -> str:
     return "".join(body)
 
 
-def reportable(rows: list[dict]) -> bool:
-    """Only show repeated, verified copies whose fastest duration is at least ten seconds."""
+def reportable(rows: list[dict], *, capability: bool = False) -> bool:
+    """Require verified copies; main comparisons require repeats and competitor duration."""
     groups = defaultdict(list)
     for row in rows:
         groups[row["tool"]].append(row)
     return bool(groups) and all(
-        len(group) == 3
-        and {r["repeat"] for r in group} == {0, 1, 2}
-        and measurements(group) is not None
-        and min(r["wall_s"] for r in group) >= 10
-        for group in groups.values()
+        measurements(group) is not None
+        and (
+            (len(group) == 1 and group[0]["repeat"] == 0)
+            if capability
+            else (
+                len(group) == 3
+                and {r["repeat"] for r in group} == {0, 1, 2}
+                and (tool == "syq" or min(r["wall_s"] for r in group) >= 10)
+            )
+        )
+        for tool, group in groups.items()
     )
 
 
@@ -190,7 +196,7 @@ def build(root: Path) -> Path:
         rows = [r for r in data["rows"] if r["scenario"] == case["id"]]
         if not rows:
             raise ValueError(f"Missing case: {case['id']}")
-        if reportable(rows):
+        if reportable(rows, capability=case.get("presentation") == "capability"):
             eligible.add(case["id"])
         featured.append(
             f'<section class="comparison-case" id="{escape(case["id"])}">'
@@ -215,7 +221,13 @@ def build(root: Path) -> Path:
         raise ValueError("Every featured comparison must appear once in navigation")
     content, links = [], []
     for anchor, label, cases in sections:
-        content.append(f'<section id="{anchor}"><h2>{label}</h2>')
+        if anchor == "local":
+            content.append('<section id="capabilities"><h2>Filesystem and network capabilities</h2>')
+            links.append(
+                '<a class="nav-item comparison-nav-group" href="#capabilities">Filesystem and network capabilities</a>'
+            )
+        heading = "h3" if anchor in {"local", "rails"} else "h2"
+        content.append(f'<section id="{anchor}"><{heading}>{label}</{heading}>')
         available = [case for case in cases if case in eligible]
         if not available:
             content.append("<p>Results forthcoming.</p>")
@@ -226,6 +238,8 @@ def build(root: Path) -> Path:
             content.append(rendered[case])
             links.append(f'<a class="nav-item comparison-nav-case" href="#{case}">{escape(titles[case])}</a>')
         content.append("</section>")
+        if anchor == "rails":
+            content.append("</section>")
     body = body.replace("<!-- RESULTS -->", "".join(content))
     nav = "".join(links) + "".join(
         f'<a class="nav-item" href="#{anchor}">{label}</a>'

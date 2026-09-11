@@ -115,7 +115,8 @@
         "size": 2147483648,
         "directories": 0,
         "original": "Original screening: generated pseudorandom file contents with seed 9911; large files in the source tree. The harness generated data with O_DIRECT where supported and requested fixture-page eviction with fadvise; metadata caches stayed warm. "
-      }
+      },
+      "presentation": "capability"
     },
     {
       "id": "lan-repeat-small",
@@ -139,7 +140,8 @@
         "size": 8589934592,
         "directories": 0,
         "original": "Original screening: generated pseudorandom file contents with seed 9911; large files in the source tree. The harness generated data with O_DIRECT where supported and requested fixture-page eviction with fadvise; metadata caches stayed warm. Tmpfs remained memory-resident; the original fixture also included an empty O_DIRECT probe file."
-      }
+      },
+      "presentation": "capability"
     },
     {
       "id": "fast-many-8g",
@@ -151,7 +153,8 @@
         "size": 1073741824,
         "directories": 8,
         "original": "Original screening: generated pseudorandom file contents with seed 9911; one large file per numbered directory. The harness generated data with O_DIRECT where supported and requested fixture-page eviction with fadvise; metadata caches stayed warm. Tmpfs remained memory-resident; the original fixture also included an empty O_DIRECT probe file."
-      }
+      },
+      "presentation": "capability"
     },
     {
       "id": "fast-32files-8g",
@@ -163,7 +166,8 @@
         "size": 268435456,
         "directories": 32,
         "original": "Original screening: generated pseudorandom file contents with seed 9911; one large file per numbered directory. The harness generated data with O_DIRECT where supported and requested fixture-page eviction with fadvise; metadata caches stayed warm. Tmpfs remained memory-resident; the original fixture also included an empty O_DIRECT probe file."
-      }
+      },
+      "presentation": "capability"
     }
   ],
   "rows": [

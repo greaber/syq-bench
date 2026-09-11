@@ -131,10 +131,15 @@ logs and speculative roadmap items do not belong in this document.
 
 ## Rclone comparison presentation (2026-09-11)
 
-The separate rclone page charts only configurations with three verified copies,
-all taking at least ten seconds. Earlier screening data remains downloadable but
-is not charted. Sections awaiting replacements have a short placeholder. The
-page remains a draft pending publication review.
+As of 2026-09-12, main comparisons require three verified copies per setting.
+Ten seconds is a screening threshold for competitor copies, not a reason to hide
+faster syq copies. Short syq timings alone do not establish setup domination.
+Selected same-filesystem large-copy and multi-rail cases appear separately under
+“Filesystem and network capabilities”; verified single measurements are accepted
+there, with counts shown normally beside speeds. These demonstrate the tested
+capabilities, not stable peak throughput or proof of the entire speedup's cause.
+Other screening data remains downloadable but is not charted. The page remains
+a draft pending publication review.
 Speeds use the same dataset-bytes / mean-command-time calculation and decimal
 units as the main page, with seconds and observed repeat ranges also visible.
 Keep bars adjacent on a shared scale within each case, followed by a compact
@@ -156,16 +161,17 @@ For the replacement LAN small-file series, use identical source preparation for
 each tool: read all source files before timing and copy to a new empty destination.
 Describe this once as the procedure, without repeated cache warnings. Keep precise
 cache controls in the data. The public section order is LAN, WAN, mounted NFS,
-local filesystem, then multi-rail LAN.
+then filesystem and network capabilities (local filesystem and multi-rail LAN).
 
-The reporting campaign requires three successful verified runs per setting in
-rotated order. Calibrate the fastest tool to at least ten seconds as a starting
-target, preserving the workload's file-size distribution. WAN payload time must
+Main reporting comparisons require three successful verified runs per setting in
+rotated order. Aim for at least ten seconds during calibration, preserving the
+workload's file-size distribution; the renderer applies that floor to competitors. WAN payload time must
 also substantially exceed startup; elapsed duration alone does not establish
 that. Replace short runs rather than presenting their setup-heavy rates as
 sustained throughput. Preserve old, failed and unfavorable screening data for
-inspection, explicitly outside publication acceptance. Matched rail controls and
-cache, metadata and authentication review remain necessary before publication.
+inspection, explicitly outside publication acceptance. Matched rail controls are needed to isolate rail count as a cause; unequal-rail
+demonstrations instead disclose the tested resource difference. Cache, metadata
+and authentication review remain necessary before publication.
 
 For the WAN replacement, use memory-resident pseudorandom source files and fresh
 remote RAID destinations to isolate the route from source disk throughput.

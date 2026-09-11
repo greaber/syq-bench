@@ -149,7 +149,10 @@ def test_page_only_renders_selected_comparisons_with_sidebar_links(tmp_path):
     data = json.loads((ROOT / "site/data/rclone-exploratory.json").read_text())
     count = 0
     for case in data["featured"]:
-        shown = reportable([r for r in data["rows"] if r["scenario"] == case["id"]])
+        shown = reportable(
+            [r for r in data["rows"] if r["scenario"] == case["id"]],
+            capability=case.get("presentation") == "capability",
+        )
         assert (f'href="#{case["id"]}"' in page) == shown
         assert (f'id="{case["id"]}"' in page) == shown
         count += shown
@@ -166,17 +169,6 @@ def test_multi_rail_notice_is_scoped_to_three_fast_fabric_cases(tmp_path):
     from syq_bench.rclone_public import build
 
     shutil.copytree(ROOT / "site", tmp_path / "site")
-    data_path = tmp_path / "site/data/rclone-exploratory.json"
-    data = json.loads(data_path.read_text())
-    rows = []
-    for row in data["rows"]:
-        if row["scenario"] in {"fast-corrected-8g", "fast-many-8g", "fast-32files-8g"}:
-            for repeat in range(3):
-                rows.append(dict(row, repeat=repeat, wall_s=max(15, row["wall_s"])))
-        else:
-            rows.append(row)
-    data["rows"] = rows
-    data_path.write_text(json.dumps(data))
     page = build(tmp_path).read_text()
     start, end = page.index('<section id="rails">'), page.index('<section id="method">')
     scoped = page[start:end]
@@ -189,7 +181,7 @@ def test_multi_rail_notice_is_scoped_to_three_fast_fabric_cases(tmp_path):
 def test_short_single_failed_or_incomplete_series_are_not_reported():
     from syq_bench.rclone_public import reportable
 
-    rows = [dict(sample(), repeat=i, wall_s=20) for i in range(3)]
+    rows = [dict(sample(), tool="rclone", repeat=i, wall_s=20) for i in range(3)]
     assert reportable(rows)
     assert not reportable(rows[:1])
     rows[2]["wall_s"] = 9.9
@@ -200,3 +192,16 @@ def test_short_single_failed_or_incomplete_series_are_not_reported():
     rows[2]["content_verified"] = True
     rows[2]["repeat"] = 1
     assert not reportable(rows)
+
+
+def test_fast_syq_and_capability_results_remain_verified():
+    from syq_bench.rclone_public import reportable
+
+    rows = [dict(sample(), tool="syq", repeat=i, wall_s=0.2) for i in range(3)]
+    rows += [dict(sample(), tool="rclone", repeat=i, wall_s=15) for i in range(3)]
+    assert reportable(rows)
+    single = [rows[0], rows[3]]
+    assert reportable(single, capability=True)
+    assert not reportable(single)
+    single[0]["content_verified"] = False
+    assert not reportable(single, capability=True)
