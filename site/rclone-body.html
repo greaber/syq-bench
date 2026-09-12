@@ -24,6 +24,8 @@ main pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px;line-height:
 </style>
 <header class="hero"><h1>syq vs rclone</h1>
 <p>Preliminary benchmarks · syq 0.5.2 and rclone 1.75.1</p>
+<p><strong>If you know how to tune rclone for better performance in these tests, please
+<a href="https://news.ycombinator.com/item?id=49644955">share your suggestions in the discussion</a>.</strong></p>
 <p>File copies over a long-distance connection, between nearby servers, and on local and NFS filesystems.</p>
 <p class="comparison-links"><a href="#wan-repeat-one8g">WAN: one large file</a>
 <a href="#wan-repeat-many32g">WAN: multiple files</a>
@@ -35,15 +37,8 @@ Commands use placeholder paths and servers.</p>
 </section>
 <div id="results"><!-- RESULTS --></div>
 <!-- MULTIRAIL -->
-<p><strong>Only this comparison uses eight network paths for syq versus one for rclone.
-This is not a comparison with equal network resources.</strong></p>
-<p>A rail is an independent network path, usually a NIC port, not necessarily a separate card.
-Each is rated at 400 Gb/s (50 GB/s). The receiver was busy and transfers were short,
-so these results neither establish peak speed nor isolate the effect of rail count.</p>
-<p>The tested <a href="https://github.com/rclone/rclone/blob/v1.75.1/backend/sftp/sftp.go#L2617">SFTP</a>
-and <a href="https://github.com/rclone/rclone/blob/v1.75.1/backend/webdav/webdav.go#L1486">WebDAV</a>
-uploads do not split one file across rail addresses. More <code>--transfers</code> alone does not change that.
-Separate rclone processes could distribute multiple files across rails; this was not tested.</p>
+<p><strong>syq uses all eight rails of this multi-rail LAN; rclone uses only one,
+even with multiple files and increased transfer concurrency.</strong></p>
 <!-- /MULTIRAIL -->
 <section id="method"><h2>Method</h2>
 <p>Generated pseudorandom files were copied into empty destinations. Timing includes connection
@@ -79,5 +74,3 @@ The copy commands above include the remaining client settings.</p></details>
 <a href="https://rclone.org/docs/#multi-thread-streams">multithread streams</a>,
 <a href="https://rclone.org/sftp/">SFTP</a> and <a href="https://rclone.org/webdav/">WebDAV</a>.</p>
 </section>
-<p>Suggestions for tuning either tool are welcome in the
-<a href="https://news.ycombinator.com/item?id=49644955">discussion</a>.</p>

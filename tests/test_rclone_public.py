@@ -173,9 +173,9 @@ def test_multi_rail_notice_is_scoped_to_one_fast_fabric_case(tmp_path):
     start, end = page.index('<section id="rails">'), page.index('<section id="method">')
     scoped = page[start:end]
     assert scoped.count('class="comparison-case"') == 1
-    assert "<strong>Only this comparison" in scoped
+    assert "<strong>syq uses all eight rails of this multi-rail LAN" in scoped
     assert 'id="lan-repeat-small"' not in scoped
-    assert page.count("<strong>Only this comparison") == 1
+    assert page.count("<strong>syq uses all eight rails of this multi-rail LAN") == 1
     start = page.index('<section id="capabilities">')
     end = page.index('<section id="method">')
     assert page[start:end].count('class="comparison-case"') == 2
