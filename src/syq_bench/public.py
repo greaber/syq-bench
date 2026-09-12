@@ -530,7 +530,7 @@ def shell(title: str, body: str, nav: str = "", page: str = "index.html", *, all
     script += "<script>" + resources.files("syq_bench").joinpath("controls.js").read_text() + "</script>"
     links = [("index.html", "Benchmarks")]
     if all_results:
-        links.extend([("all-results.html", "All results"), ("rclone.html", "rclone comparison")])
+        links.extend([("rclone.html", "rclone comparison"), ("all-results.html", "More Results")])
     links.extend(
         [
             ("reproduce.html", "Reproduce a result"),
@@ -656,7 +656,7 @@ def render_public(runs: list[dict], catalog: dict | None = None, *, page: str = 
             )
         body.append("</section>")
     return shell(
-        "All results" if page == "all-results.html" else "Benchmarks",
+        "More Results" if page == "all-results.html" else "Benchmarks",
         "".join(body),
         nav,
         page=page,
@@ -666,7 +666,7 @@ def render_public(runs: list[dict], catalog: dict | None = None, *, page: str = 
 
 def method_body(*, all_results: bool = False) -> str:
     body = resources.files("syq_bench").joinpath("method-body.html").read_text()
-    return body if all_results else body.replace('href="all-results.html">All results', 'href="index.html">Results')
+    return body if all_results else body.replace('href="all-results.html">More Results', 'href="index.html">Results')
 
 
 def overview_catalog(runs: list[dict], catalog: dict) -> dict:
@@ -722,7 +722,7 @@ def render_pages(runs: list[dict], catalog: dict | None = None, reproduce_body: 
                 name,
                 {
                     "index.html": "Benchmarks",
-                    "all-results.html": "All results",
+                    "all-results.html": "More Results",
                     "method.html": "How we measure",
                     "reproduce.html": "Reproduce a result",
                 }[name],
