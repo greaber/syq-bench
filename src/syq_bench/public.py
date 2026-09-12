@@ -530,17 +530,19 @@ def shell(title: str, body: str, nav: str = "", page: str = "index.html", *, all
     script += "<script>" + resources.files("syq_bench").joinpath("controls.js").read_text() + "</script>"
     links = [("index.html", "Benchmarks")]
     if all_results:
-        links.append(("all-results.html", "All results"))
-    links.extend([("reproduce.html", "Reproduce a result"), ("method.html", "How we measure")])
+        links.extend([("rclone.html", "rclone comparison"), ("all-results.html", "More Results")])
+    links.extend(
+        [
+            ("reproduce.html", "Reproduce a result"),
+            ("method.html", "How we measure"),
+        ]
+    )
+    nav_page = page if page in {"all-results.html", "rclone.html"} else "index.html"
     page_links = "".join(
         f'<a class="page-link" href="{href}"'
         + (' aria-current="page"' if page == href else "")
         + f">{label}</a>"
-        + (
-            f'<div class="scenario-links">{nav}</div>'
-            if href == ("all-results.html" if page == "all-results.html" else "index.html") and nav
-            else ""
-        )
+        + (f'<div class="scenario-links">{nav}</div>' if href == nav_page and nav else "")
         for href, label in links
     )
     site_nav = resources.files("syq_bench").joinpath("site-nav.html").read_text()
@@ -584,6 +586,9 @@ def render_public(runs: list[dict], catalog: dict | None = None, *, page: str = 
     subtitle = (
         (catalog or {}).get("overview", {}).get("subtitle", "Measured copy performance, with reproducible tests.")
     )
+    comparison_link = (
+        '<a href="rclone.html">Preliminary rclone comparison</a>' if catalog and catalog.get("overview") else ""
+    )
     body = [
         '<header class="hero"><div><h1 class="landing-title" aria-label="syq benchmarks">'
         '<span class="landing-wordmark">syq</span> '
@@ -591,7 +596,8 @@ def render_public(runs: list[dict], catalog: dict | None = None, *, page: str = 
         f"<p>{esc(subtitle)}</p>"
         '<nav class="landing-actions" aria-label="Explore benchmarks">'
         '<a class="landing-primary" href="reproduce.html">Reproduce a result</a>'
-        '<a href="method.html">How we measure</a></nav></div></header>'
+        '<a href="method.html">How we measure</a>'
+        f"{comparison_link}</nav></div></header>"
     ]
     compact = bool(catalog and catalog.get("_overview"))
     if page == "all-results.html":
@@ -650,7 +656,7 @@ def render_public(runs: list[dict], catalog: dict | None = None, *, page: str = 
             )
         body.append("</section>")
     return shell(
-        "All results" if page == "all-results.html" else "Benchmarks",
+        "More Results" if page == "all-results.html" else "Benchmarks",
         "".join(body),
         nav,
         page=page,
@@ -660,7 +666,7 @@ def render_public(runs: list[dict], catalog: dict | None = None, *, page: str = 
 
 def method_body(*, all_results: bool = False) -> str:
     body = resources.files("syq_bench").joinpath("method-body.html").read_text()
-    return body if all_results else body.replace('href="all-results.html">All results', 'href="index.html">Results')
+    return body if all_results else body.replace('href="all-results.html">More Results', 'href="index.html">Results')
 
 
 def overview_catalog(runs: list[dict], catalog: dict) -> dict:
@@ -716,7 +722,7 @@ def render_pages(runs: list[dict], catalog: dict | None = None, reproduce_body: 
                 name,
                 {
                     "index.html": "Benchmarks",
-                    "all-results.html": "All results",
+                    "all-results.html": "More Results",
                     "method.html": "How we measure",
                     "reproduce.html": "Reproduce a result",
                 }[name],

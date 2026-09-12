@@ -128,3 +128,63 @@ See [README.md](README.md) for usage, [site/README.md](site/README.md) for page
 selection, [site/BRANDING.md](site/BRANDING.md) for presentation, and the recipes
 under `specs/` and `providers/` for setup. Implementation inventories, experiment
 logs and speculative roadmap items do not belong in this document.
+
+## Rclone comparison presentation (2026-09-11)
+
+As of 2026-09-12, main comparisons require three verified copies per setting.
+Ten seconds is a screening threshold for competitor copies, not a reason to hide
+faster syq copies. Short syq timings alone do not establish setup domination.
+One same-filesystem large-copy example and one single-file multi-rail example appear under
+“Filesystem and network capabilities”; verified single measurements are accepted
+there, with counts shown normally beside speeds. These demonstrate the tested
+capabilities, not stable peak throughput or proof of the entire speedup's cause.
+Other screening data remains downloadable but is not charted. The page remains
+a draft pending publication review.
+Speeds use the same dataset-bytes / mean-command-time calculation and decimal
+units as the main page, with seconds and observed repeat ranges also visible.
+Keep bars adjacent on a shared scale within each case, followed by a compact
+block of exact commands. Describe file sizes, counts, placement and preparation
+in plain language; optional reproduction instructions stay outside the main flow.
+A linked standalone generator provides an optional procedure; it did not produce
+the captured data. The page groups selected comparisons by WAN, LAN, NFS and
+local filesystem, with each comparison linked in the sidebar. One fast-fabric
+case appears in the multi-rail subsection, with one bold notice of unequal rail use.
+Other sections do not inherit that limitation. A separate rate-capped SFTP
+diagnostic confirmed that rclone can use both bonded ports, with uneven traffic
+distribution. Its counters and idle baseline are retained as diagnostic data,
+not pooled into the timing results or treated as maximum-throughput evidence. Unreported trials
+remain in the raw data but are not rendered as an appendix or a details page.
+Show nominal sender ceilings only from consistent recorded NIC ratings, without
+treating per-rail ratings as measured end-to-end throughput.
+
+For the replacement LAN and NFS-read small-file series, use identical source preparation for
+each tool: read all source files before timing and copy to a new empty destination.
+Describe this once as the procedure, without repeated cache warnings. Keep precise
+cache controls in the data. The public section order is LAN, WAN, mounted NFS,
+then filesystem and network capabilities (local filesystem and multi-rail LAN).
+
+Main reporting comparisons require three successful verified runs per setting in
+rotated order. Aim for at least ten seconds during calibration, preserving the
+workload's file-size distribution; the renderer applies that floor to competitors. WAN payload time must
+also substantially exceed startup; elapsed duration alone does not establish
+that. Replace short runs rather than presenting their setup-heavy rates as
+sustained throughput. Preserve old, failed and unfavorable screening data for
+inspection, explicitly outside publication acceptance. Matched rail controls are needed to isolate rail count as a cause; unequal-rail
+demonstrations instead disclose the tested resource difference. Cache, metadata
+and authentication review remain necessary before publication.
+
+For the WAN replacement, use memory-resident pseudorandom source files and fresh
+remote RAID destinations to isolate the route from source disk throughput.
+Record the outgoing NIC speed and congestion control, keep native hashing and
+whole-command startup inside timing, and verify SHA256, exact file membership,
+sizes and whole-second file mtimes afterward. Larger payloads are calibrated
+before freezing settings and collecting three repetitions. Compare rclone's
+native SFTP with external OpenSSH sharing, as well as authenticated HTTPS
+WebDAV; record local-key authentication and start any shared connection inside
+the timer. Do not call a setting globally optimal after a bounded tuning sweep.
+
+WAN startup screening uses a recorded positive finite
+upper bound on payload startup at most one fifth of its duration in every repeat.
+Use syq's planning log or the first rclone nonzero progress report (including
+one second for its timestamp precision). This is a conservative screening rule,
+not a subtraction from elapsed time or proof that later coordination is free.
