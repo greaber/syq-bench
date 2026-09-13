@@ -577,7 +577,9 @@ def test_overview_cannot_select_unaccepted_or_duplicate_comparisons(damage):
 def test_generated_page_and_links_match_current_inputs():
     assert not (ROOT / "site/downloads/syq-bench-source.zip").exists()
     module = build_module()
-    runs, catalog = module.inputs(ROOT)
+    releases = module.manifest(ROOT / "site")
+    latest = next(release for release in releases["releases"] if release["version"] == releases["latest"])
+    runs, catalog = module.inputs(ROOT, latest["catalog"])
     pages = {
         name: page
         for name, page in module.render_site(ROOT).items()
