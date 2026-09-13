@@ -172,7 +172,7 @@ def reportable(rows: list[dict], *, capability: bool = False) -> bool:
     return bool(groups) and all(
         measurements(group) is not None
         and (
-            (len(group) == 1 and group[0]["repeat"] == 0)
+            (len(group) in (1, 3) and {r["repeat"] for r in group} == set(range(len(group))))
             if capability
             else (
                 len(group) == 3
@@ -215,6 +215,8 @@ def render(root: Path, data_path: str = "data/rclone-exploratory.json", body_pat
         ("local", "Local filesystem", ["raid-explore-local-small", "raid-explore-local-large"]),
         ("rails", "Multi-rail LAN", ["fast-corrected-8g"]),
     ]
+    if any(case["id"] == "cloud-rclone-large" for case in data["featured"]):
+        sections[1][2].append("cloud-rclone-large")
     rendered = dict(zip((c["id"] for c in data["featured"]), featured, strict=True))
     titles = {c["id"]: c["title"] for c in data["featured"]}
     if sorted(rendered) != sorted(case for _, _, cases in sections for case in cases):

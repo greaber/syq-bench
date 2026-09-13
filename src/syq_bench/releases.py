@@ -71,8 +71,7 @@ def validate_identity(runs: list[dict], rclone: dict, version: str) -> None:
                 if run["tools"][tool["name"]].get("version") != "syq " + version:
                     raise ValueError("Main capture contains another syq version")
     for row in rclone["rows"]:
-        if (
-            row["tool"] == "syq"
-            and str(row.get("tool_identity", {}).get("version", "")).strip().removeprefix("syq ") != version
-        ):
+        if (row["tool"] == "syq" or row["tool"].startswith("syq-")) and str(
+            row.get("tool_identity", {}).get("version", "")
+        ).strip().removeprefix("syq ") != version:
             raise ValueError("Rclone capture contains another syq version")

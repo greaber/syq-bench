@@ -1,0 +1,495 @@
+{
+  "schema": 3,
+  "harness_version": "0.1.0",
+  "started": "2026-09-13T16:15:01+00:00",
+  "finished": "2026-09-13T16:30:53+00:00",
+  "spec": {
+    "name": "public-ext4-same",
+    "description": "Release 0.6.0 with contemporaneous 0.5.2 controls",
+    "endpoints": {
+      "source": "/path/to/empty-source-scratch",
+      "destination": "/path/to/empty-destination-scratch"
+    },
+    "tools": [
+      {
+        "name": "syq",
+        "kind": "syq",
+        "binary": "/path/to/syq",
+        "args": [
+          "rsync",
+          "-a",
+          "--stats",
+          "--no-progress",
+          "--syq-no-bootstrap"
+        ],
+        "debug": false
+      },
+      {
+        "name": "syq-j32",
+        "kind": "syq",
+        "binary": "/path/to/syq",
+        "args": [
+          "rsync",
+          "-a",
+          "--stats",
+          "--no-progress",
+          "--syq-no-bootstrap",
+          "--syq-connections",
+          "32"
+        ],
+        "debug": false
+      },
+      {
+        "name": "rsync",
+        "kind": "rsync",
+        "binary": "/usr/bin/rsync",
+        "args": [
+          "-a"
+        ],
+        "debug": false
+      },
+      {
+        "name": "cp",
+        "kind": "cp",
+        "binary": "/usr/bin/cp",
+        "args": [
+          "-a"
+        ],
+        "debug": false
+      }
+    ],
+    "workloads": [
+      {
+        "name": "mixed-tree",
+        "kind": "mixed-tree",
+        "bytes": 17179869184,
+        "files": 16000
+      }
+    ],
+    "protocol": {
+      "repeats": 3,
+      "seed": 204330278,
+      "cache": "evict",
+      "durable": false,
+      "verify": true,
+      "probes": false,
+      "tool_timeout": 300,
+      "slow_cutoff": 0,
+      "order": [
+        [
+          "syq",
+          "syq-j32",
+          "rsync",
+          "cp"
+        ],
+        [
+          "syq-j32",
+          "rsync",
+          "cp",
+          "syq"
+        ],
+        [
+          "rsync",
+          "cp",
+          "syq",
+          "syq-j32"
+        ]
+      ]
+    }
+  },
+  "seed": 204330278,
+  "host": {
+    "hostname": "source-host",
+    "kernel": "6.12.67",
+    "machine": "x86_64",
+    "cpus": 32,
+    "python": "3.13.13"
+  },
+  "tools": {
+    "syq": {
+      "binary": "/path/to/syq",
+      "version": "syq 0.6.0",
+      "sha256": "4fc2f442d88f83d05bf61a0b4eead718b681678b7c7ad6a52696c16d3f479a24"
+    },
+    "syq-j32": {
+      "binary": "/path/to/syq",
+      "version": "syq 0.6.0",
+      "sha256": "4fc2f442d88f83d05bf61a0b4eead718b681678b7c7ad6a52696c16d3f479a24"
+    },
+    "rsync": {
+      "binary": "/usr/bin/rsync",
+      "version": "rsync  version 3.2.7  protocol version 32",
+      "sha256": "ab544a0e536ca83f9399e86942c466bb5b43abde469dfb1200ddba98b00e559d"
+    },
+    "cp": {
+      "binary": "/usr/bin/cp",
+      "version": "cp (GNU coreutils) 9.1",
+      "sha256": "e296487a3a8f10a1c55e56056ba4bbb2d3ca22ae625af9f0d5cebaed28e55fa4"
+    }
+  },
+  "source": "/path/to/empty-source-scratch",
+  "destination": "/path/to/empty-destination-scratch",
+  "filesystems": {
+    "source": "ext2/ext3",
+    "destination": "ext2/ext3"
+  },
+  "uncontrolled": [
+    "metadata cache (dentries/inodes) is not evicted: generation, checksum, and repeats all warm it",
+    "Previous-release controls ran after the first automatic syq repeat; those separately versioned private controls are excluded from these charts.",
+    "No final flush requested; completion is not a durability or physical-device-throughput measurement.",
+    "GNU time wrapper is inside command timing. Host snapshots are outside timing. Largest-process RSS is not aggregate process-tree memory."
+  ],
+  "probes": [],
+  "network": null,
+  "cases": [
+    {
+      "workload": "mixed-tree",
+      "tool": "syq",
+      "argv": [
+        "/path/to/syq",
+        "rsync",
+        "-a",
+        "--stats",
+        "--no-progress",
+        "--syq-no-bootstrap",
+        "/path/to/empty-source-scratch/mixed-tree/",
+        "/path/to/empty-destination-scratch/DEST"
+      ],
+      "bytes": 17179869184,
+      "files": 16000,
+      "source": "/path/to/empty-source-scratch/mixed-tree",
+      "source_fs": "ext2/ext3",
+      "mode": "fresh",
+      "prepopulated_with": null,
+      "repeats": [
+        {
+          "index": 0,
+          "wall_s": 4.222930894000001,
+          "user_s": 1.5630640000000042,
+          "sys_s": 26.221035,
+          "exit_code": 0,
+          "verified": true,
+          "fsync_s": null,
+          "fsync_note": "not requested",
+          "cache": "evict",
+          "metadata_cache": "warm",
+          "stderr_tail": "",
+          "changed_files": 0,
+          "changed_bytes": 0,
+          "delta_seed": null,
+          "round_index": 0
+        },
+        {
+          "index": 1,
+          "wall_s": 4.472492020999994,
+          "user_s": 1.0518189999999663,
+          "sys_s": 26.55517499999999,
+          "exit_code": 0,
+          "verified": true,
+          "fsync_s": null,
+          "fsync_note": "not requested",
+          "cache": "evict",
+          "metadata_cache": "warm",
+          "stderr_tail": "",
+          "changed_files": 0,
+          "changed_bytes": 0,
+          "delta_seed": null,
+          "round_index": 1
+        },
+        {
+          "index": 2,
+          "wall_s": 4.230954539999857,
+          "user_s": 1.4096799999999803,
+          "sys_s": 26.600692000000038,
+          "exit_code": 0,
+          "verified": true,
+          "fsync_s": null,
+          "fsync_note": "not requested",
+          "cache": "evict",
+          "metadata_cache": "warm",
+          "stderr_tail": "",
+          "changed_files": 0,
+          "changed_bytes": 0,
+          "delta_seed": null,
+          "round_index": 2
+        }
+      ],
+      "error": null,
+      "skipped": null,
+      "curtailed": null,
+      "too_short": false
+    },
+    {
+      "workload": "mixed-tree",
+      "tool": "syq-j32",
+      "argv": [
+        "/path/to/syq",
+        "rsync",
+        "-a",
+        "--stats",
+        "--no-progress",
+        "--syq-no-bootstrap",
+        "--syq-connections",
+        "32",
+        "/path/to/empty-source-scratch/mixed-tree/",
+        "/path/to/empty-destination-scratch/DEST"
+      ],
+      "bytes": 17179869184,
+      "files": 16000,
+      "source": "/path/to/empty-source-scratch/mixed-tree",
+      "source_fs": "ext2/ext3",
+      "mode": "fresh",
+      "prepopulated_with": null,
+      "repeats": [
+        {
+          "index": 0,
+          "wall_s": 4.6766199379999875,
+          "user_s": 1.234831000000014,
+          "sys_s": 26.24587299999999,
+          "exit_code": 0,
+          "verified": true,
+          "fsync_s": null,
+          "fsync_note": "not requested",
+          "cache": "evict",
+          "metadata_cache": "warm",
+          "stderr_tail": "",
+          "changed_files": 0,
+          "changed_bytes": 0,
+          "delta_seed": null,
+          "round_index": 0
+        },
+        {
+          "index": 1,
+          "wall_s": 4.472570028000064,
+          "user_s": 1.0937720000000013,
+          "sys_s": 26.335617000000013,
+          "exit_code": 0,
+          "verified": true,
+          "fsync_s": null,
+          "fsync_note": "not requested",
+          "cache": "evict",
+          "metadata_cache": "warm",
+          "stderr_tail": "",
+          "changed_files": 0,
+          "changed_bytes": 0,
+          "delta_seed": null,
+          "round_index": 1
+        },
+        {
+          "index": 2,
+          "wall_s": 4.125793809000015,
+          "user_s": 1.2626899999999068,
+          "sys_s": 26.589395000000025,
+          "exit_code": 0,
+          "verified": true,
+          "fsync_s": null,
+          "fsync_note": "not requested",
+          "cache": "evict",
+          "metadata_cache": "warm",
+          "stderr_tail": "",
+          "changed_files": 0,
+          "changed_bytes": 0,
+          "delta_seed": null,
+          "round_index": 2
+        }
+      ],
+      "error": null,
+      "skipped": null,
+      "curtailed": null,
+      "too_short": false
+    },
+    {
+      "workload": "mixed-tree",
+      "tool": "rsync",
+      "argv": [
+        "/usr/bin/rsync",
+        "-a",
+        "/path/to/empty-source-scratch/mixed-tree/",
+        "/path/to/empty-destination-scratch/DEST"
+      ],
+      "bytes": 17179869184,
+      "files": 16000,
+      "source": "/path/to/empty-source-scratch/mixed-tree",
+      "source_fs": "ext2/ext3",
+      "mode": "fresh",
+      "prepopulated_with": null,
+      "repeats": [
+        {
+          "index": 0,
+          "wall_s": 22.54171359999998,
+          "user_s": 3.7329719999999895,
+          "sys_s": 21.10551000000001,
+          "exit_code": 0,
+          "verified": true,
+          "fsync_s": null,
+          "fsync_note": "not requested",
+          "cache": "evict",
+          "metadata_cache": "warm",
+          "stderr_tail": "",
+          "changed_files": 0,
+          "changed_bytes": 0,
+          "delta_seed": null,
+          "round_index": 0
+        },
+        {
+          "index": 1,
+          "wall_s": 22.52420585499999,
+          "user_s": 3.9864259999999945,
+          "sys_s": 20.98208299999999,
+          "exit_code": 0,
+          "verified": true,
+          "fsync_s": null,
+          "fsync_note": "not requested",
+          "cache": "evict",
+          "metadata_cache": "warm",
+          "stderr_tail": "",
+          "changed_files": 0,
+          "changed_bytes": 0,
+          "delta_seed": null,
+          "round_index": 1
+        },
+        {
+          "index": 2,
+          "wall_s": 22.36810595999998,
+          "user_s": 3.64033500000005,
+          "sys_s": 20.972908000000018,
+          "exit_code": 0,
+          "verified": true,
+          "fsync_s": null,
+          "fsync_note": "not requested",
+          "cache": "evict",
+          "metadata_cache": "warm",
+          "stderr_tail": "",
+          "changed_files": 0,
+          "changed_bytes": 0,
+          "delta_seed": null,
+          "round_index": 2
+        }
+      ],
+      "error": null,
+      "skipped": null,
+      "curtailed": null,
+      "too_short": false
+    },
+    {
+      "workload": "mixed-tree",
+      "tool": "cp",
+      "argv": [
+        "/usr/bin/cp",
+        "-a",
+        "/path/to/empty-source-scratch/mixed-tree/.",
+        "/path/to/empty-destination-scratch/DEST"
+      ],
+      "bytes": 17179869184,
+      "files": 16000,
+      "source": "/path/to/empty-source-scratch/mixed-tree",
+      "source_fs": "ext2/ext3",
+      "mode": "fresh",
+      "prepopulated_with": null,
+      "repeats": [
+        {
+          "index": 0,
+          "wall_s": 17.093627622999975,
+          "user_s": 0.029140999999981432,
+          "sys_s": 14.983878000000004,
+          "exit_code": 0,
+          "verified": true,
+          "fsync_s": null,
+          "fsync_note": "not requested",
+          "cache": "evict",
+          "metadata_cache": "warm",
+          "stderr_tail": "",
+          "changed_files": 0,
+          "changed_bytes": 0,
+          "delta_seed": null,
+          "round_index": 0
+        },
+        {
+          "index": 1,
+          "wall_s": 17.550907559000052,
+          "user_s": 0.052841000000000804,
+          "sys_s": 14.96987200000001,
+          "exit_code": 0,
+          "verified": true,
+          "fsync_s": null,
+          "fsync_note": "not requested",
+          "cache": "evict",
+          "metadata_cache": "warm",
+          "stderr_tail": "",
+          "changed_files": 0,
+          "changed_bytes": 0,
+          "delta_seed": null,
+          "round_index": 1
+        },
+        {
+          "index": 2,
+          "wall_s": 17.09292799700006,
+          "user_s": 0.03666899999996076,
+          "sys_s": 14.939686999999992,
+          "exit_code": 0,
+          "verified": true,
+          "fsync_s": null,
+          "fsync_note": "not requested",
+          "cache": "evict",
+          "metadata_cache": "warm",
+          "stderr_tail": "",
+          "changed_files": 0,
+          "changed_bytes": 0,
+          "delta_seed": null,
+          "round_index": 2
+        }
+      ],
+      "error": null,
+      "skipped": null,
+      "curtailed": null,
+      "too_short": false
+    }
+  ],
+  "aborted": null,
+  "publication": {
+    "release": "0.6.0",
+    "syq_revision": "8ccec067bb41cf3fe01fef0be2a8fb35e9d5f329",
+    "build_type": "official release binary",
+    "source_build_sha256": "4fc2f442d88f83d05bf61a0b4eead718b681678b7c7ad6a52696c16d3f479a24",
+    "harness_revision": "b87f3aeff75d05cc56e5f961f7d66518e39998ef",
+    "manual_recipe": "specs/release-060/public-ext4-same.toml",
+    "environment": {
+      "kernel": "6.12.67",
+      "cpu_model": "AMD Ryzen 9 5950X 16-Core Processor",
+      "allowed_cpus": 32,
+      "versions": {
+        "syq": "syq 0.6.0",
+        "syq-j32": "syq 0.6.0",
+        "rsync": "rsync  version 3.2.7  protocol version 32",
+        "cp": "cp (GNU coreutils) 9.1"
+      }
+    },
+    "path_filesystems": {
+      "source": "ext4",
+      "destination": "ext4"
+    },
+    "selection_note": "Entire refreshed homepage workload, every current-release and competitor repetition retained. Prior-release drift controls remain separate.",
+    "original_round_order": [
+      [
+        "syq",
+        "syq-052",
+        "syq-052-historical",
+        "syq-j32",
+        "rsync",
+        "cp"
+      ],
+      [
+        "syq-j32",
+        "rsync",
+        "cp",
+        "syq"
+      ],
+      [
+        "rsync",
+        "cp",
+        "syq",
+        "syq-j32"
+      ]
+    ]
+  }
+}

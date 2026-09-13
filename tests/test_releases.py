@@ -44,3 +44,9 @@ def test_archive_pages_exist_and_all_local_links_resolve():
             for href in re.findall(r'href="([^"]+)"', text):
                 if not href.startswith(("https://", "#", "mailto:")):
                     assert (ROOT / "site" / href.split("#")[0]).is_file(), href
+
+
+def test_versioned_syq_control_cannot_escape_identity_validation():
+    rclone = {"rows": [{"tool": "syq-j32", "tool_identity": {"version": "syq 0.5.2"}}]}
+    with pytest.raises(ValueError, match="another syq version"):
+        validate_identity([], rclone, "0.6.0")
