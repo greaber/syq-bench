@@ -184,9 +184,9 @@ def reportable(rows: list[dict], *, capability: bool = False) -> bool:
     )
 
 
-def build(root: Path) -> Path:
-    data = json.loads((root / "site/data/rclone-exploratory.json").read_text())
-    body = (root / "site/rclone-body.html").read_text()
+def render(root: Path, data_path: str = "data/rclone-exploratory.json", body_path: str = "rclone-body.html") -> str:
+    data = json.loads((root / "site" / data_path).read_text())
+    body = (root / "site" / body_path).read_text()
     before, remainder = body.split("<!-- MULTIRAIL -->")
     rail_intro, after = remainder.split("<!-- /MULTIRAIL -->")
     body = before + after
@@ -249,6 +249,10 @@ def build(root: Path) -> Path:
             ("settings", "Transfer settings"),
         ]
     )
+    return shell("syq vs rclone — preliminary results", body, nav, page="rclone.html", all_results=True)
+
+
+def build(root: Path) -> Path:
     target = root / "site/rclone.html"
-    target.write_text(shell("syq vs rclone — preliminary results", body, nav, page="rclone.html", all_results=True))
+    target.write_text(render(root))
     return target

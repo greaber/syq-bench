@@ -188,3 +188,13 @@ upper bound on payload startup at most one fifth of its duration in every repeat
 Use syq's planning log or the first rclone nonzero progress report (including
 one second for its timestamp precision). This is a conservative screening rule,
 not a subtraction from elapsed time or proof that later coordination is free.
+
+### Release selection (2026-09-13)
+
+Public benchmark pages use a shared release manifest and a version selector,
+including the rclone page. Each release has its own capture catalog and page
+inputs; versioned URLs retain that release while following site navigation.
+Canonical URLs show the manifest's latest complete capture set. The build
+checks syq identities against the selected release, so selecting a version
+cannot relabel older measurements. Historical results remain available for
+comparison; their measurements and qualifications are preserved.

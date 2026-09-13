@@ -1,0 +1,390 @@
+# syq 0.5.2 release selection. Measurements stay in data/, not presentation metadata.
+introduction = ["We tested syq 0.5.2 against rsync and cp on local drives, shared network drives, and connections between servers."]
+
+[overview]
+subtitle = "How syq 0.5.2 compares with rsync and cp."
+[[overview.comparisons]]
+id = "public-wan-forward"
+workload = "large-file"
+chart_controls = ["syq-ssh"]
+tool_labels = { syq-ssh = "syq over SSH" }
+title = "Sending a large file overseas"
+description = "Copy one large file from Germany to the US East Coast."
+[[overview.comparisons]]
+id = "public-ext4-same"
+workload = "mixed-tree"
+title = "Copying a folder on one drive"
+description = "Make another copy of a folder with files of different sizes."
+[[overview.comparisons]]
+id = "private-nfs-metadata-25k"
+workload = "small-files"
+title = "Copying small files to a network drive"
+description = "Copy a folder of small files onto a shared drive."
+note = "A shared drive using NFS."
+
+[[overview.comparisons]]
+id = "public-wan-unchanged-tree"
+workload = "unchanged-tree"
+chart_metric = "time"
+title = "Checking a folder that hasn’t changed"
+description = "Check whether a folder needs updating, from Germany to the US East Coast."
+note = ""
+
+[acceptance]
+minimum_repeat_seconds = 3
+repeats = 3
+syq_revision = "fd2b17c642e62d7ee63f7f3835560a6ceacd0afb"
+
+[[scenarios]]
+id = "public-wan-forward"
+title = "Copying to a distant server"
+kind = "cloud"
+primary = "syq"
+description = "Send a file or folder from Germany to the US East Coast."
+note = "Files stay in memory, so this tests the connection rather than disk writes."
+setup = "syq 0.5.2, source fd2b17c; static GNU build with Rust 1.94.1. Three rotated repetitions, each checksum-verified outside timing. Generated incompressible data, seed 204330278; compression off. No final flush: completion is not a durability measurement. Two Hetzner Cloud CCX23 guests, each with 4 dedicated vCPUs and 16 GiB RAM, Debian 13. Warm tmpfs at both endpoints. Default syq uses SSH-authenticated encrypted TCP; the SSH control disables TCP; rsync uses SSH. Packet counters independently checked large-file data paths. Small-file data paths were not recorded per repetition. Both directions share allocations and are separate comparisons, not independent replications. Germany → US East Coast; approximately 107 ms round-trip latency. "
+manual_recipe = "specs/release-052/README.md"
+captures = ["data/release-052-public-wan-forward.json"]
+workload_selection = ["large-file", "large-files", "small-files"]
+explained_captures = ["17792da3d69fd0c7af636cd84a1a02a9445ccc713514f5e5db3a85f7e6a2a46a"]
+[scenarios.controls]
+syq = "Automatic"
+syq-j32 = "32 workers"
+syq-ssh = "Transfer over SSH"
+[scenarios.workloads]
+large-file = "One large file"
+large-files = "A folder of large files"
+small-files = "Many small files"
+[scenarios.explanations]
+large-file = { basis = "likely", text = "syq transfers different parts of the same file in parallel, including over SSH. Its default mode adds another speedup by sending the data over separate encrypted TCP connections, using SSH only to log in." }
+large-files = { basis = "likely", text = "syq copies several files at once and can split each file across several encrypted TCP connections. It uses SSH to log in, but the file data can bypass SSH." }
+small-files = { basis = "unknown", text = "rsync finishes sooner here. Sending lots of small files involves work for each file, even though syq groups them together for transfer. We’re still investigating the gap." }
+
+[[scenarios]]
+id = "public-wan-reverse"
+title = "Copying back from a distant server"
+kind = "cloud"
+primary = "syq"
+description = "Send the same files from the US East Coast back to Germany."
+note = "The same two servers, with files again kept in memory."
+setup = "syq 0.5.2, source fd2b17c; static GNU build with Rust 1.94.1. Three rotated repetitions, each checksum-verified outside timing. Generated incompressible data, seed 204330278; compression off. No final flush: completion is not a durability measurement. Two Hetzner Cloud CCX23 guests, each with 4 dedicated vCPUs and 16 GiB RAM, Debian 13. Warm tmpfs at both endpoints. Default syq uses SSH-authenticated encrypted TCP; the SSH control disables TCP; rsync uses SSH. Packet counters independently checked large-file data paths. Small-file data paths were not recorded per repetition. Both directions share allocations and are separate comparisons, not independent replications. US East Coast → Germany; approximately 107 ms round-trip latency. "
+manual_recipe = "specs/release-052/README.md"
+captures = ["data/release-052-public-wan-reverse.json"]
+workload_selection = ["large-file", "large-files", "small-files"]
+explained_captures = ["2072e735c6204b541dc9b18ae16f397e2d00121e195d805f4a06916b2cb5584b"]
+[scenarios.controls]
+syq = "Automatic"
+syq-j32 = "32 workers"
+syq-ssh = "Transfer over SSH"
+[scenarios.workloads]
+large-file = "One large file"
+large-files = "A folder of large files"
+small-files = "Many small files"
+[scenarios.explanations]
+large-file = { basis = "likely", text = "syq transfers different parts of the same file in parallel, including over SSH. Its default mode adds another speedup by sending the data over separate encrypted TCP connections, using SSH only to log in." }
+large-files = { basis = "likely", text = "syq copies several files at once and can split each file across several encrypted TCP connections. It uses SSH to log in, but the file data can bypass SSH." }
+small-files = { basis = "unknown", text = "rsync finishes sooner here. Sending lots of small files involves work for each file, even though syq groups them together for transfer. We’re still investigating the gap." }
+
+[[scenarios]]
+id = "public-ext4-same"
+title = "Copying a file or folder on one drive"
+kind = "rental"
+primary = "syq"
+description = "Make another copy on the same SSD."
+note = "A rented Hetzner server, using the ext4 filesystem."
+setup = "syq 0.5.2, source fd2b17c; static GNU build with Rust 1.94.1. Three rotated repetitions, each checksum-verified outside timing. Generated incompressible data, seed 204330278; compression off. No final flush: completion is not a durability measurement. One Hetzner Server Auction allocation: Ryzen 9 5950X, 32 logical CPUs, 128 GiB RAM, two dedicated 3.84 TB Samsung PM9A3 NVMe drives; Linux 6.12.67, powersave governor. Source fixture pages evicted, metadata warm; device caches and drive history uncontrolled. The 32-worker control also disables automatic tuning and the automatic sequential NFS fallback, so it is not an isolated worker-count comparison. Source and destination share one ext4 filesystem on one NVMe drive, mounted noatime. "
+manual_recipe = "specs/release-052/README.md"
+captures = ["data/release-052-public-ext4-same.json"]
+workload_selection = ["large-file", "mixed-tree", "small-files"]
+explained_captures = ["af81686aedf30b9577ec54de83ba726b90bc61fa95e1e6acafb5738ddfaa118e"]
+[scenarios.controls]
+syq = "Automatic"
+syq-j32 = "32 workers"
+syq-ssh = "Transfer over SSH"
+[scenarios.workloads]
+large-file = "One large file"
+mixed-tree = "A folder with files of different sizes"
+small-files = "Many small files"
+[scenarios.explanations]
+large-file = { basis = "unknown", text = "syq can copy several parts of one file at once. That doesn’t always help as much as copying several separate files." }
+mixed-tree = { basis = "likely", text = "syq uses several workers to copy files in parallel. That can make better use of the available CPU and disk bandwidth." }
+small-files = { basis = "likely", text = "With small files, creating and checking each file can take more work than copying its contents. syq can do that work for several files at once." }
+
+[[scenarios]]
+id = "public-ext4-cross"
+title = "Copying between two drives"
+kind = "rental"
+primary = "syq"
+description = "Copy files from one SSD to another in the same server."
+note = "The same Hetzner server, with a separate ext4 filesystem on each drive."
+setup = "syq 0.5.2, source fd2b17c; static GNU build with Rust 1.94.1. Three rotated repetitions, each checksum-verified outside timing. Generated incompressible data, seed 204330278; compression off. No final flush: completion is not a durability measurement. One Hetzner Server Auction allocation: Ryzen 9 5950X, 32 logical CPUs, 128 GiB RAM, two dedicated 3.84 TB Samsung PM9A3 NVMe drives; Linux 6.12.67, powersave governor. Source fixture pages evicted, metadata warm; device caches and drive history uncontrolled. The 32-worker control also disables automatic tuning and the automatic sequential NFS fallback, so it is not an isolated worker-count comparison. Source and destination use separate ext4 filesystems and separate drives, mounted noatime. "
+manual_recipe = "specs/release-052/README.md"
+captures = ["data/release-052-public-ext4-cross.json"]
+workload_selection = ["large-file", "mixed-tree", "small-files"]
+explained_captures = ["f83f7ab286fa2102f58914e629d5561617aa8aa2a56a654c5f452331b22dc732"]
+[scenarios.controls]
+syq = "Automatic"
+syq-j32 = "32 workers"
+syq-ssh = "Transfer over SSH"
+[scenarios.workloads]
+large-file = "One large file"
+mixed-tree = "A folder with files of different sizes"
+small-files = "Many small files"
+[scenarios.explanations]
+large-file = { basis = "unknown", text = "syq can copy several parts of one file at once. That doesn’t always help as much as copying several separate files." }
+mixed-tree = { basis = "likely", text = "syq uses several workers to copy files in parallel. That can make better use of the available CPU and disk bandwidth." }
+small-files = { basis = "likely", text = "With small files, creating and checking each file can take more work than copying its contents. syq can do that work for several files at once." }
+
+[[scenarios]]
+id = "public-lan-forward"
+title = "Copying between nearby servers"
+kind = "cloud"
+primary = "syq"
+description = "Send files between two servers in the same data center."
+note = "Files stay in memory, so this tests the connection rather than disk writes."
+setup = "syq 0.5.2, source fd2b17c; static GNU build with Rust 1.94.1. Three rotated repetitions, each checksum-verified outside timing. Generated incompressible data, seed 204330278; compression off. No final flush: completion is not a durability measurement. Two Hetzner Cloud CCX23 guests, each with 4 dedicated vCPUs and 16 GiB RAM, Debian 13. Warm tmpfs at both endpoints. Default syq uses SSH-authenticated encrypted TCP; the SSH control disables TCP; rsync uses SSH. Packet counters independently checked large-file data paths. Small-file data paths were not recorded per repetition. Both directions share allocations and are separate comparisons, not independent replications. "
+manual_recipe = "specs/release-052/README.md"
+captures = ["data/release-052-public-lan-forward.json"]
+workload_selection = ["large-file", "large-files", "small-files"]
+explained_captures = ["8fa48ef0c56f75464ed163de0b4fccc9fd69a7d350196e0c964ca778dfc7f2e8"]
+[scenarios.controls]
+syq = "Automatic"
+syq-j32 = "32 workers"
+syq-ssh = "Transfer over SSH"
+[scenarios.workloads]
+large-file = "One large file"
+large-files = "A folder of large files"
+small-files = "Many small files"
+[scenarios.explanations]
+large-file = { basis = "likely", text = "syq transfers different parts of the same file in parallel, including over SSH. Its default mode adds another speedup by sending the data over separate encrypted TCP connections, using SSH only to log in." }
+large-files = { basis = "likely", text = "syq copies several files at once and can split each file across several encrypted TCP connections. It uses SSH to log in, but the file data can bypass SSH." }
+small-files = { basis = "unknown", text = "rsync finishes sooner here. Sending lots of small files involves work for each file, even though syq groups them together for transfer. We’re still investigating the gap." }
+
+[[scenarios]]
+id = "public-lan-reverse"
+title = "Copying back between nearby servers"
+kind = "cloud"
+primary = "syq"
+description = "Send the same files back the other way."
+note = "The same two servers, with files again kept in memory."
+setup = "syq 0.5.2, source fd2b17c; static GNU build with Rust 1.94.1. Three rotated repetitions, each checksum-verified outside timing. Generated incompressible data, seed 204330278; compression off. No final flush: completion is not a durability measurement. Two Hetzner Cloud CCX23 guests, each with 4 dedicated vCPUs and 16 GiB RAM, Debian 13. Warm tmpfs at both endpoints. Default syq uses SSH-authenticated encrypted TCP; the SSH control disables TCP; rsync uses SSH. Packet counters independently checked large-file data paths. Small-file data paths were not recorded per repetition. Both directions share allocations and are separate comparisons, not independent replications. "
+manual_recipe = "specs/release-052/README.md"
+captures = ["data/release-052-public-lan-reverse.json"]
+workload_selection = ["large-file", "large-files", "small-files"]
+explained_captures = ["d28eddbb80d4a9ec60dec3aa78bfab3cbe9c536e43a2b94b86644e9cd8384bcf"]
+[scenarios.controls]
+syq = "Automatic"
+syq-j32 = "32 workers"
+syq-ssh = "Transfer over SSH"
+[scenarios.workloads]
+large-file = "One large file"
+large-files = "A folder of large files"
+small-files = "Many small files"
+[scenarios.explanations]
+large-file = { basis = "likely", text = "syq transfers different parts of the same file in parallel, including over SSH. Its default mode adds another speedup by sending the data over separate encrypted TCP connections, using SSH only to log in." }
+large-files = { basis = "likely", text = "syq copies several files at once and can split each file across several encrypted TCP connections. It uses SSH to log in, but the file data can bypass SSH." }
+small-files = { basis = "unknown", text = "rsync finishes sooner here. Sending lots of small files involves work for each file, even though syq groups them together for transfer. We’re still investigating the gap." }
+
+[[scenarios]]
+id = "public-wan-updates"
+title = "Updating a distant copy"
+kind = "cloud"
+primary = "syq"
+description = "Both servers already have the files. Change the originals, then bring the other copy up to date."
+note = "Germany → US East Coast. Both servers hold the files in memory."
+setup = "syq 0.5.2, source fd2b17c; static GNU build with Rust 1.94.1. Three rotated repetitions, each checksum-verified outside timing. Generated incompressible data, seed 204330278; compression off. No final flush: completion is not a durability measurement. Two Hetzner Cloud CCX23 guests, each with 4 dedicated vCPUs and 16 GiB RAM, Debian 13. Warm tmpfs at both endpoints. Default syq uses SSH-authenticated encrypted TCP; the SSH control disables TCP; rsync uses SSH. Packet counters independently checked large-file data paths. Small-file data paths were not recorded per repetition. Both directions share allocations and are separate comparisons, not independent replications. Germany → US East Coast. Each repetition restores the same pre-change destination. Scattered edits affect about 1% of 4 KiB regions in every file. "
+manual_recipe = "specs/release-052/README.md"
+captures = ["data/release-052-public-wan-updates.json"]
+workload_selection = ["block-edits", "full-rewrite", "append"]
+explained_captures = ["201768e3fb9cdb717630f9a41d05b4bfd856a5ed3b934e12e5ffa9c267d69c9e"]
+[scenarios.controls]
+syq = "Automatic"
+syq-j32 = "32 workers"
+syq-ssh = "Transfer over SSH"
+[scenarios.workloads]
+block-edits = "Small edits throughout the files"
+full-rewrite = "All the contents have changed"
+append = "Adding data to the ends of files"
+[scenarios.explanations]
+block-edits = { basis = "likely", text = "rsync can reuse smaller pieces of the old files. When edits are spread throughout a file, that can leave it with less data to send." }
+full-rewrite = { basis = "likely", text = "Both tools need to send all the new contents. syq can send different parts at the same time." }
+append = { basis = "unknown", text = "Most of each file is unchanged. The job is to copy the new data added at the end." }
+
+[[scenarios]]
+id = "public-wan-unchanged-tree"
+chart_metric = "time"
+title = "Checking a folder that hasn’t changed"
+kind = "cloud"
+primary = "syq"
+description = "Both servers already have identical files. Check whether anything needs copying."
+note = "Germany → US East Coast, with a large folder of small files kept in memory."
+setup = "syq 0.5.2, source fd2b17c; static GNU build with Rust 1.94.1. Three rotated repetitions, each checksum-verified outside timing. Generated incompressible data, seed 204330278; compression off. No final flush: completion is not a durability measurement. Two Hetzner Cloud CCX23 guests, each with 4 dedicated vCPUs and 16 GiB RAM, Debian 13. Warm tmpfs at both endpoints. Default syq uses SSH-authenticated encrypted TCP; the SSH control disables TCP; rsync uses SSH. Packet counters independently checked large-file data paths. Small-file data paths were not recorded per repetition. Both directions share allocations and are separate comparisons, not independent replications. Germany → US East Coast. The destination already contains an identical copy. "
+manual_recipe = "specs/release-052/README.md"
+captures = ["data/release-052-public-wan-unchanged-tree.json"]
+workload_selection = ["unchanged-tree"]
+explained_captures = ["6b5154bb670a1ab093d47efcbca11a47b2201fcec603ea0e78f61c35789dc8f5"]
+[scenarios.controls]
+syq = "Automatic"
+syq-j32 = "32 workers"
+syq-ssh = "Transfer over SSH"
+[scenarios.workloads]
+unchanged-tree = "An unchanged folder"
+[scenarios.explanations]
+unchanged-tree = { basis = "unknown", text = "Nothing needs transferring. This measures how quickly each tool checks a large folder and finds that the files already match." }
+
+[[scenarios]]
+id = "public-xfs-same"
+title = "Many small files on XFS"
+kind = "rental"
+primary = "syq"
+description = "Make another copy of a folder containing many small files."
+note = "The same Hetzner server, this time using the XFS filesystem."
+setup = "syq 0.5.2, source fd2b17c; static GNU build with Rust 1.94.1. Three rotated repetitions, each checksum-verified outside timing. Generated incompressible data, seed 204330278; compression off. No final flush: completion is not a durability measurement. One Hetzner Server Auction allocation: Ryzen 9 5950X, 32 logical CPUs, 128 GiB RAM, two dedicated 3.84 TB Samsung PM9A3 NVMe drives; Linux 6.12.67, powersave governor. Source fixture pages evicted, metadata warm; device caches and drive history uncontrolled. The 32-worker control also disables automatic tuning and the automatic sequential NFS fallback, so it is not an isolated worker-count comparison. Source and destination share one XFS filesystem, mounted noatime with reflink enabled. One-file and mixed-tree copies were too short for charts. Extent sharing can avoid copying payload bytes, so scaling bytes alone would not establish physical bandwidth. "
+manual_recipe = "specs/release-052/README.md"
+captures = ["data/release-052-public-xfs-same.json"]
+workload_selection = ["small-files"]
+explained_captures = ["eaf106397a07d7080257da0a18a3b8ec979fe968b57e000570a7f5d9a16c115b"]
+[scenarios.controls]
+syq = "Automatic"
+syq-j32 = "32 workers"
+syq-ssh = "Transfer over SSH"
+[scenarios.workloads]
+small-files = "Many small files"
+[scenarios.explanations]
+small-files = { basis = "likely", text = "With small files, creating and checking each file can take more work than copying its contents. syq can do that work for several files at once." }
+
+[[scenarios]]
+id = "private-ext4-same"
+title = "Copying on an ext4 system drive"
+kind = "hardware"
+primary = "syq"
+description = "Make another copy on the server’s system drive."
+note = "Local storage using ext4; no files are sent to another server."
+setup = "syq 0.5.2, source fd2b17c; static GNU build with Rust 1.94.1. Three rotated repetitions, each checksum-verified outside timing. Generated incompressible data, seed 204330278; compression off. No final flush: completion is not a durability measurement. A server with two Xeon Platinum 8460Y+ CPUs, 160 logical CPUs and the performance governor; Linux 5.15.0-126-generic. Its ext4 system volume, XFS data volume and NFS mount are distinct placements. Shared-host activity was observed but not eliminated. Source fixture pages evicted, metadata warm; device caches and drive history uncontrolled. The 32-worker control also disables automatic tuning and the automatic sequential NFS fallback, so it is not an isolated worker-count comparison. "
+manual_recipe = "specs/release-052/README.md"
+captures = ["data/release-052-private-ext4-same.json"]
+workload_selection = ["large-file", "small-files"]
+explained_captures = ["42c0d4aeb9bffd7def753ee591abf4acfa3b918bf3141361b025e2991c951536"]
+[scenarios.controls]
+syq = "Automatic"
+syq-j32 = "32 workers"
+syq-ssh = "Transfer over SSH"
+[scenarios.workloads]
+large-file = "One large file"
+small-files = "Many small files"
+[scenarios.explanations]
+large-file = { basis = "unknown", text = "syq can copy several parts of one file at once. That doesn’t always help as much as copying several separate files." }
+small-files = { basis = "likely", text = "With small files, creating and checking each file can take more work than copying its contents. syq can do that work for several files at once." }
+
+[[scenarios]]
+id = "private-ext4-xfs-cross"
+title = "Copying from ext4 to XFS"
+kind = "hardware"
+primary = "syq"
+description = "Copy from the server’s system drive to its data drive."
+note = "The source uses ext4 and the destination uses XFS."
+setup = "syq 0.5.2, source fd2b17c; static GNU build with Rust 1.94.1. Three rotated repetitions, each checksum-verified outside timing. Generated incompressible data, seed 204330278; compression off. No final flush: completion is not a durability measurement. A server with two Xeon Platinum 8460Y+ CPUs, 160 logical CPUs and the performance governor; Linux 5.15.0-126-generic. Its ext4 system volume, XFS data volume and NFS mount are distinct placements. Shared-host activity was observed but not eliminated. Source fixture pages evicted, metadata warm; device caches and drive history uncontrolled. The 32-worker control also disables automatic tuning and the automatic sequential NFS fallback, so it is not an isolated worker-count comparison. "
+manual_recipe = "specs/release-052/README.md"
+captures = ["data/release-052-private-ext4-xfs-cross.json"]
+workload_selection = ["large-file", "small-files"]
+explained_captures = ["a3e6c28174b2cc8cdb982fcf556d0603fd67057fbd20f87ab5c2f1c8e61149bd"]
+[scenarios.controls]
+syq = "Automatic"
+syq-j32 = "32 workers"
+syq-ssh = "Transfer over SSH"
+[scenarios.workloads]
+large-file = "One large file"
+small-files = "Many small files"
+[scenarios.explanations]
+large-file = { basis = "unknown", text = "syq can copy several parts of one file at once. That doesn’t always help as much as copying several separate files." }
+small-files = { basis = "likely", text = "With small files, creating and checking each file can take more work than copying its contents. syq can do that work for several files at once." }
+
+[[scenarios]]
+id = "private-xfs-full"
+title = "Many small files on an XFS data drive"
+kind = "hardware"
+primary = "syq"
+description = "Make another copy of a folder on the server’s data drive."
+note = "Local XFS storage on the same server."
+setup = "syq 0.5.2, source fd2b17c; static GNU build with Rust 1.94.1. Three rotated repetitions, each checksum-verified outside timing. Generated incompressible data, seed 204330278; compression off. No final flush: completion is not a durability measurement. A server with two Xeon Platinum 8460Y+ CPUs, 160 logical CPUs and the performance governor; Linux 5.15.0-126-generic. Its ext4 system volume, XFS data volume and NFS mount are distinct placements. Shared-host activity was observed but not eliminated. Source fixture pages evicted, metadata warm; device caches and drive history uncontrolled. The 32-worker control also disables automatic tuning and the automatic sequential NFS fallback, so it is not an isolated worker-count comparison. One-file and mixed-tree copies were too short for charts; extent sharing was confirmed separately. "
+manual_recipe = "specs/release-052/README.md"
+captures = ["data/release-052-private-xfs-full.json"]
+workload_selection = ["small-files"]
+explained_captures = ["30ba146772083f19b9f3086b5eebf5e16305ee16fbabf05b2f0a6928d9ae7e79"]
+[scenarios.controls]
+syq = "Automatic"
+syq-j32 = "32 workers"
+syq-ssh = "Transfer over SSH"
+[scenarios.workloads]
+small-files = "Many small files"
+[scenarios.explanations]
+small-files = { basis = "likely", text = "With small files, creating and checking each file can take more work than copying its contents. syq can do that work for several files at once." }
+
+[[scenarios]]
+id = "private-nfs-write"
+title = "Copying to a shared network drive"
+kind = "hardware"
+primary = "syq"
+description = "Copy a large file or a folder onto a drive shared over the network."
+note = "An NFS network drive. Other NFS services may perform differently."
+setup = "syq 0.5.2, source fd2b17c; static GNU build with Rust 1.94.1. Three rotated repetitions, each checksum-verified outside timing. Generated incompressible data, seed 204330278; compression off. No final flush: completion is not a durability measurement. A server with two Xeon Platinum 8460Y+ CPUs, 160 logical CPUs and the performance governor; Linux 5.15.0-126-generic. Its ext4 system volume, XFS data volume and NFS mount are distinct placements. Shared-host activity was observed but not eliminated. Source fixture pages evicted, metadata warm; device caches and drive history uncontrolled. The 32-worker control also disables automatic tuning and the automatic sequential NFS fallback, so it is not an isolated worker-count comparison. NFS 4.2; server cache and backing filesystem uncontrolled. Eviction affects the client only. The copy process accesses the NFS mount directly, without an SSH relay. The original small-file comparison timed out for two tools; the separate reduced-size comparison below is complete. "
+manual_recipe = "specs/release-052/README.md"
+captures = ["data/release-052-private-nfs-write.json"]
+workload_selection = ["large-file", "mixed-tree"]
+explained_captures = ["32760ca6a97f5bdfcad590290a36982f91c47e4dcda83e226ec7c73c82b5defd"]
+[scenarios.controls]
+syq = "Automatic"
+syq-j32 = "32 workers"
+syq-ssh = "Transfer over SSH"
+[scenarios.workloads]
+large-file = "One large file"
+mixed-tree = "A folder with files of different sizes"
+[scenarios.explanations]
+large-file = { basis = "likely", text = "syq can keep several reads or writes in progress at once, overlapping waits for the network drive." }
+mixed-tree = { basis = "likely", text = "syq uses several workers to create and write files in parallel, keeping more requests to the network drive in progress." }
+
+[[scenarios]]
+id = "private-nfs-metadata-25k"
+title = "Many small files on a network drive"
+kind = "hardware"
+primary = "syq"
+description = "Copy a folder of small files onto the same shared drive."
+note = "The same NFS network drive."
+setup = "syq 0.5.2, source fd2b17c; static GNU build with Rust 1.94.1. Three rotated repetitions, each checksum-verified outside timing. Generated incompressible data, seed 204330278; compression off. No final flush: completion is not a durability measurement. A server with two Xeon Platinum 8460Y+ CPUs, 160 logical CPUs and the performance governor; Linux 5.15.0-126-generic. Its ext4 system volume, XFS data volume and NFS mount are distinct placements. Shared-host activity was observed but not eliminated. Source fixture pages evicted, metadata warm; device caches and drive history uncontrolled. The 32-worker control also disables automatic tuning and the automatic sequential NFS fallback, so it is not an isolated worker-count comparison. NFS 4.2; server cache and backing filesystem uncontrolled. Eviction affects the client only. The copy process accesses the NFS mount directly, without an SSH relay. "
+manual_recipe = "specs/release-052/README.md"
+captures = ["data/release-052-private-nfs-metadata-25k.json"]
+workload_selection = ["small-files"]
+explained_captures = ["20180fb8b30c802fd7b6bbd17ceac70022c43368248811d85afc90e4a25122e2"]
+[scenarios.controls]
+syq = "Automatic"
+syq-j32 = "32 workers"
+syq-ssh = "Transfer over SSH"
+[scenarios.workloads]
+small-files = "Many small files"
+[scenarios.explanations]
+small-files = { basis = "likely", text = "syq uses several workers to create and write files in parallel, keeping more requests to the network drive in progress." }
+
+[[scenarios]]
+id = "private-nfs-read"
+title = "Copying from a shared network drive"
+kind = "hardware"
+primary = "syq"
+description = "Read files from the shared drive back onto the server."
+note = "The copy is kept in memory, so local disk writes don’t slow it down."
+setup = "syq 0.5.2, source fd2b17c; static GNU build with Rust 1.94.1. Three rotated repetitions, each checksum-verified outside timing. Generated incompressible data, seed 204330278; compression off. No final flush: completion is not a durability measurement. A server with two Xeon Platinum 8460Y+ CPUs, 160 logical CPUs and the performance governor; Linux 5.15.0-126-generic. Its ext4 system volume, XFS data volume and NFS mount are distinct placements. Shared-host activity was observed but not eliminated. Source fixture pages evicted, metadata warm; device caches and drive history uncontrolled. The 32-worker control also disables automatic tuning and the automatic sequential NFS fallback, so it is not an isolated worker-count comparison. NFS 4.2; server cache and backing filesystem uncontrolled. Eviction affects the client only. The copy process accesses the NFS mount directly, without an SSH relay. Destination tmpfs removes local disk writes from this comparison. "
+manual_recipe = "specs/release-052/README.md"
+captures = ["data/release-052-private-nfs-read.json"]
+workload_selection = ["large-file", "mixed-tree", "small-files"]
+explained_captures = ["63091cbe81542bde2b1eb6207a886cb25e55aa1e1cefd96d42de935daf728209"]
+[scenarios.controls]
+syq = "Automatic"
+syq-j32 = "32 workers"
+syq-ssh = "Transfer over SSH"
+[scenarios.workloads]
+large-file = "One large file"
+mixed-tree = "A folder with files of different sizes"
+small-files = "Many small files"
+[scenarios.explanations]
+large-file = { basis = "likely", text = "syq can keep several reads or writes in progress at once, overlapping waits for the network drive." }
+mixed-tree = { basis = "likely", text = "syq can read several files at once, overlapping waits for the network drive." }
+small-files = { basis = "likely", text = "syq can read several files at once, overlapping waits for the network drive." }
