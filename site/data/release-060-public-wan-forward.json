@@ -1,0 +1,464 @@
+{
+  "schema": 3,
+  "harness_version": "0.1.0",
+  "started": "2026-09-13T16:10:07+00:00",
+  "finished": "2026-09-13T16:16:04+00:00",
+  "spec": {
+    "name": "public-wan-forward",
+    "description": "Release 0.6.0 with contemporaneous 0.5.2 controls",
+    "endpoints": {
+      "source": "/path/to/empty-source-scratch",
+      "destination": "destination-host:/path/to/empty-destination-scratch",
+      "ssh": "/path/to/benchmark-ssh"
+    },
+    "tools": [
+      {
+        "name": "syq",
+        "kind": "syq",
+        "binary": "/path/to/syq",
+        "args": [
+          "rsync",
+          "-a",
+          "--stats",
+          "--no-progress",
+          "--syq-no-bootstrap",
+          "--rsync-path",
+          "/path/to/syq-resource-helper"
+        ],
+        "debug": false
+      },
+      {
+        "name": "syq-ssh",
+        "kind": "syq",
+        "binary": "/path/to/syq",
+        "args": [
+          "rsync",
+          "-a",
+          "--stats",
+          "--no-progress",
+          "--syq-no-bootstrap",
+          "--rsync-path",
+          "/path/to/syq-resource-helper",
+          "--syq-no-tcp"
+        ],
+        "debug": false
+      },
+      {
+        "name": "rsync",
+        "kind": "rsync",
+        "binary": "/usr/bin/rsync",
+        "args": [
+          "-a",
+          "--rsync-path",
+          "/path/to/rsync-resource-helper"
+        ],
+        "debug": false
+      }
+    ],
+    "workloads": [
+      {
+        "name": "large-file",
+        "kind": "large-file",
+        "bytes": 1073741824,
+        "files": 1
+      }
+    ],
+    "protocol": {
+      "repeats": 3,
+      "seed": 204330278,
+      "cache": "warm",
+      "durable": false,
+      "verify": true,
+      "probes": false,
+      "tool_timeout": 600,
+      "slow_cutoff": 0,
+      "order": [
+        [
+          "syq",
+          "syq-ssh",
+          "rsync"
+        ],
+        [
+          "syq-ssh",
+          "rsync",
+          "syq"
+        ],
+        [
+          "rsync",
+          "syq",
+          "syq-ssh"
+        ]
+      ]
+    }
+  },
+  "seed": 204330278,
+  "host": {
+    "hostname": "source-host",
+    "kernel": "6.12.107+deb13-cloud-amd64",
+    "machine": "x86_64",
+    "cpus": 4,
+    "python": "3.13.5"
+  },
+  "tools": {
+    "syq": {
+      "binary": "/path/to/syq",
+      "version": "syq 0.6.0",
+      "sha256": "4fc2f442d88f83d05bf61a0b4eead718b681678b7c7ad6a52696c16d3f479a24",
+      "remote": {
+        "binary": "/path/to/syq-resource-helper",
+        "sha256": "320e7d275732b398dfdb224ed857f4081769ee3825a7c9e5d55e69201cab06ed",
+        "version": "syq 0.6.0",
+        "identity_scope": "resource wrapper; actual syq executable hash equals local syq hash"
+      }
+    },
+    "syq-ssh": {
+      "binary": "/path/to/syq",
+      "version": "syq 0.6.0",
+      "sha256": "4fc2f442d88f83d05bf61a0b4eead718b681678b7c7ad6a52696c16d3f479a24",
+      "remote": {
+        "binary": "/path/to/syq-resource-helper",
+        "sha256": "320e7d275732b398dfdb224ed857f4081769ee3825a7c9e5d55e69201cab06ed",
+        "version": "syq 0.6.0",
+        "identity_scope": "resource wrapper; actual syq executable hash equals local syq hash"
+      }
+    },
+    "rsync": {
+      "binary": "/usr/bin/rsync",
+      "version": "rsync  version 3.4.1  protocol version 32",
+      "sha256": "a56c05b960beb734169619d5760b43ff495e84f85a93eb1f54fe58118262fb20",
+      "remote": {
+        "binary": "/usr/bin/rsync",
+        "sha256": "a56c05b960beb734169619d5760b43ff495e84f85a93eb1f54fe58118262fb20",
+        "version": "rsync  version 3.4.1  protocol version 32",
+        "identity_scope": "remote executable"
+      }
+    }
+  },
+  "source": "/path/to/empty-source-scratch",
+  "destination": "destination-host:/path/to/empty-destination-scratch",
+  "filesystems": {
+    "source": "tmpfs",
+    "destination": "tmpfs"
+  },
+  "uncontrolled": [
+    "metadata cache (dentries/inodes) is not evicted: generation, checksum, and repeats all warm it",
+    "remote end: fixture pages evicted on the client only",
+    "Previous-release controls ran after the first automatic syq repeat; those separately versioned private controls are excluded from these charts.",
+    "No final flush requested; completion is not a durability or physical-device-throughput measurement.",
+    "GNU time wrapper is inside command timing. Host snapshots are outside timing. Largest-process RSS is not aggregate process-tree memory.",
+    "Light WebDAV setup on the destination overlapped the final automatic syq repeat; retain its timing and before/after host counters."
+  ],
+  "probes": [],
+  "network": {
+    "before": {
+      "local_dev": "eth0",
+      "local_qdisc": "qdisc fq_codel 0: root refcnt 2 limit 10240p flows 1024 quantum 1514 target 5ms interval 100ms memory_limit 32Mb ecn drop_batch 64 \n Sent 2913054 bytes 15793 pkt (dropped 0, overlimits 0 requeues 4) \n backlog 0b 0p requeues 4\n  maxpacket 239 drop_overlimit 0 new_flow_count 10 ecn_mark 0\n  new_flows_len 0 old_flows_len 0",
+      "local_filters": "",
+      "remote_qdisc": "qdisc fq_codel 0: root refcnt 2 limit 10240p flows 1024 quantum 1514 target 5ms interval 100ms memory_limit 32Mb ecn drop_batch 64 \n Sent 832279 bytes 6547 pkt (dropped 0, overlimits 0 requeues 0) \n backlog 0b 0p requeues 0\n  maxpacket 242 drop_overlimit 0 new_flow_count 6 ecn_mark 0\n  new_flows_len 0 old_flows_len 0",
+      "remote_filters": "",
+      "ping": {
+        "loss_pct": 0,
+        "rtt_avg_ms": 107.8,
+        "count": 20,
+        "note": "20 packets: resolution 5 %; use the netem dropped counters for the emulated rate"
+      },
+      "missing": [],
+      "target": "destination-host"
+    },
+    "after": {
+      "local_dev": "eth0",
+      "local_qdisc": "qdisc fq_codel 0: root refcnt 2 limit 10240p flows 1024 quantum 1514 target 5ms interval 100ms memory_limit 32Mb ecn drop_batch 64 \n Sent 12381683499 bytes 8291314 pkt (dropped 0, overlimits 0 requeues 335) \n backlog 0b 0p requeues 335\n  maxpacket 68130 drop_overlimit 0 new_flow_count 12426 ecn_mark 0\n  new_flows_len 0 old_flows_len 0",
+      "local_filters": "",
+      "remote_qdisc": "qdisc fq_codel 0: root refcnt 2 limit 10240p flows 1024 quantum 1514 target 5ms interval 100ms memory_limit 32Mb ecn drop_batch 64 \n Sent 38939636 bytes 544367 pkt (dropped 0, overlimits 0 requeues 0) \n backlog 0b 0p requeues 0\n  maxpacket 330 drop_overlimit 0 new_flow_count 18144 ecn_mark 0\n  new_flows_len 0 old_flows_len 0",
+      "remote_filters": "",
+      "ping": null,
+      "missing": [],
+      "target": "destination-host"
+    }
+  },
+  "cases": [
+    {
+      "workload": "large-file",
+      "tool": "syq",
+      "argv": [
+        "/path/to/syq",
+        "rsync",
+        "-a",
+        "--stats",
+        "--no-progress",
+        "--syq-no-bootstrap",
+        "--rsync-path",
+        "/path/to/syq-resource-helper",
+        "-e",
+        "/path/to/benchmark-ssh",
+        "/path/to/empty-source-scratch/large-file/",
+        "destination-host:/path/to/empty-destination-scratch/DEST"
+      ],
+      "bytes": 1073741824,
+      "files": 1,
+      "source": "/path/to/empty-source-scratch/large-file",
+      "source_fs": "tmpfs",
+      "mode": "fresh",
+      "prepopulated_with": null,
+      "repeats": [
+        {
+          "index": 0,
+          "wall_s": 6.536943379999968,
+          "user_s": 2.538209,
+          "sys_s": 0.879556,
+          "exit_code": 0,
+          "verified": true,
+          "fsync_s": null,
+          "fsync_note": "not requested",
+          "cache": "warm",
+          "metadata_cache": "warm",
+          "stderr_tail": "",
+          "changed_files": 0,
+          "changed_bytes": 0,
+          "delta_seed": null,
+          "round_index": 0
+        },
+        {
+          "index": 1,
+          "wall_s": 6.454376762000038,
+          "user_s": 2.5615360000000003,
+          "sys_s": 0.9422290000000011,
+          "exit_code": 0,
+          "verified": true,
+          "fsync_s": null,
+          "fsync_note": "not requested",
+          "cache": "warm",
+          "metadata_cache": "warm",
+          "stderr_tail": "",
+          "changed_files": 0,
+          "changed_bytes": 0,
+          "delta_seed": null,
+          "round_index": 1
+        },
+        {
+          "index": 2,
+          "wall_s": 7.155035218999956,
+          "user_s": 2.6189309999999963,
+          "sys_s": 1.0624439999999993,
+          "exit_code": 0,
+          "verified": true,
+          "fsync_s": null,
+          "fsync_note": "not requested",
+          "cache": "warm",
+          "metadata_cache": "warm",
+          "stderr_tail": "",
+          "changed_files": 0,
+          "changed_bytes": 0,
+          "delta_seed": null,
+          "round_index": 2
+        }
+      ],
+      "error": null,
+      "skipped": null,
+      "curtailed": null,
+      "too_short": false
+    },
+    {
+      "workload": "large-file",
+      "tool": "syq-ssh",
+      "argv": [
+        "/path/to/syq",
+        "rsync",
+        "-a",
+        "--stats",
+        "--no-progress",
+        "--syq-no-bootstrap",
+        "--rsync-path",
+        "/path/to/syq-resource-helper",
+        "--syq-no-tcp",
+        "-e",
+        "/path/to/benchmark-ssh",
+        "/path/to/empty-source-scratch/large-file/",
+        "destination-host:/path/to/empty-destination-scratch/DEST"
+      ],
+      "bytes": 1073741824,
+      "files": 1,
+      "source": "/path/to/empty-source-scratch/large-file",
+      "source_fs": "tmpfs",
+      "mode": "fresh",
+      "prepopulated_with": null,
+      "repeats": [
+        {
+          "index": 0,
+          "wall_s": 12.15694331200001,
+          "user_s": 3.459492000000001,
+          "sys_s": 4.0951699999999995,
+          "exit_code": 0,
+          "verified": true,
+          "fsync_s": null,
+          "fsync_note": "not requested",
+          "cache": "warm",
+          "metadata_cache": "warm",
+          "stderr_tail": "",
+          "changed_files": 0,
+          "changed_bytes": 0,
+          "delta_seed": null,
+          "round_index": 0
+        },
+        {
+          "index": 1,
+          "wall_s": 12.153990143999977,
+          "user_s": 3.3047369999999994,
+          "sys_s": 4.019616000000001,
+          "exit_code": 0,
+          "verified": true,
+          "fsync_s": null,
+          "fsync_note": "not requested",
+          "cache": "warm",
+          "metadata_cache": "warm",
+          "stderr_tail": "",
+          "changed_files": 0,
+          "changed_bytes": 0,
+          "delta_seed": null,
+          "round_index": 1
+        },
+        {
+          "index": 2,
+          "wall_s": 12.160312913999974,
+          "user_s": 3.7118869999999973,
+          "sys_s": 4.039057,
+          "exit_code": 0,
+          "verified": true,
+          "fsync_s": null,
+          "fsync_note": "not requested",
+          "cache": "warm",
+          "metadata_cache": "warm",
+          "stderr_tail": "",
+          "changed_files": 0,
+          "changed_bytes": 0,
+          "delta_seed": null,
+          "round_index": 2
+        }
+      ],
+      "error": null,
+      "skipped": null,
+      "curtailed": null,
+      "too_short": false
+    },
+    {
+      "workload": "large-file",
+      "tool": "rsync",
+      "argv": [
+        "/usr/bin/rsync",
+        "-a",
+        "--rsync-path",
+        "/path/to/rsync-resource-helper",
+        "-e",
+        "/path/to/benchmark-ssh",
+        "/path/to/empty-source-scratch/large-file/",
+        "destination-host:/path/to/empty-destination-scratch/DEST"
+      ],
+      "bytes": 1073741824,
+      "files": 1,
+      "source": "/path/to/empty-source-scratch/large-file",
+      "source_fs": "tmpfs",
+      "mode": "fresh",
+      "prepopulated_with": null,
+      "repeats": [
+        {
+          "index": 0,
+          "wall_s": 58.56408853600004,
+          "user_s": 3.675797000000001,
+          "sys_s": 2.7498699999999996,
+          "exit_code": 0,
+          "verified": true,
+          "fsync_s": null,
+          "fsync_note": "not requested",
+          "cache": "warm",
+          "metadata_cache": "warm",
+          "stderr_tail": "",
+          "changed_files": 0,
+          "changed_bytes": 0,
+          "delta_seed": null,
+          "round_index": 0
+        },
+        {
+          "index": 1,
+          "wall_s": 58.72092494899994,
+          "user_s": 3.7439680000000024,
+          "sys_s": 3.2151899999999998,
+          "exit_code": 0,
+          "verified": true,
+          "fsync_s": null,
+          "fsync_note": "not requested",
+          "cache": "warm",
+          "metadata_cache": "warm",
+          "stderr_tail": "",
+          "changed_files": 0,
+          "changed_bytes": 0,
+          "delta_seed": null,
+          "round_index": 1
+        },
+        {
+          "index": 2,
+          "wall_s": 58.81985148799993,
+          "user_s": 3.8245369999999994,
+          "sys_s": 3.0266769999999994,
+          "exit_code": 0,
+          "verified": true,
+          "fsync_s": null,
+          "fsync_note": "not requested",
+          "cache": "warm",
+          "metadata_cache": "warm",
+          "stderr_tail": "",
+          "changed_files": 0,
+          "changed_bytes": 0,
+          "delta_seed": null,
+          "round_index": 2
+        }
+      ],
+      "error": null,
+      "skipped": null,
+      "curtailed": null,
+      "too_short": false
+    }
+  ],
+  "aborted": null,
+  "publication": {
+    "release": "0.6.0",
+    "syq_revision": "8ccec067bb41cf3fe01fef0be2a8fb35e9d5f329",
+    "build_type": "official release binary",
+    "source_build_sha256": "4fc2f442d88f83d05bf61a0b4eead718b681678b7c7ad6a52696c16d3f479a24",
+    "harness_revision": "b87f3aeff75d05cc56e5f961f7d66518e39998ef",
+    "manual_recipe": "specs/release-060/public-wan-forward.toml",
+    "environment": {
+      "kernel": "6.12.107+deb13-cloud-amd64",
+      "cpu_model": "AMD EPYC-Milan Processor",
+      "allowed_cpus": 4,
+      "versions": {
+        "syq": "syq 0.6.0",
+        "syq-ssh": "syq 0.6.0",
+        "rsync": "rsync  version 3.4.1  protocol version 32"
+      }
+    },
+    "path_filesystems": {
+      "source": "tmpfs",
+      "destination": "tmpfs"
+    },
+    "selection_note": "Entire refreshed homepage workload, every current-release and competitor repetition retained. Prior-release drift controls remain separate.",
+    "original_round_order": [
+      [
+        "syq",
+        "syq-052",
+        "syq-052-historical",
+        "syq-ssh",
+        "rsync"
+      ],
+      [
+        "syq-ssh",
+        "rsync",
+        "syq"
+      ],
+      [
+        "rsync",
+        "syq",
+        "syq-ssh"
+      ]
+    ]
+  }
+}

@@ -76,18 +76,26 @@ def plan_lines(spec: Spec, tools: list[Tool]) -> list[str]:
             lines.append(f"  workload {w.name:12} {w.kind}: {w.bytes / 2**20:.0f} MiB in {w.files} file(s)")
     for t in tools:
         selected = "" if t.spec.workloads is None else f" [workloads: {', '.join(t.spec.workloads)}]"
-        argv = " ".join(t.argv(Location.parse("SRC"), Location.parse("DST")))
+        if t.kind == "rclone":
+            argv = " ".join(t.argv(Location.parse(spec.source, spec.ssh), Location.parse(spec.destination, spec.ssh)))
+        else:
+            argv = " ".join(t.argv(Location.parse("SRC"), Location.parse("DST")))
         lines.append(f"  tool     {t.name:12} {argv}{selected}")
     repeats = (
         f"{p.repeats} repeat(s)"
         if not p.slow_cutoff
         else (f"up to {p.repeats} repeat(s) (a tool >= {p.slow_cutoff:g}x slower than the fastest is not re-measured)")
     )
+    if p.order is not None:
+        repeats = f"{len(p.order)} scheduled rounds (per-tool counts follow the order below)"
     budget = f"; tool_timeout={p.tool_timeout:g}s" if p.tool_timeout else ""
     lines.append(
         f"  protocol: {repeats}, interleaved; cache={p.cache}; durable={p.durable}; verify={p.verify}; "
         f"seed={'fresh' if p.seed is None else p.seed}{budget}"
     )
+    if p.order is not None:
+        for index, row in enumerate(p.order):
+            lines.append(f"  round {index + 1}: {', '.join(row)}")
     return lines
 
 
@@ -99,7 +107,11 @@ def cmd_run(a: argparse.Namespace) -> int:
     tools = [Tool(t) for t in spec.tools]
     src_root, dst = Location.parse(spec.source, spec.ssh), Location.parse(spec.destination, spec.ssh)
 
-    for line in plan_lines(spec, tools):
+    try:
+        lines = plan_lines(spec, tools)
+    except ValueError as e:
+        _die(str(e))
+    for line in lines:
         print(line)
     if a.dry_run:
         return 0
@@ -108,9 +120,9 @@ def cmd_run(a: argparse.Namespace) -> int:
     if missing:
         _die(f"tool binary not found: {', '.join(missing)}")
     if dst.is_remote and any(not t.remote_ok for t in tools):
-        _die("cp cannot copy to a remote destination")
+        _die("selected tool requires local or mounted filesystem paths")
     if not dst.is_remote and not src_root.is_remote and any(not t.local_ok for t in tools):
-        _die("qcp and tar need a remote endpoint")
+        _die("selected tool requires a remote endpoint")
     if dst.exists() and not dst.is_empty_dir():
         _die(f"destination {dst.spec()} exists and is not empty; refusing to write into it")
     generated = [w for w in spec.workloads if w.kind != "path"]

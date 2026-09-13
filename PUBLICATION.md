@@ -56,19 +56,25 @@ review both content and commit messages before a public PR. Never merge private
 branches wholesale or push private refs. Bring public harness releases back into
 the private workspace to avoid diverging implementations.
 
-## Rclone presentation preview (2026-09-11)
+## Rclone release captures (2026-09-13)
 
-The draft page pairs compact dataset descriptions and exact commands with
-measured speeds, elapsed times and verification scope.
-Existing screening measurements retain their status alongside completed
-three-run WAN replacements. Describe each case using its actual recorded
-repetitions and controls; local, NFS and fast-fabric screening still need the
-agreed longer workloads and repeated measurements.
-Do not merge/deploy this preview as the completed results page.
+Each release has its own rclone input, with the same version selector as the
+main comparison pages. Historical captures retain their recorded repetitions
+and qualifications. Ordinary reporting series require three verified copies
+per setting and the competitor duration floor; filesystem and multi-rail
+capability panels also accept their historical single-copy captures. Short,
+failed and unreported settings remain inspectable in the selected data.
+
+Release refreshes insert an official previous-release control after the first
+candidate run, retaining those controls separately from the displayed release.
+When an older public capture used a source build, compare that exact historical
+binary too. Differences between official and historical binaries must remain
+visible rather than being attributed automatically to a release change.
 
 The standalone preparation recipe is an inspectable alternative to the
-experimental setup; do not claim it generated the captured numbers. Its cache
-and metadata semantics must be recorded when used. Experimental adapters are not
-yet public; that limitation stays explicit. Matching public measurement code is
-still required for a full reproducible release. Existing release-page acceptance
-and the private/public provenance boundary remain unchanged.
+operational setup; it did not generate the historical captures. Record the
+actual cache and metadata checks alongside every selected measurement. SFTP
+and WebDAV adapters are included in the public harness. Matching measurement
+code, the actual preparation procedure and private/public provenance review
+remain required. A draft refresh is ready for publication only after its
+selected capture set and acceptance checks are complete.

@@ -603,7 +603,7 @@ def render_public(runs: list[dict], catalog: dict | None = None, *, page: str = 
     if page == "all-results.html":
         body = [
             '<header class="hero"><h1>All benchmark results</h1>'
-            "<p>The full set of comparisons for syq 0.5.2, including other settings and every test run.</p>"
+            "<p>The selected comparisons, including tool settings and every retained test run.</p>"
             '<p><a href="index.html">← Back to the short version</a></p></header>'
         ]
     if catalog and not compact:

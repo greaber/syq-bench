@@ -172,7 +172,7 @@ def reportable(rows: list[dict], *, capability: bool = False) -> bool:
     return bool(groups) and all(
         measurements(group) is not None
         and (
-            (len(group) == 1 and group[0]["repeat"] == 0)
+            (len(group) in (1, 3) and {r["repeat"] for r in group} == set(range(len(group))))
             if capability
             else (
                 len(group) == 3
@@ -184,9 +184,9 @@ def reportable(rows: list[dict], *, capability: bool = False) -> bool:
     )
 
 
-def build(root: Path) -> Path:
-    data = json.loads((root / "site/data/rclone-exploratory.json").read_text())
-    body = (root / "site/rclone-body.html").read_text()
+def render(root: Path, data_path: str = "data/rclone-exploratory.json", body_path: str = "rclone-body.html") -> str:
+    data = json.loads((root / "site" / data_path).read_text())
+    body = (root / "site" / body_path).read_text()
     before, remainder = body.split("<!-- MULTIRAIL -->")
     rail_intro, after = remainder.split("<!-- /MULTIRAIL -->")
     body = before + after
@@ -215,6 +215,8 @@ def build(root: Path) -> Path:
         ("local", "Local filesystem", ["raid-explore-local-small", "raid-explore-local-large"]),
         ("rails", "Multi-rail LAN", ["fast-corrected-8g"]),
     ]
+    if any(case["id"] == "cloud-rclone-large" for case in data["featured"]):
+        sections[1][2].append("cloud-rclone-large")
     rendered = dict(zip((c["id"] for c in data["featured"]), featured, strict=True))
     titles = {c["id"]: c["title"] for c in data["featured"]}
     if sorted(rendered) != sorted(case for _, _, cases in sections for case in cases):
@@ -249,6 +251,10 @@ def build(root: Path) -> Path:
             ("settings", "Transfer settings"),
         ]
     )
+    return shell("syq vs rclone — preliminary results", body, nav, page="rclone.html", all_results=True)
+
+
+def build(root: Path) -> Path:
     target = root / "site/rclone.html"
-    target.write_text(shell("syq vs rclone — preliminary results", body, nav, page="rclone.html", all_results=True))
+    target.write_text(render(root))
     return target
