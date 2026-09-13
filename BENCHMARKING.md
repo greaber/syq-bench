@@ -191,6 +191,12 @@ Use syq's planning log or the first rclone nonzero progress report (including
 one second for its timestamp precision). This is a conservative screening rule,
 not a subtraction from elapsed time or proof that later coordination is free.
 
+As of 2026-09-13, filesystem and multi-rail capability panels accept either
+one historical verified copy or a complete three-copy refresh per setting.
+Their purpose is to demonstrate the stated filesystem or network capability;
+the ordinary comparison duration gate does not apply. Display the actual repeat
+count and preserve the distinction between logical copy rate and physical IO.
+
 ### Release selection (2026-09-13)
 
 Public benchmark pages use a shared release manifest and a version selector,

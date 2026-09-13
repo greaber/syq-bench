@@ -406,7 +406,8 @@ aside{background: var(--bg);}
 .track:not(.dismissed):hover .measurements,.track:not(.dismissed):focus .measurements{display:block;visibility:visible}
 @media print{.measurements{display:none}}
 
-.release-picker { display: flex; align-items: center; justify-content: flex-end; gap: .5rem; margin-bottom: .75rem; }
+#main { scroll-margin-top: calc(var(--site-header-height, 80px) + 16px); }
+.release-picker { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: .5rem; margin-bottom: .75rem; }
 .release-picker select { font: inherit; color: inherit; background: var(--panel); border: 1px solid var(--border); border-radius: .3rem; padding: .3rem .5rem; }
 /* Shared sidebar presentation. Loaded after each renderer's layout adapter. */
 :root{--site-sidebar-width:300px;--sidebar-width:var(--site-sidebar-width)}
