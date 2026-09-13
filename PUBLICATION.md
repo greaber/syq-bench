@@ -68,7 +68,7 @@ Do not merge/deploy this preview as the completed results page.
 
 The standalone preparation recipe is an inspectable alternative to the
 experimental setup; do not claim it generated the captured numbers. Its cache
-and metadata semantics must be recorded when used. Experimental adapters are not
-yet public; that limitation stays explicit. Matching public measurement code is
-still required for a full reproducible release. Existing release-page acceptance
+and metadata semantics must be recorded when used. SFTP and WebDAV adapters are now included in the public harness. Matching
+measurement code and the actual preparation procedure remain required for a
+fully reproducible release. Existing release-page acceptance
 and the private/public provenance boundary remain unchanged.

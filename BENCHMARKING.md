@@ -32,7 +32,9 @@ Use the same source contents and starting destination for every competing tool.
 Fresh copies start empty; updates restore the same pre-change state. Interleave
 repetitions across tools to reduce drift and cache-order bias. Record additional
 campaign ordering or instrumentation rather than claiming a stock harness run
-reproduces it. Clean timings run separately from tracing and diagnostic sampling.
+reproduces it. An explicit round order can insert one previous-release copy after
+the first candidate copy while retaining three candidate and competitor repeats.
+This is a drift screen; repeat both versions when it shows a substantial difference. Clean timings run separately from tracing and diagnostic sampling.
 
 Time completed, checksum-verified jobs. Give long runs explicit budgets, retain
 failures and timeouts, and report any curtailed repetitions. An interrupted copy
@@ -198,3 +200,14 @@ Canonical URLs show the manifest's latest complete capture set. The build
 checks syq identities against the selected release, so selecting a version
 cannot relabel older measurements. Historical results remain available for
 comparison; their measurements and qualifications are preserved.
+
+### Resource accounting (2026-09-13)
+
+Release campaigns compare total user-plus-system CPU seconds for the same
+completed job, elapsed time, and absolute memory consumption. The standalone
+resource probe records wait4 CPU, largest-process peak RSS, faults, block IO,
+and context switches. Peak RSS is not simultaneous aggregate process-tree memory.
+Check both endpoints, including SSH/SFTP helpers and persistent WebDAV servers;
+keep process accounting distinct from whole-host counters. Missing accounting
+and incomplete commands remain explicit. Use separate diagnostic runs for
+tracing or sampling, and independently verify their copies.

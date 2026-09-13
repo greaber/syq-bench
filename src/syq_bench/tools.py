@@ -7,10 +7,12 @@ harness owns cleanup.
 
 from __future__ import annotations
 
+import secrets
 import shlex
 import shutil
+import subprocess
 from dataclasses import dataclass
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 from syq_bench.remote import Location
 from syq_bench.spec import ToolSpec
@@ -34,11 +36,11 @@ class Tool:
 
     @property
     def remote_ok(self) -> bool:
-        return self.kind != "cp"
+        return self.kind != "cp" and (self.kind != "rclone" or self.spec.rclone_backend != "local")
 
     @property
     def local_ok(self) -> bool:
-        return self.kind not in ("qcp", "tar")  # both exist to move data through ssh
+        return self.kind not in ("qcp", "tar") and (self.kind != "rclone" or self.spec.rclone_backend == "local")
 
     def runs_workload(self, name: str) -> bool:
         selected = self.spec.workloads
@@ -47,6 +49,8 @@ class Tool:
     def argv(self, src: Location, dst: Location) -> list[str]:
         s = self.spec
         remote = src if src.is_remote else dst if dst.is_remote else None
+        if s.kind == "rclone":
+            return self.rclone_argv("copy", src, dst)
         if s.kind == "cp":
             return [s.binary, *s.args, f"{src.path}/.", str(dst.path)]
         if s.kind == "tar":
@@ -79,6 +83,69 @@ class Tool:
         # always creates DST first.
         cmd += [src.spec(trailing_slash=True), dst.spec()]
         return ["env", "SYQ_DEBUG=1", *cmd] if s.debug else cmd
+
+    def rclone_path(self, location: Location) -> str:
+        if not location.is_remote:
+            # Explicit local backend avoids interpreting colons in local names as a remote.
+            return ":local:" + str(location.path)
+        if self.spec.rclone_backend in ("sftp", "sftp-ssh"):
+            return ":sftp:" + str(location.path)
+        if self.spec.rclone_backend == "webdav":
+            root = PurePosixPath(self.spec.rclone_root)
+            if ".." in location.path.parts or not location.path.is_relative_to(root):
+                raise ValueError("WebDAV path is outside rclone_root")
+            return ":webdav:" + str(location.path.relative_to(root))
+        raise ValueError("rclone local backend requires mounted filesystem paths")
+
+    def rclone_argv(self, command: str, *locations: Location) -> list[str]:
+        remotes = [loc for loc in locations if loc.is_remote]
+        if len(remotes) > 1:
+            raise ValueError("rclone benchmark requires a local endpoint")
+        cmd = [self.binary, command, "--config", "/dev/null"]
+        if remotes:
+            remote = remotes[0]
+            if self.spec.rclone_backend == "sftp":
+                user, sep, host = remote.host.rpartition("@")
+                cmd += ["--sftp-host", host, "--sftp-known-hosts-file", str(Path.home() / ".ssh/known_hosts")]
+                if sep:
+                    cmd += ["--sftp-user", user]
+            elif self.spec.rclone_backend == "sftp-ssh":
+                # External OpenSSH preserves the harness's aliases, keys, ports and wrappers.
+                cmd += ["--sftp-ssh", shlex.join(remote.ssh_argv())]
+            elif self.spec.rclone_backend == "webdav":
+                cmd += ["--webdav-url", self.spec.rclone_url]
+        elif self.spec.rclone_backend != "local":
+            raise ValueError("rclone network backend requires a remote endpoint")
+        args = self.spec.args
+        if command == "cat":
+            # This is a copy-command flag, unlike global/backend tuning flags.
+            args = tuple(a for a in args if a.split("=", 1)[0] != "--create-empty-src-dirs")
+        return [*cmd, *args, "--", *(self.rclone_path(loc) for loc in locations)]
+
+    def check_destination(self, dst: Location) -> None:
+        """Before separately configured backend writes, prove it reaches the SSH-owned tree.
+
+        Only a read uses the unproven endpoint. The random marker lives in this repeat's
+        owned destination and is removed before timing and checksum verification.
+        """
+        if self.kind != "rclone" or self.spec.rclone_backend not in ("sftp", "webdav"):
+            return
+        if not dst.is_remote:
+            raise ValueError("SFTP/WebDAV campaign currently supports uploads only")
+        token = secrets.token_hex(32)
+        marker = dst / (".syq-bench-endpoint-" + secrets.token_hex(16))
+        created = False
+        try:
+            dst.sh(f"(set -C; printf %s {shlex.quote(token)} > {shlex.quote(str(marker.path))})")
+            created = True
+            result = subprocess.run(
+                self.rclone_argv("cat", marker), capture_output=True, text=True, check=True, timeout=30
+            )
+            if result.stdout != token:
+                raise OSError("rclone endpoint does not expose the owned destination; refusing copy")
+        finally:
+            if created:
+                dst.run(["rm", "-f", "--", str(marker.path)])
 
     def resolved_binary(self) -> str | None:
         """Absolute path of the local binary, or None if not found."""

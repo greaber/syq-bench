@@ -12,12 +12,13 @@ import math
 import re
 import tomllib
 from dataclasses import dataclass, field
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any
+from urllib.parse import urlsplit
 
 CACHE_MODES = ("evict", "warm", "drop")
 FIXTURE_KINDS = ("large-file", "small-files", "mixed-tree", "path")
-TOOL_KINDS = ("syq", "rsync", "cp", "qcp", "tar")
+TOOL_KINDS = ("syq", "rsync", "cp", "qcp", "tar", "rclone")
 _NAME = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]*")
 # Arguments that delete or move files. The harness owns every removal.
 FORBIDDEN_ARGS = ("--delete", "--del", "--remove-source-files", "--remove-sent-files", "--rm")
@@ -48,6 +49,9 @@ class ToolSpec:
     jobs: int | None
     workloads: tuple[str, ...] | None = None  # None: every workload; otherwise an explicit allowlist
     debug: bool = False  # run syq with its SYQ_DEBUG phase/worker diagnostics enabled
+    rclone_backend: str = "local"  # local (including mounts), sftp, sftp-ssh, or webdav
+    rclone_url: str | None = None  # WebDAV URL, credentials supplied through the environment
+    rclone_root: str | None = None  # absolute filesystem directory served at rclone_url
 
 
 BLOCK = 4096  # a file costs at least one block on disk, whatever its size
@@ -108,6 +112,7 @@ class Protocol:
     # than the workload's fastest completed median (0 disables); the first repeat still runs, so the
     # order of magnitude is measured once and recorded as a lower bound instead of re-measured.
     seed: int | None = None  # None: fresh per run, recorded in the result
+    order: tuple[tuple[str, ...], ...] | None = None  # Explicit tools in each round; omissions are intentional.
 
 
 @dataclass(frozen=True)
@@ -148,7 +153,7 @@ def _tool(d: dict, i: int) -> ToolSpec:
         raise SpecError(f"{ctx}.debug must be true or false")
     if debug and kind != "syq":
         raise SpecError(f"{ctx}.debug is supported only for syq")
-    default_args = {"qcp": ["-rpq"], "tar": []}.get(kind, ["-a"])
+    default_args = {"qcp": ["-rpq"], "tar": [], "rclone": ["--create-empty-src-dirs"]}.get(kind, ["-a"])
     args = tuple(str(a) for a in d.get("args", default_args))
     bad = [a for a in args if a.split("=", 1)[0] in FORBIDDEN_ARGS or a.startswith("--delete-")]
     if bad:
@@ -160,7 +165,38 @@ def _tool(d: dict, i: int) -> ToolSpec:
         if len(set(selected)) != len(selected):
             raise SpecError(f"{ctx}.workloads contains duplicate names: {selected}")
         selected = tuple(selected)
-    return ToolSpec(name, kind, d.get("binary", kind), args, d.get("jobs"), selected, debug)
+    backend = d.get("rclone_backend", "local")
+    url, root = d.get("rclone_url"), d.get("rclone_root")
+    if kind != "rclone" and any(k.startswith("rclone_") for k in d):
+        raise SpecError(f"{ctx}: rclone settings require kind = rclone")
+    if backend not in ("local", "sftp", "sftp-ssh", "webdav"):
+        raise SpecError(f"{ctx}: rclone_backend must be local, sftp, sftp-ssh, or webdav")
+    if kind == "rclone":
+        if d.get("jobs") is not None:
+            raise SpecError(f"{ctx}: use rclone --transfers in args instead of jobs")
+        if backend == "webdav":
+            try:
+                parsed = urlsplit(url) if isinstance(url, str) else None
+                valid_url = parsed and parsed.scheme == "https" and parsed.hostname and parsed.port != 0
+            except ValueError:
+                valid_url = False
+            if not valid_url or parsed.username or parsed.password or parsed.query or parsed.fragment:
+                raise SpecError(f"{ctx}: rclone_url must be an HTTPS URL without credentials, query, or fragment")
+            if not isinstance(root, str) or not root.startswith("/") or ".." in PurePosixPath(root).parts:
+                raise SpecError(f"{ctx}: rclone_root must be an absolute filesystem directory without ..")
+        elif url is not None or root is not None:
+            raise SpecError(f"{ctx}: rclone_url and rclone_root are only for webdav")
+        # The adapter owns the operation and endpoint routing, just as the harness owns cleanup.
+        reserved = (
+            "--sftp-ssh",
+            "--sftp-server-command",
+            "--sftp-subsystem",
+            "--webdav-url",
+            "--config",
+        )
+        if any(a.split("=", 1)[0] in reserved for a in args):
+            raise SpecError(f"{ctx}: rclone endpoint/config arguments are managed by the harness")
+    return ToolSpec(name, kind, d.get("binary", kind), args, d.get("jobs"), selected, debug, backend, url, root)
 
 
 def _workload(d: dict, i: int) -> WorkloadSpec:
@@ -191,6 +227,13 @@ def _workload(d: dict, i: int) -> WorkloadSpec:
 
 
 def _protocol(d: dict) -> Protocol:
+    order = d.get("order")
+    if order is not None and (
+        not isinstance(order, list)
+        or not order
+        or any(not isinstance(row, list) or not row or any(not isinstance(t, str) for t in row) for row in order)
+    ):
+        raise SpecError("protocol.order must be a non-empty array of non-empty tool-name arrays")
     p = Protocol(
         repeats=int(d.get("repeats", 3)),
         cache=d.get("cache", "evict"),
@@ -200,6 +243,7 @@ def _protocol(d: dict) -> Protocol:
         tool_timeout=float(d["tool_timeout"]) if "tool_timeout" in d else None,
         slow_cutoff=float(d.get("slow_cutoff", 10.0)),
         seed=d.get("seed"),
+        order=tuple(tuple(row) for row in order) if order is not None else None,
     )
     if p.cache not in CACHE_MODES:
         raise SpecError(f"protocol.cache must be one of {CACHE_MODES}")
@@ -209,6 +253,8 @@ def _protocol(d: dict) -> Protocol:
         raise SpecError("protocol.tool_timeout must be a positive finite number of seconds")
     if not math.isfinite(p.slow_cutoff) or (p.slow_cutoff != 0 and p.slow_cutoff <= 1):
         raise SpecError("protocol.slow_cutoff must be 0 (disabled) or a finite value above 1")
+    if p.order is not None and (len(p.order) != p.repeats or any(len(set(row)) != len(row) for row in p.order)):
+        raise SpecError("protocol.order must have one row per repeat, with no duplicate tool within a row")
     return p
 
 
@@ -230,6 +276,11 @@ def from_dict(raw: dict[str, Any]) -> Spec:
     name = str(raw.get("name", "unnamed"))
     if not _NAME.fullmatch(name):
         raise SpecError(f"name {name!r} must be a plain path component ([A-Za-z0-9._-]); it names the result file")
+    protocol = _protocol(raw.get("protocol", {}))
+    if protocol.order is not None:
+        scheduled = {name for row in protocol.order for name in row}
+        if scheduled != {t.name for t in tools}:
+            raise SpecError("protocol.order must name every configured tool and no unknown tools")
     return Spec(
         name=name,
         description=raw.get("description", ""),
@@ -238,7 +289,7 @@ def from_dict(raw: dict[str, Any]) -> Spec:
         ssh=str(ep.get("ssh", "ssh")),
         tools=tuple(tools),
         workloads=tuple(workloads),
-        protocol=_protocol(raw.get("protocol", {})),
+        protocol=protocol,
         raw=raw,
     )
 

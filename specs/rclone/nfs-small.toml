@@ -1,0 +1,38 @@
+name = "rclone-nfs-small"
+description = "Mounted NFS small-file comparison; verify mount identity before running"
+
+[endpoints]
+source = "/path/to/empty-local-source-scratch"
+destination = "/path/to/nfs/empty-destination-scratch"
+
+[[tools]]
+name = "syq"
+binary = "/path/to/pinned-syq"
+args = ["rsync", "-a", "--no-progress"]
+
+[[tools]]
+name = "rsync"
+args = ["-a"]
+
+[[tools]]
+name = "rclone-local"
+kind = "rclone"
+binary = "/path/to/pinned-rclone"
+rclone_backend = "local"
+args = ["--metadata", "--create-empty-src-dirs"]
+
+[[workloads]]
+name = "small-files"
+kind = "small-files"
+files = 100000
+bytes = "400MiB"
+
+[protocol]
+repeats = 3
+seed = 9911
+cache = "evict"
+durable = false
+verify = true
+probes = false
+tool_timeout = 900
+slow_cutoff = 0
