@@ -1,0 +1,8 @@
+/* Benchmark identity is orange; --syq remains blue for measured syq results. */
+:root, :root.light, :root.rust{
+  --accent:#ad4b0b;--accent-soft:#fff0e5;
+  --accent-fill:#db6b26;--accent-ink:#111820}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]):not(.light):not(.rust),:root:not(.js):not([data-theme="light"]){
+  --accent:#f4a261;--accent-soft:#382619}}
+:root[data-theme="dark"], :root.navy, :root.coal, :root.ayu{
+  --accent:#f4a261;--accent-soft:#382619}
