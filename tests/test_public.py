@@ -581,7 +581,11 @@ def test_generated_page_and_links_match_current_inputs():
     pages = public.render_pages(runs, catalog, (ROOT / "site/reproduce-body.html").read_text())
     assert "will be public soon" not in pages["reproduce.html"]
     for filename, page in pages.items():
-        assert (ROOT / "site" / filename).read_text() == page
+        icons = (
+            '<link rel="icon" type="image/png" href="favicon.png">'
+            '<link rel="icon" type="image/svg+xml" href="favicon.svg">'
+        )
+        assert (ROOT / "site" / filename).read_text() == page.replace("</head>", icons + "</head>", 1)
         assert "syq-bench-source.zip" not in page
         assert 'href="https://github.com/greaber/syq-bench"' in page
         header = page.split('<header class="site-header"')[1].split("</header>")[0]

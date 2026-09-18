@@ -112,6 +112,14 @@ def build(root: Path = ROOT) -> list[Path]:
         target.write_text(page)
         outputs.append(target)
     outputs.append(build_rclone_page(root))
+    for target in outputs:
+        page = target.read_text().replace(
+            "</head>",
+            '<link rel="icon" type="image/png" href="favicon.png">'
+            '<link rel="icon" type="image/svg+xml" href="favicon.svg"></head>',
+            1,
+        )
+        target.write_text(page)
     return outputs
 
 
