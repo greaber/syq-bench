@@ -509,10 +509,10 @@ def stylesheet() -> str:
     return (
         css
         + root.joinpath("brand.css").read_text()
-        + root.joinpath("bench-brand.css").read_text()
         + root.joinpath("public.css").read_text()
         + root.joinpath("sidebar.css").read_text()
         + root.joinpath("controls.css").read_text()
+        + root.joinpath("bench-brand.css").read_text()
     )
 
 

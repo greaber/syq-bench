@@ -5,11 +5,12 @@ titles/buttons, sidebars and header controls. The inventory is site-ui.json
 under src/syq_bench here and theme in syq. Keep every listed pair identical.
 
 The toolkit uses Open Sans prose at 20px, a Manrope wordmark, and IBM Plex
-Mono commands and numbers. Docs use a blue accent; benchmarks use orange,
-with darker text in light mode and lighter text in dark mode. The benchmark
-`bench-brand.css` adapter sets `--accent` for site chrome while `--syq` keeps
-measured syq results blue. Chart and status colors are shared. Both favicons
-use the Manrope “s”, with blue for docs and orange for benchmarks.
+Mono commands and numbers. The syq wordmark stays blue on both sites.
+Benchmarks use orange only for the active navigation underline, sidebar
+selection markers, primary buttons, and favicon. The `bench-brand.css`
+adapter supplies these section cues; normal text, headings, hover/focus
+styles, chart colors, and status colors keep the shared palette.
+Both favicons use the Manrope “s”, blue for docs and orange for benchmarks.
 
 Sidebars default to 300px, with 24px left padding,
 12px right padding, 15px links and 16px section headings. Contents toggles an

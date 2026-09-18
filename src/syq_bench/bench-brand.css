@@ -1,8 +1,11 @@
-/* Benchmark identity is orange; --syq remains blue for measured syq results. */
-:root, :root.light, :root.rust{
-  --accent:#ad4b0b;--accent-soft:#fff0e5;
-  --accent-fill:#db6b26;--accent-ink:#111820}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]):not(.light):not(.rust),:root:not(.js):not([data-theme="light"]){
-  --accent:#f4a261;--accent-soft:#382619}}
-:root[data-theme="dark"], :root.navy, :root.coal, :root.ayu{
-  --accent:#f4a261;--accent-soft:#382619}
+/* Orange identifies the benchmark section, not the syq brand or measured data. */
+:root{
+  --bench-accent:#db6b26;
+  --accent-fill:var(--bench-accent);--accent-ink:#111820}
+.site-nav a[aria-current="page"]{
+  color:var(--ink);text-decoration-color:var(--bench-accent);text-decoration-thickness:2px}
+#benchmark-sidebar a[aria-current]{position:relative;color:var(--ink)}
+#benchmark-sidebar a[aria-current]::before{
+  content:"";position:absolute;left:-13px;top:4px;bottom:4px;width:3px;
+  background:var(--bench-accent);border-radius:2px}
+#benchmark-sidebar .nav-item[aria-current="location"] .nav-num{color:inherit}
