@@ -1,11 +1,19 @@
 # Published benchmarks
 
-`catalog.toml` explicitly selects the public captures and supplies scenario
-titles, context and the default syq entry. Numbers and comparison status are
-computed from the captures in `data/`; do not put measured performance in
-the presentation metadata. Chart bars show logical throughput beside mean elapsed seconds; whiskers show
-the repeat range. Each chart compares tools from one run. Other
-allocations stay separate and inspectable.
+[`releases.toml`](releases.toml) selects the published releases and the default
+release via `latest`. Each entry points to its own catalog, rclone data and page
+bodies under `releases/` and `data/`. A release catalog selects the main-page
+captures and supplies scenario titles, context and the default syq entry.
+Numbers and comparison status are computed from the captures in `data/`; do not
+put measured performance in the presentation metadata. Chart bars show logical
+throughput beside mean elapsed seconds; whiskers show the repeat range. Each
+chart compares tools from one run. Other allocations stay separate and inspectable.
+
+The build generates all five pages for every configured release. Versioned URLs
+retain that release while navigating; unversioned URLs show `latest`. The shared
+version selector also links to historical results. The top-level `catalog.toml`,
+`reproduce-body.html` and `rclone-body.html` are legacy inputs retained for direct
+renderer calls and tests; the published build uses the manifest's release inputs.
 
 Every chart uses effective speed: recorded reference dataset bytes divided by
 mean runtime, including updates that reuse existing data. This is not a wire
@@ -38,19 +46,22 @@ fields still require review. Preserve failure, verification, cache and timing
 fields. Do not rename a changed workload into an existing comparison or
 pool different allocations as one measured environment.
 
-The current page selects only the syq 0.5.2 source revision. Hetzner Cloud,
-dedicated-server and Local and NFS storage comparisons stay separate. The build
-checks `acceptance` against every tool in each selected whole workload: three
-verified repetitions, the requested cache preparation, and at least three seconds
-per repetition. Failed and short cases remain in the downloadable captures but
-are not charted. The initial public snapshot includes the 15 captures selected
-by the release catalog. Older captures remain in the private experiment
-repository; they are not inputs to this page.
+The build checks each capture's syq identity against its selected release.
+Hetzner Cloud, dedicated-server and local and NFS storage comparisons stay
+separate. Each main catalog's `acceptance` applies to every tool in a selected
+whole workload: three verified repetitions, the requested cache preparation,
+and at least three seconds per repetition. Failed and short cases remain in
+the downloadable captures but are not charted. Rclone reporting and capability
+panels have their own acceptance rules; see
+[PUBLICATION.md](../PUBLICATION.md#rclone-release-captures-2026-09-13).
 
-Manual recipes are under `specs/release-052/`. They explain the independent
-remote-helper hash checks and the difference between the rotating campaign
-wrapper and a stock harness invocation. The recorded harness revision points to matching measurement source in public
-history; later report and harness updates are separate commits.
+Each release's Reproduce page and catalog link to its manual recipes under
+`specs/`; the rclone page includes its own reproduction guidance. Follow the
+recipe for the selected release, including its executable identity checks,
+run order and instrumentation. The recorded harness revision points to matching
+measurement source in public history; later report and harness updates are
+separate commits. Historical captures keep their original versions and
+qualifications.
 
 The generated HTML and selected data are served by the existing Pages workflow
 after a reviewed change reaches `master`. For shared fonts, colors and
@@ -69,8 +80,8 @@ The main page has four selected charts, one per section. `overview.comparisons`
 selects accepted workloads from the full catalog; all competitors and measured values are retained. `all-results.html` keeps the complete set of accepted
 comparisons, alternate syq settings, repetitions, downloads and setup details.
 Losses remain with the full results, available through the navigation. The
-complete-rewrite chart is there too; the main page uses the overseas fresh copy
-to show the bulk-transfer benefit once. Write
+available comparisons depend on the selected release's catalog; a homepage
+refresh need not repeat the wider historical campaign. Write
 its copy for someone new to syq: copying jobs first, technical details on the
 other pages. Describe local storage by setup and long-distance routes by country
 or broad US region, not by small cities or the owner's machine labels.

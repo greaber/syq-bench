@@ -140,8 +140,8 @@ One same-filesystem large-copy example and one single-file multi-rail example ap
 “Filesystem and network capabilities”; verified single measurements are accepted
 there, with counts shown normally beside speeds. These demonstrate the tested
 capabilities, not stable peak throughput or proof of the entire speedup's cause.
-Other screening data remains downloadable but is not charted. The page remains
-a draft pending publication review.
+Other screening data remains downloadable but is not charted. The published
+page participates in the shared release selection described below.
 Speeds use the same dataset-bytes / mean-command-time calculation and decimal
 units as the main page, with seconds and observed repeat ranges also visible.
 Keep bars adjacent on a shared scale within each case, followed by a compact

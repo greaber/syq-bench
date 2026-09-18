@@ -56,6 +56,18 @@ review both content and commit messages before a public PR. Never merge private
 branches wholesale or push private refs. Bring public harness releases back into
 the private workspace to avoid diverging implementations.
 
+## Release update documentation (2026-09-18)
+
+The root README links to the unversioned Reproduce page so its starting point
+follows the latest published benchmark release without a separate version pin.
+Exact versions belong in release-specific recipes, catalogs and captures, where
+they identify the measurements. Historical inputs keep their original identities.
+
+When publishing a release refresh, update `site/releases.toml` and its selected
+inputs together, rebuild the site, and check the root and site READMEs for stale
+coverage, recipe links or build instructions. Check that unversioned pages show
+`latest` and that versioned pages retain their matching recipes and downloads.
+
 ## Rclone release captures (2026-09-13)
 
 Each release has its own rclone input, with the same version selector as the

@@ -9,8 +9,12 @@ and limitations.
 
 [Published benchmark results](https://greaber.github.io/syq-bench/)
 
-Start with the [syq 0.5.2 recipes](specs/release-052/README.md) to repeat a
-published comparison, or adapt a template under `specs/` for your own scratch
+Start with [Reproduce a result](https://greaber.github.io/syq-bench/reproduce.html)
+to repeat a published comparison. The site defaults to the latest benchmarked
+release; use its version selector to find earlier results and their matching
+recipes. Each recipe and capture records the exact versions measured.
+
+For your own comparisons, adapt a template under `specs/` to your scratch
 directories. Always inspect the plan with `uv run syq-bench run SPEC --dry-run`
 before running a new spec.
 
