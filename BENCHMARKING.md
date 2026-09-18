@@ -32,7 +32,9 @@ Use the same source contents and starting destination for every competing tool.
 Fresh copies start empty; updates restore the same pre-change state. Interleave
 repetitions across tools to reduce drift and cache-order bias. Record additional
 campaign ordering or instrumentation rather than claiming a stock harness run
-reproduces it. Clean timings run separately from tracing and diagnostic sampling.
+reproduces it. An explicit round order can insert one previous-release copy after
+the first candidate copy while retaining three candidate and competitor repeats.
+This is a drift screen; repeat both versions when it shows a substantial difference. Clean timings run separately from tracing and diagnostic sampling.
 
 Time completed, checksum-verified jobs. Give long runs explicit budgets, retain
 failures and timeouts, and report any curtailed repetitions. An interrupted copy
@@ -188,3 +190,30 @@ upper bound on payload startup at most one fifth of its duration in every repeat
 Use syq's planning log or the first rclone nonzero progress report (including
 one second for its timestamp precision). This is a conservative screening rule,
 not a subtraction from elapsed time or proof that later coordination is free.
+
+As of 2026-09-13, filesystem and multi-rail capability panels accept either
+one historical verified copy or a complete three-copy refresh per setting.
+Their purpose is to demonstrate the stated filesystem or network capability;
+the ordinary comparison duration gate does not apply. Display the actual repeat
+count and preserve the distinction between logical copy rate and physical IO.
+
+### Release selection (2026-09-13)
+
+Public benchmark pages use a shared release manifest and a version selector,
+including the rclone page. Each release has its own capture catalog and page
+inputs; versioned URLs retain that release while following site navigation.
+Canonical URLs show the manifest's latest complete capture set. The build
+checks syq identities against the selected release, so selecting a version
+cannot relabel older measurements. Historical results remain available for
+comparison; their measurements and qualifications are preserved.
+
+### Resource accounting (2026-09-13)
+
+Release campaigns compare total user-plus-system CPU seconds for the same
+completed job, elapsed time, and absolute memory consumption. The standalone
+resource probe records wait4 CPU, largest-process peak RSS, faults, block IO,
+and context switches. Peak RSS is not simultaneous aggregate process-tree memory.
+Check both endpoints, including SSH/SFTP helpers and persistent WebDAV servers;
+keep process accounting distinct from whole-host counters. Missing accounting
+and incomplete commands remain explicit. Use separate diagnostic runs for
+tracing or sampling, and independently verify their copies.

@@ -1,0 +1,39 @@
+# Replace binary and scratch paths. Named binaries work with every tool backend,
+# including adding kind="rclone" entries from specs/rclone/.
+name = "release-comparison"
+[endpoints]
+source = "/path/to/empty/source-scratch"
+destination = "/path/to/empty/destination-scratch"
+[[tools]]
+name = "syq-new"
+kind = "syq"
+binary = "/path/to/new/syq"
+args = ["rsync", "-a", "--no-progress", "--syq-no-bootstrap"]
+[[tools]]
+name = "syq-old"
+kind = "syq"
+binary = "/path/to/old/syq"
+args = ["rsync", "-a", "--no-progress", "--syq-no-bootstrap"]
+[[tools]]
+name = "rsync"
+[[tools]]
+name = "cp"
+[[workloads]]
+name = "mixed-tree"
+kind = "mixed-tree"
+files = 16000
+bytes = "16GiB"
+[protocol]
+repeats = 3
+order = [
+  ["syq-new", "syq-old", "rsync", "cp"],
+  ["rsync", "cp", "syq-new"],
+  ["cp", "syq-new", "rsync"],
+]
+seed = 9911
+cache = "evict"
+durable = false
+verify = true
+probes = false
+slow_cutoff = 0
+tool_timeout = 900

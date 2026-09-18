@@ -210,3 +210,16 @@ def test_fast_syq_and_capability_results_remain_verified():
     assert not reportable(single)
     single[0]["content_verified"] = False
     assert not reportable(single, capability=True)
+
+
+def test_repeated_capability_requires_complete_verified_indices():
+    from syq_bench.rclone_public import reportable
+
+    rows = [dict(sample(), tool="syq", repeat=i, wall_s=0.2) for i in range(3)]
+    assert reportable(rows, capability=True)
+    assert not reportable(rows[:2], capability=True)
+    rows[2]["repeat"] = 1
+    assert not reportable(rows, capability=True)
+    rows[2]["repeat"] = 2
+    rows[1]["content_verified"] = False
+    assert not reportable(rows, capability=True)
