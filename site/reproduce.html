@@ -512,16 +512,22 @@ aside{background: var(--bg);}
 }
 @media(max-width:480px){.site-sidebar-ready .site-nav{font-size:14px;gap:8px}}
 @media print{.site-controls,.site-search-panel{display:none!important}}
-/* Orange identifies the benchmark section, not the syq brand or measured data. */
-:root{
-  --bench-accent:#db6b26;
-  --accent-fill:var(--bench-accent);--accent-ink:#111820}
+/* Golden-orange surfaces distinguish benchmarks; syq branding and data stay blue. */
+:root, :root.light, :root.rust{
+  --bg:hsl(39 100% 91%);--panel:hsl(39 100% 85%);
+  --docs-sidebar:hsl(39 100% 88%);--line:hsl(39 80% 75%)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]):not(.light):not(.rust),:root:not(.js):not([data-theme="light"]){
+  --bg:hsl(39 65% 13%);--panel:hsl(39 62% 18%);
+  --docs-sidebar:hsl(39 65% 15%);--line:hsl(39 50% 29%)}}
+:root[data-theme="dark"], :root.navy, :root.coal, :root.ayu{
+  --bg:hsl(39 65% 13%);--panel:hsl(39 62% 18%);
+  --docs-sidebar:hsl(39 65% 15%);--line:hsl(39 50% 29%)}
+:root, :root[data-theme], :root.light, :root.rust, :root.navy, :root.coal, :root.ayu{
+  --accent:var(--ink);--accent-soft:var(--panel);
+  --accent-fill:var(--ink);--accent-ink:var(--bg)}
+.site-header .site-wordmark,.landing-title .landing-wordmark,.wordmark{color:var(--syq)}
 .site-nav a[aria-current="page"]{
-  color:var(--ink);text-decoration-color:var(--bench-accent);text-decoration-thickness:2px}
-#benchmark-sidebar a[aria-current]{position:relative;color:var(--ink)}
-#benchmark-sidebar a[aria-current]::before{
-  content:"";position:absolute;left:-13px;top:4px;bottom:4px;width:3px;
-  background:var(--bench-accent);border-radius:2px}
+  color:var(--ink);text-decoration-color:currentColor;text-decoration-thickness:2px}
 #benchmark-sidebar .nav-item[aria-current="location"] .nav-num{color:inherit}
 </style><link rel="icon" type="image/png" href="favicon.png"><link rel="icon" type="image/svg+xml" href="favicon.svg"></head><body><a class="skip" href="#main">Skip to content</a><header class="site-header">
   <a class="site-wordmark" href="https://greaber.github.io/syq/" aria-label="syq home">syq</a>
