@@ -1,0 +1,15 @@
+latest = "0.6.0"
+
+[[releases]]
+version = "0.6.0"
+catalog = "releases/0.6.0/catalog.toml"
+rclone_data = "data/rclone-060.json"
+rclone_body = "releases/0.6.0/rclone-body.html"
+reproduce_body = "releases/0.6.0/reproduce-body.html"
+
+[[releases]]
+version = "0.5.2"
+catalog = "releases/0.5.2/catalog.toml"
+rclone_data = "data/rclone-exploratory.json"
+rclone_body = "releases/0.5.2/rclone-body.html"
+reproduce_body = "releases/0.5.2/reproduce-body.html"

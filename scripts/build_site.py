@@ -10,7 +10,9 @@ from pathlib import Path
 
 from syq_bench.fly import load_campaign
 from syq_bench.public import render_pages, selected_cases
-from syq_bench.rclone_public import build as build_rclone_page
+from syq_bench.rclone_public import render as render_rclone_page
+from syq_bench.releases import decorate, manifest, validate_identity
+from syq_bench.releases import filename as release_filename
 from syq_bench.spec import from_dict
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -52,9 +54,9 @@ def validate_acceptance(run: dict, scenario: dict, policy: dict) -> None:
                 raise ValueError(f"release acceptance failed: {scenario['id']}/{row.case['workload']}/{row.name}")
 
 
-def inputs(root: Path) -> tuple[list[dict], dict]:
+def inputs(root: Path, catalog_path: str = "catalog.toml") -> tuple[list[dict], dict]:
     site = root / "site"
-    catalog = tomllib.loads((site / "catalog.toml").read_text())
+    catalog = tomllib.loads((site / catalog_path).read_text())
     runs = []
     seen = set()
     selected = set()
@@ -102,16 +104,30 @@ def inputs(root: Path) -> tuple[list[dict], dict]:
     return runs, catalog
 
 
-def build(root: Path = ROOT) -> list[Path]:
-    runs, catalog = inputs(root)
+def render_site(root: Path = ROOT) -> dict[str, str]:
     site = root / "site"
-    pages = render_pages(runs, catalog, (site / "reproduce-body.html").read_text())
+    config = manifest(site)
+    outputs = {}
+    for release in config["releases"]:
+        version = release["version"]
+        runs, catalog = inputs(root, release["catalog"])
+        rclone = json.loads((site / release["rclone_data"]).read_text())
+        validate_identity(runs, rclone, version)
+        pages = render_pages(runs, catalog, (site / release["reproduce_body"]).read_text())
+        pages["rclone.html"] = render_rclone_page(root, release["rclone_data"], release["rclone_body"])
+        for name, page in pages.items():
+            outputs[release_filename(name, version)] = decorate(name, page, version, config["releases"], archive=True)
+            if version == config["latest"]:
+                outputs[name] = decorate(name, page, version, config["releases"], archive=False)
+    return outputs
+
+
+def build(root: Path = ROOT) -> list[Path]:
     outputs = []
-    for name, page in pages.items():
-        target = site / name
+    for name, page in render_site(root).items():
+        target = root / "site" / name
         target.write_text(page)
         outputs.append(target)
-    outputs.append(build_rclone_page(root))
     for target in outputs:
         page = target.read_text().replace(
             "</head>",

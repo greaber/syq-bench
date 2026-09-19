@@ -1,0 +1,495 @@
+{
+  "schema": 3,
+  "harness_version": "0.1.0",
+  "started": "2026-09-13T16:11:11+00:00",
+  "finished": "2026-09-13T16:20:16+00:00",
+  "spec": {
+    "name": "private-nfs-metadata-25k",
+    "description": "Release 0.6.0 with contemporaneous 0.5.2 controls",
+    "endpoints": {
+      "source": "/path/to/empty-source-scratch",
+      "destination": "/path/to/empty-destination-scratch"
+    },
+    "tools": [
+      {
+        "name": "syq",
+        "kind": "syq",
+        "binary": "/path/to/syq",
+        "args": [
+          "rsync",
+          "-a",
+          "--stats",
+          "--no-progress",
+          "--syq-no-bootstrap"
+        ],
+        "debug": false
+      },
+      {
+        "name": "syq-j32",
+        "kind": "syq",
+        "binary": "/path/to/syq",
+        "args": [
+          "rsync",
+          "-a",
+          "--stats",
+          "--no-progress",
+          "--syq-no-bootstrap",
+          "--syq-connections",
+          "32"
+        ],
+        "debug": false
+      },
+      {
+        "name": "rsync",
+        "kind": "rsync",
+        "binary": "/usr/bin/rsync",
+        "args": [
+          "-a"
+        ],
+        "debug": false
+      },
+      {
+        "name": "cp",
+        "kind": "cp",
+        "binary": "/usr/bin/cp",
+        "args": [
+          "-a"
+        ],
+        "debug": false
+      }
+    ],
+    "workloads": [
+      {
+        "name": "small-files",
+        "kind": "small-files",
+        "bytes": 104857600,
+        "files": 25000
+      }
+    ],
+    "protocol": {
+      "repeats": 3,
+      "seed": 204330278,
+      "cache": "evict",
+      "durable": false,
+      "verify": true,
+      "probes": false,
+      "tool_timeout": 300,
+      "slow_cutoff": 0,
+      "order": [
+        [
+          "syq",
+          "syq-j32",
+          "rsync",
+          "cp"
+        ],
+        [
+          "syq-j32",
+          "rsync",
+          "cp",
+          "syq"
+        ],
+        [
+          "rsync",
+          "cp",
+          "syq",
+          "syq-j32"
+        ]
+      ]
+    }
+  },
+  "seed": 204330278,
+  "host": {
+    "hostname": "source-host",
+    "kernel": "5.15.0-126-generic",
+    "machine": "x86_64",
+    "cpus": 160,
+    "python": "3.13.13"
+  },
+  "tools": {
+    "syq": {
+      "binary": "/path/to/syq",
+      "version": "syq 0.6.0",
+      "sha256": "4fc2f442d88f83d05bf61a0b4eead718b681678b7c7ad6a52696c16d3f479a24"
+    },
+    "syq-j32": {
+      "binary": "/path/to/syq",
+      "version": "syq 0.6.0",
+      "sha256": "4fc2f442d88f83d05bf61a0b4eead718b681678b7c7ad6a52696c16d3f479a24"
+    },
+    "rsync": {
+      "binary": "/usr/bin/rsync",
+      "version": "rsync  version 3.2.7  protocol version 31",
+      "sha256": "f029cadc3f0b1c879bf8dfb899f434703c13ee53197d27da5d17bf0faf1f1318"
+    },
+    "cp": {
+      "binary": "/usr/bin/cp",
+      "version": "cp (GNU coreutils) 8.32",
+      "sha256": "ff67abc6eb03d81e080343971605e185e64da71d9804dd5a556f9001a10f0586"
+    }
+  },
+  "source": "/path/to/empty-source-scratch",
+  "destination": "/path/to/empty-destination-scratch",
+  "filesystems": {
+    "source": "xfs",
+    "destination": "nfs"
+  },
+  "uncontrolled": [
+    "metadata cache (dentries/inodes) is not evicted: generation, checksum, and repeats all warm it",
+    "Previous-release controls ran after the first automatic syq repeat; those separately versioned private controls are excluded from these charts.",
+    "No final flush requested; completion is not a durability or physical-device-throughput measurement.",
+    "GNU time wrapper is inside command timing. Host snapshots are outside timing. Largest-process RSS is not aggregate process-tree memory."
+  ],
+  "probes": [],
+  "network": null,
+  "cases": [
+    {
+      "workload": "small-files",
+      "tool": "syq",
+      "argv": [
+        "/path/to/syq",
+        "rsync",
+        "-a",
+        "--stats",
+        "--no-progress",
+        "--syq-no-bootstrap",
+        "/path/to/empty-source-scratch/small-files/",
+        "/path/to/empty-destination-scratch/DEST"
+      ],
+      "bytes": 104850000,
+      "files": 25000,
+      "source": "/path/to/empty-source-scratch/small-files",
+      "source_fs": "xfs",
+      "mode": "fresh",
+      "prepopulated_with": null,
+      "repeats": [
+        {
+          "index": 0,
+          "wall_s": 7.52456415630877,
+          "user_s": 1.7559500000000003,
+          "sys_s": 9.278896,
+          "exit_code": 0,
+          "verified": true,
+          "fsync_s": null,
+          "fsync_note": "not requested",
+          "cache": "evict",
+          "metadata_cache": "warm",
+          "stderr_tail": "",
+          "changed_files": 0,
+          "changed_bytes": 0,
+          "delta_seed": null,
+          "round_index": 0
+        },
+        {
+          "index": 1,
+          "wall_s": 5.371792659163475,
+          "user_s": 1.7781660000000006,
+          "sys_s": 10.141358999999994,
+          "exit_code": 0,
+          "verified": true,
+          "fsync_s": null,
+          "fsync_note": "not requested",
+          "cache": "evict",
+          "metadata_cache": "warm",
+          "stderr_tail": "",
+          "changed_files": 0,
+          "changed_bytes": 0,
+          "delta_seed": null,
+          "round_index": 1
+        },
+        {
+          "index": 2,
+          "wall_s": 5.721609707921743,
+          "user_s": 1.7281440000000003,
+          "sys_s": 9.230304000000004,
+          "exit_code": 0,
+          "verified": true,
+          "fsync_s": null,
+          "fsync_note": "not requested",
+          "cache": "evict",
+          "metadata_cache": "warm",
+          "stderr_tail": "",
+          "changed_files": 0,
+          "changed_bytes": 0,
+          "delta_seed": null,
+          "round_index": 2
+        }
+      ],
+      "error": null,
+      "skipped": null,
+      "curtailed": null,
+      "too_short": false
+    },
+    {
+      "workload": "small-files",
+      "tool": "syq-j32",
+      "argv": [
+        "/path/to/syq",
+        "rsync",
+        "-a",
+        "--stats",
+        "--no-progress",
+        "--syq-no-bootstrap",
+        "--syq-connections",
+        "32",
+        "/path/to/empty-source-scratch/small-files/",
+        "/path/to/empty-destination-scratch/DEST"
+      ],
+      "bytes": 104850000,
+      "files": 25000,
+      "source": "/path/to/empty-source-scratch/small-files",
+      "source_fs": "xfs",
+      "mode": "fresh",
+      "prepopulated_with": null,
+      "repeats": [
+        {
+          "index": 0,
+          "wall_s": 11.130615143105388,
+          "user_s": 1.6723660000000002,
+          "sys_s": 9.517851999999998,
+          "exit_code": 0,
+          "verified": true,
+          "fsync_s": null,
+          "fsync_note": "not requested",
+          "cache": "evict",
+          "metadata_cache": "warm",
+          "stderr_tail": "",
+          "changed_files": 0,
+          "changed_bytes": 0,
+          "delta_seed": null,
+          "round_index": 0
+        },
+        {
+          "index": 1,
+          "wall_s": 5.321376424282789,
+          "user_s": 1.544201000000001,
+          "sys_s": 10.018659,
+          "exit_code": 0,
+          "verified": true,
+          "fsync_s": null,
+          "fsync_note": "not requested",
+          "cache": "evict",
+          "metadata_cache": "warm",
+          "stderr_tail": "",
+          "changed_files": 0,
+          "changed_bytes": 0,
+          "delta_seed": null,
+          "round_index": 1
+        },
+        {
+          "index": 2,
+          "wall_s": 4.82194646447897,
+          "user_s": 1.8840279999999971,
+          "sys_s": 9.258594000000002,
+          "exit_code": 0,
+          "verified": true,
+          "fsync_s": null,
+          "fsync_note": "not requested",
+          "cache": "evict",
+          "metadata_cache": "warm",
+          "stderr_tail": "",
+          "changed_files": 0,
+          "changed_bytes": 0,
+          "delta_seed": null,
+          "round_index": 2
+        }
+      ],
+      "error": null,
+      "skipped": null,
+      "curtailed": null,
+      "too_short": false
+    },
+    {
+      "workload": "small-files",
+      "tool": "rsync",
+      "argv": [
+        "/usr/bin/rsync",
+        "-a",
+        "/path/to/empty-source-scratch/small-files/",
+        "/path/to/empty-destination-scratch/DEST"
+      ],
+      "bytes": 104850000,
+      "files": 25000,
+      "source": "/path/to/empty-source-scratch/small-files",
+      "source_fs": "xfs",
+      "mode": "fresh",
+      "prepopulated_with": null,
+      "repeats": [
+        {
+          "index": 0,
+          "wall_s": 52.39592172205448,
+          "user_s": 0.16915600000000097,
+          "sys_s": 3.388251000000004,
+          "exit_code": 0,
+          "verified": true,
+          "fsync_s": null,
+          "fsync_note": "not requested",
+          "cache": "evict",
+          "metadata_cache": "warm",
+          "stderr_tail": "",
+          "changed_files": 0,
+          "changed_bytes": 0,
+          "delta_seed": null,
+          "round_index": 0
+        },
+        {
+          "index": 1,
+          "wall_s": 50.58866672590375,
+          "user_s": 0.21977099999999972,
+          "sys_s": 3.3287090000000035,
+          "exit_code": 0,
+          "verified": true,
+          "fsync_s": null,
+          "fsync_note": "not requested",
+          "cache": "evict",
+          "metadata_cache": "warm",
+          "stderr_tail": "",
+          "changed_files": 0,
+          "changed_bytes": 0,
+          "delta_seed": null,
+          "round_index": 1
+        },
+        {
+          "index": 2,
+          "wall_s": 44.7867463119328,
+          "user_s": 0.18869199999999964,
+          "sys_s": 3.2704099999999983,
+          "exit_code": 0,
+          "verified": true,
+          "fsync_s": null,
+          "fsync_note": "not requested",
+          "cache": "evict",
+          "metadata_cache": "warm",
+          "stderr_tail": "",
+          "changed_files": 0,
+          "changed_bytes": 0,
+          "delta_seed": null,
+          "round_index": 2
+        }
+      ],
+      "error": null,
+      "skipped": null,
+      "curtailed": null,
+      "too_short": false
+    },
+    {
+      "workload": "small-files",
+      "tool": "cp",
+      "argv": [
+        "/usr/bin/cp",
+        "-a",
+        "/path/to/empty-source-scratch/small-files/.",
+        "/path/to/empty-destination-scratch/DEST"
+      ],
+      "bytes": 104850000,
+      "files": 25000,
+      "source": "/path/to/empty-source-scratch/small-files",
+      "source_fs": "xfs",
+      "mode": "fresh",
+      "prepopulated_with": null,
+      "repeats": [
+        {
+          "index": 0,
+          "wall_s": 37.82747489027679,
+          "user_s": 0.10382700000000078,
+          "sys_s": 1.9955580000000026,
+          "exit_code": 0,
+          "verified": true,
+          "fsync_s": null,
+          "fsync_note": "not requested",
+          "cache": "evict",
+          "metadata_cache": "warm",
+          "stderr_tail": "",
+          "changed_files": 0,
+          "changed_bytes": 0,
+          "delta_seed": null,
+          "round_index": 0
+        },
+        {
+          "index": 1,
+          "wall_s": 36.62235315144062,
+          "user_s": 0.038591999999999516,
+          "sys_s": 2.0128619999999984,
+          "exit_code": 0,
+          "verified": true,
+          "fsync_s": null,
+          "fsync_note": "not requested",
+          "cache": "evict",
+          "metadata_cache": "warm",
+          "stderr_tail": "",
+          "changed_files": 0,
+          "changed_bytes": 0,
+          "delta_seed": null,
+          "round_index": 1
+        },
+        {
+          "index": 2,
+          "wall_s": 35.37168504856527,
+          "user_s": 0.10779800000000073,
+          "sys_s": 1.9056949999999944,
+          "exit_code": 0,
+          "verified": true,
+          "fsync_s": null,
+          "fsync_note": "not requested",
+          "cache": "evict",
+          "metadata_cache": "warm",
+          "stderr_tail": "",
+          "changed_files": 0,
+          "changed_bytes": 0,
+          "delta_seed": null,
+          "round_index": 2
+        }
+      ],
+      "error": null,
+      "skipped": null,
+      "curtailed": null,
+      "too_short": false
+    }
+  ],
+  "aborted": null,
+  "publication": {
+    "release": "0.6.0",
+    "syq_revision": "8ccec067bb41cf3fe01fef0be2a8fb35e9d5f329",
+    "build_type": "official release binary",
+    "source_build_sha256": "4fc2f442d88f83d05bf61a0b4eead718b681678b7c7ad6a52696c16d3f479a24",
+    "harness_revision": "b87f3aeff75d05cc56e5f961f7d66518e39998ef",
+    "manual_recipe": "specs/release-060/private-nfs-metadata-25k.toml",
+    "environment": {
+      "kernel": "5.15.0-126-generic",
+      "cpu_model": "Intel(R) Xeon(R) Platinum 8460Y+",
+      "allowed_cpus": 160,
+      "versions": {
+        "syq": "syq 0.6.0",
+        "syq-j32": "syq 0.6.0",
+        "rsync": "rsync  version 3.2.7  protocol version 31",
+        "cp": "cp (GNU coreutils) 8.32"
+      }
+    },
+    "path_filesystems": {
+      "source": "xfs",
+      "destination": "nfs"
+    },
+    "selection_note": "Entire refreshed homepage workload, every current-release and competitor repetition retained. Prior-release drift controls remain separate.",
+    "original_round_order": [
+      [
+        "syq",
+        "syq-052",
+        "syq-052-historical",
+        "syq-j32",
+        "rsync",
+        "cp"
+      ],
+      [
+        "syq-j32",
+        "rsync",
+        "cp",
+        "syq"
+      ],
+      [
+        "rsync",
+        "cp",
+        "syq",
+        "syq-j32"
+      ]
+    ]
+  }
+}

@@ -1,0 +1,18 @@
+<header class="hero"><div><h1>Reproduce a result</h1>
+<p>Pick a test and follow its setup. The benchmarks use several different environments.</p></div></header>
+<article class="notes">
+<h2>Choose the comparison</h2>
+<ul>
+<li><a href="all-results.html#public-wan-forward">Overseas copy</a> and <a href="all-results.html#public-wan-unchanged-tree">unchanged-folder check</a>: two Hetzner Cloud servers, Germany and the US East Coast, with test files held in memory.</li>
+<li><a href="all-results.html#public-ext4-same">Copying a folder on one drive</a>: a Hetzner dedicated server, with both folders on the same ext4 filesystem on an NVMe drive.</li>
+<li><a href="all-results.html#private-nfs-metadata-25k">Copying to a network drive</a>: a storage server copying from a local XFS volume to an NFS mount.</li>
+</ul>
+<p>Each link includes the hardware, tool versions, file sizes and settings for that test. The other comparisons on <a href="all-results.html">More Results</a> have their own setups too. Similar hardware and conditions should give a useful comparison; exact times will vary, especially across networks and NFS services.</p>
+<h2>Run it yourself</h2>
+<p>The <a href="https://github.com/greaber/syq-bench">syq-bench repository</a> contains a <a href="https://github.com/greaber/syq-bench/tree/master/specs/release-052">recipe and configuration templates</a> for these tests, including how to build the measured syq 0.5.2 version.</p>
+<p>From a checkout of the repository, copy the template for your chosen test to <code>my-test.toml</code>. Set the paths to your tools and empty scratch folders; for a remote test, also set the SSH destination. With Python 3.13 or later and uv installed, preview the commands, then run:</p>
+<pre class="spec">uv run syq-bench run my-test.toml --dry-run
+uv run syq-bench run my-test.toml --out results/my-test.json</pre>
+<p>Use otherwise idle machines and match the filesystem, file sizes and cache settings described in the recipe. The templates reproduce the copy jobs and tool options; the recipe also describes the original run order and extra diagnostics.</p>
+<p>Before sharing your results, remove any private hostnames or paths from the output.</p>
+</article>

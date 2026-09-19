@@ -1,0 +1,50 @@
+name = "private-nfs-metadata-25k"
+description = "Release 0.6.0 with contemporaneous 0.5.2 controls"
+[endpoints]
+source = "/path/to/empty-source-scratch"
+destination = "/path/to/empty-destination-scratch"
+
+[[tools]]
+name = "syq"
+kind = "syq"
+binary = "/path/to/syq"
+args = ["rsync", "-a", "--stats", "--no-progress", "--syq-no-bootstrap"]
+debug = false
+
+[[tools]]
+name = "syq-j32"
+kind = "syq"
+binary = "/path/to/syq"
+args = ["rsync", "-a", "--stats", "--no-progress", "--syq-no-bootstrap", "--syq-connections", "32"]
+debug = false
+
+[[tools]]
+name = "rsync"
+kind = "rsync"
+binary = "/usr/bin/rsync"
+args = ["-a"]
+debug = false
+
+[[tools]]
+name = "cp"
+kind = "cp"
+binary = "/usr/bin/cp"
+args = ["-a"]
+debug = false
+
+[[workloads]]
+name = "small-files"
+kind = "small-files"
+bytes = 104857600
+files = 25000
+
+[protocol]
+repeats = 3
+seed = 204330278
+cache = "evict"
+durable = false
+verify = true
+probes = false
+tool_timeout = 300
+slow_cutoff = 0
+order = [["syq", "syq-j32", "rsync", "cp"], ["syq-j32", "rsync", "cp", "syq"], ["rsync", "cp", "syq", "syq-j32"]]

@@ -1,0 +1,96 @@
+# syq 0.6.0 refreshed homepage capture set.
+introduction = ["We tested syq 0.6.0 against rsync and cp on local storage, a shared network drive, and an overseas connection."]
+
+[overview]
+subtitle = "How syq 0.6.0 compares with rsync and cp."
+
+[[overview.comparisons]]
+id = "public-wan-forward"
+workload = "large-file"
+chart_controls = ["syq-ssh"]
+tool_labels = { syq-ssh = "syq over SSH" }
+title = "Sending a large file overseas"
+description = "Copy one large file from Germany to the US East Coast."
+
+[[overview.comparisons]]
+id = "public-ext4-same"
+workload = "mixed-tree"
+title = "Copying a folder on one drive"
+description = "Make another copy of a folder with files of different sizes."
+
+[[overview.comparisons]]
+id = "private-nfs-metadata-25k"
+workload = "small-files"
+title = "Copying small files to a network drive"
+description = "Copy a folder of small files onto a shared drive."
+note = "A shared drive using NFS."
+
+[[overview.comparisons]]
+id = "public-wan-unchanged-tree"
+workload = "unchanged-tree"
+chart_metric = "time"
+title = "Checking a folder that hasn’t changed"
+description = "Check whether a folder needs updating, from Germany to the US East Coast."
+note = ""
+
+[acceptance]
+minimum_repeat_seconds = 3
+repeats = 3
+syq_revision = "8ccec067bb41cf3fe01fef0be2a8fb35e9d5f329"
+
+[[scenarios]]
+id = "public-wan-forward"
+title = "Copying to a distant server"
+kind = "cloud"
+primary = "syq"
+description = "Send a file or folder from Germany to the US East Coast."
+note = "Files stay in memory, so this tests the connection rather than disk writes."
+setup = "Official syq 0.6.0 Linux release executable. Three rotated repetitions for each displayed tool; current 0.5.2 controls followed the first automatic syq repeat and are retained separately. Contents checked outside timing. Generated incompressible data, seed 204330278. No final flush: completion does not establish durability. GNU time command wrapper; host snapshots outside timing. Two Hetzner Cloud CCX23 guests, each with 4 dedicated vCPUs and 16 GiB RAM, Debian 13; warm tmpfs at both endpoints. Germany to US East Coast, approximately 108 ms RTT. Default syq uses SSH-authenticated encrypted TCP; the SSH control disables TCP; rsync uses SSH. "
+manual_recipe = "specs/release-060/README.md"
+captures = ["data/release-060-public-wan-forward.json"]
+workload_selection = ["large-file"]
+controls = { syq = "Automatic", syq-j32 = "32 workers", syq-ssh = "Transfer over SSH" }
+workloads = { large-file = "One large file", large-files = "A folder of large files", small-files = "Many small files" }
+
+[[scenarios]]
+id = "public-ext4-same"
+title = "Copying a file or folder on one drive"
+kind = "rental"
+primary = "syq"
+description = "Make another copy on the same SSD."
+note = "A rented Hetzner server, using the ext4 filesystem."
+setup = "Official syq 0.6.0 Linux release executable. Three rotated repetitions for each displayed tool; current 0.5.2 controls followed the first automatic syq repeat and are retained separately. Contents checked outside timing. Generated incompressible data, seed 204330278. No final flush: completion does not establish durability. GNU time command wrapper; host snapshots outside timing. Hetzner dedicated server, Ryzen 9 5950X, 128 GiB RAM, Samsung PM9A3 NVMe. Source and destination on one ext4 filesystem. File data eviction requested; metadata caches remain warm. "
+manual_recipe = "specs/release-060/README.md"
+captures = ["data/release-060-public-ext4-same.json"]
+workload_selection = ["mixed-tree"]
+controls = { syq = "Automatic", syq-j32 = "32 workers", syq-ssh = "Transfer over SSH" }
+workloads = { large-file = "One large file", mixed-tree = "A folder with files of different sizes", small-files = "Many small files" }
+
+[[scenarios]]
+id = "public-wan-unchanged-tree"
+chart_metric = "time"
+title = "Checking a folder that hasn’t changed"
+kind = "cloud"
+primary = "syq"
+description = "Both servers already have identical files. Check whether anything needs copying."
+note = "Germany → US East Coast, with a large folder of small files kept in memory."
+setup = "Official syq 0.6.0 Linux release executable. Three rotated repetitions for each displayed tool; current 0.5.2 controls followed the first automatic syq repeat and are retained separately. Contents checked outside timing. Generated incompressible data, seed 204330278. No final flush: completion does not establish durability. GNU time command wrapper; host snapshots outside timing. Two Hetzner Cloud CCX23 guests, each with 4 dedicated vCPUs and 16 GiB RAM, Debian 13; warm tmpfs at both endpoints. Germany to US East Coast, approximately 108 ms RTT. Default syq uses SSH-authenticated encrypted TCP; the SSH control disables TCP; rsync uses SSH. "
+manual_recipe = "specs/release-060/README.md"
+captures = ["data/release-060-public-wan-unchanged-tree.json"]
+workload_selection = ["unchanged-tree"]
+controls = { syq = "Automatic", syq-j32 = "32 workers", syq-ssh = "Transfer over SSH" }
+workloads = { unchanged-tree = "An unchanged folder" }
+
+[[scenarios]]
+id = "private-nfs-metadata-25k"
+title = "Many small files on a network drive"
+kind = "hardware"
+primary = "syq"
+description = "Copy a folder of small files onto the same shared drive."
+note = "The same NFS network drive."
+setup = "Official syq 0.6.0 Linux release executable. Three rotated repetitions for each displayed tool; current 0.5.2 controls followed the first automatic syq repeat and are retained separately. Contents checked outside timing. Generated incompressible data, seed 204330278. No final flush: completion does not establish durability. GNU time command wrapper; host snapshots outside timing. Same shared Linux NFS client as the previous release: local XFS source to mounted NFS destination. Client fixture-page eviction requested; metadata and NFS server caches and other clients are uncontrolled. "
+manual_recipe = "specs/release-060/README.md"
+captures = ["data/release-060-private-nfs-metadata-25k.json"]
+workload_selection = ["small-files"]
+controls = { syq = "Automatic", syq-j32 = "32 workers", syq-ssh = "Transfer over SSH" }
+workloads = { small-files = "Many small files" }

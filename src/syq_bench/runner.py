@@ -55,7 +55,8 @@ class Repeat:
     stderr_tail: str = ""
     changed_files: int = 0  # incremental cases: what differed between source and destination
     changed_bytes: int = 0
-    delta_seed: int | None = None  # seed of that change; derived from the run seed and repeat index
+    delta_seed: int | None = None  # seed of that change; derived from the run seed and round index
+    round_index: int | None = None  # Chronological round; index counts this tool's own repetitions.
 
 
 @dataclass
@@ -137,11 +138,21 @@ def remote_identity(tool: Tool, remote: Location) -> dict:
     Best effort: a missing binary is recorded, not fatal. syq's rsync-compatible interface prefixes
     its no-bootstrap flag, while the native interface does not.
     """
+    if tool.kind == "rclone":
+        return {
+            "binary": None,
+            "version": None,
+            "sha256": None,
+            "note": f"rclone {tool.spec.rclone_backend} server; server identity must be recorded by the campaign",
+        }
     args = list(tool.spec.args)
     name = {"syq": "syq", "qcp": "qcp", "rsync": "rsync", "tar": "tar"}[tool.kind]
     explicit = None
+    path_flags = (
+        ("--syq-path", "--remote-qcp-binary", "--rsync-path") if tool.kind == "syq" else ("--remote-qcp-binary",)
+    )
     for i, a in enumerate(args):
-        for flag in ("--syq-path", "--remote-qcp-binary"):
+        for flag in path_flags:
             if a == flag and i + 1 < len(args):
                 explicit = args[i + 1]
             elif a.startswith(flag + "="):
@@ -310,6 +321,27 @@ class Runner:
             {"source": src_root.fs_type(), "destination": dst_root.fs_type()},
             ["metadata cache (dentries/inodes) is not evicted: generation, checksum, and repeats all warm it"],
         )
+        for tool in tools:
+            if tool.kind == "rclone":
+                backend = tool.spec.rclone_backend
+                self.run.uncontrolled.append(
+                    f"{tool.name}: rclone {backend}; harness verification checks regular-file contents, not metadata"
+                )
+                if backend == "sftp-ssh":
+                    self.run.uncontrolled.append(
+                        f"{tool.name}: SFTP uses external OpenSSH; permissions/ownership preservation is unsupported"
+                    )
+                elif backend == "sftp":
+                    self.run.uncontrolled.append(
+                        f"{tool.name}: SFTP uses rclone's internal SSH library; "
+                        "scratch mapping must pass a check before copying; "
+                        "permissions/ownership preservation is unsupported"
+                    )
+                elif backend == "webdav":
+                    self.run.uncontrolled.append(
+                        f"{tool.name}: WebDAV scratch mapping must pass a check before copying; metadata and rename "
+                        "semantics depend on the server"
+                    )
         if src_root.is_remote or dst_root.is_remote:
             self.run.uncontrolled.append("remote end: fixture pages evicted on the client only")
 
@@ -402,6 +434,7 @@ class Runner:
         cache = "not-run"
         try:
             dst.mkdir()
+            tool.check_destination(dst)
             dst_evicted = True
             if delta is not None:
                 before, delta_seed, n, nbytes = delta
@@ -422,7 +455,7 @@ class Runner:
                     note = "fsync walk failed at destination"
             if self.spec.protocol.verify and code == 0:
                 verified = dst.exists() and dst.checksum() == wl.checksum
-        except (subprocess.CalledProcessError, OSError) as e:
+        except (subprocess.CalledProcessError, subprocess.TimeoutExpired, OSError) as e:
             detail = (getattr(e, "stderr", "") or str(e)).strip().splitlines()
             case.error = f"harness step failed: {detail[-1] if detail else e}"
             verified = None if code != 0 else False
@@ -497,7 +530,9 @@ class Runner:
         slow = statistics.median(walls)
         # Below the timing floor the numbers are startup noise (see TOO_SHORT_S): a 1 s tool next to
         # a 0.1 s tool is not "an order of magnitude slower", it is two unmeasurable cases.
-        if slow >= cutoff * fastest and slow >= TOO_SHORT_S and len(case.repeats) < self.spec.protocol.repeats:
+        order = self.spec.protocol.order
+        planned = sum(case.tool in row for row in order) if order else self.spec.protocol.repeats
+        if slow >= cutoff * fastest and slow >= TOO_SHORT_S and len(case.repeats) < planned:
             n = len(case.repeats)
             times = "once" if n == 1 else f"{n} times"
             case.curtailed = (
@@ -507,16 +542,20 @@ class Runner:
             self.log(f"    {case.tool}: {case.curtailed}")
 
     def _round(self, wl: Workload, cases: dict[str, Case], i: int, delta) -> None:
-        """Repeat i of every tool, interleaved."""
+        """Run the configured tools in chronological round i."""
         w = wl.spec
-        for tool in self.tools:
+        by_name = {t.name: t for t in self.tools}
+        order = self.spec.protocol.order
+        round_tools = [by_name[name] for name in order[i]] if order else self.tools
+        for position, tool in enumerate(round_tools):
             case = cases[tool.name]
             if case.error or case.skipped or case.curtailed:
                 continue
             # Only the very first read of a born-cold tree can skip eviction, and verification's
             # checksum pass (when enabled) already took that read.
-            first = i == 0 and tool is self.tools[0] and wl.generated and not self.spec.protocol.verify
-            r = self._repeat(wl, tool, case, i, first, delta)
+            first = i == 0 and position == 0 and wl.generated and not self.spec.protocol.verify
+            r = self._repeat(wl, tool, case, len(case.repeats), first, delta)
+            r.round_index = i
             case.repeats.append(r)
             if self.abort:
                 raise self.abort

@@ -1,0 +1,58 @@
+name = "rclone-network"
+description = "Run separately on short- and long-distance routes; regular-file content and mtime comparison"
+
+[endpoints]
+source = "/path/to/empty-source-scratch"
+destination = "user@server.example:/path/to/empty-destination-scratch"
+ssh = "ssh"
+
+[[tools]]
+name = "syq"
+binary = "/path/to/pinned-syq"
+args = ["rsync", "-rt", "--no-progress", "--syq-no-bootstrap", "--rsync-path", "/path/to/pinned-syq"]
+
+[[tools]]
+name = "rsync"
+args = ["-rt"]
+
+[[tools]]
+name = "rclone-sftp"
+kind = "rclone"
+binary = "/path/to/pinned-rclone"
+rclone_backend = "sftp"
+# Internal SSH: supply actual hostname/key/port here if the SSH endpoint uses an alias.
+# Host keys are checked against ~/.ssh/known_hosts unless explicitly overridden.
+args = ["--create-empty-src-dirs"]
+
+[[tools]]
+name = "rclone-webdav"
+kind = "rclone"
+binary = "/path/to/pinned-rclone"
+rclone_backend = "webdav"
+# This URL must expose precisely the directory below; the harness proves the mapping
+# by reading an unpredictable marker created through SSH before every copy.
+rclone_url = "https://server.example:8443/"
+rclone_root = "/path/to/empty-destination-scratch"
+# For rclone serve webdav; choose the actual vendor if using another server.
+args = ["--webdav-vendor", "rclone", "--create-empty-src-dirs"]
+
+[[workloads]]
+name = "small-files"
+kind = "small-files"
+files = 100000
+bytes = "400MiB"
+
+[[workloads]]
+name = "large-file"
+kind = "large-file"
+bytes = "16GiB"
+
+[protocol]
+repeats = 3
+seed = 9911
+cache = "evict"
+durable = false
+verify = true
+probes = false
+tool_timeout = 900
+slow_cutoff = 0
